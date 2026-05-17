@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>$10 General Knowledge Challenge</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .container {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 700px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 8px;
+    background: linear-gradient(90deg, #f7d774, #ffb347);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle {
+    text-align: center;
+    color: #aaa;
+    font-size: 14px;
+    margin-bottom: 30px;
+  }
+  .hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+  }
+  .hud-item { text-align: center; flex: 1; }
+  .hud-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+  .hud-value { font-size: 22px; font-weight: bold; margin-top: 4px; }
+  .progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4ade80, #22d3ee);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  .timer-bar {
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .timer-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4ade80, #facc15, #ef4444);
+    width: 100%;
+    transition: width 0.1s linear;
+  }
+  .category-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(247, 215, 116, 0.2);
+    color: #f7d774;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+  }
+  .difficulty-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    margin-left: 8px;
+  }
+  .diff-easy { background: rgba(74,222,128,0.2); color: #4ade80; }
+  .diff-medium { background: rgba(250,204,21,0.2); color: #facc15; }
+  .diff-hard { background: rgba(239,68,68,0.2); color: #ef4444; }
+  .diff-expert { background: rgba(168,85,247,0.2); color: #a855f7; }
+  .question {
+    font-size: 20px;
+    line-height: 1.5;
+    margin-bottom: 24px;
+    min-height: 60px;
+  }
+  .options { display: grid; gap: 12px; }
+  .option {
+    padding: 16px 20px;
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 16px;
+    color: #fff;
+    text-align: left;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .option:hover:not(:disabled) {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.3);
+    transform: translateX(4px);
+  }
+  .option:disabled { cursor: not-allowed; opacity: 0.6; }
+  .option.correct { background: rgba(74,222,128,0.3); border-color: #4ade80; }
+  .option.wrong { background: rgba(239,68,68,0.3); border-color: #ef4444; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .btn {
+    display: inline-block;
+    padding: 14px 32px;
+    background: linear-gradient(90deg, #f7d774, #ffb347);
+    color: #1a1a2e;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+    font-family: inherit;
+    transition: transform 0.2s;
+  }
+  .btn:hover { transform: scale(1.05); }
+  .center { text-align: center; }
+  .prize {
+    font-size: 64px;
+    font-weight: bold;
+    margin: 20px 0;
+    background: linear-gradient(90deg, #f7d774, #ffb347);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .rules {
+    text-align: left;
+    background: rgba(0,0,0,0.3);
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+    font-size: 14px;
+    line-height: 1.8;
+  }
+  .rules li { margin-left: 20px; margin-bottom: 4px; }
+  .warning-banner {
+    background: rgba(239,68,68,0.2);
+    border: 1px solid #ef4444;
+    color: #fecaca;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    text-align: center;
+    display: none;
+  }
+  .warning-banner.show { display: block; }
+  .cheat-screen { text-align: center; }
+  .cheat-screen h2 { color: #ef4444; font-size: 32px; margin-bottom: 16px; }
+  .cheat-reason {
+    background: rgba(0,0,0,0.4);
+    padding: 16px;
+    border-radius: 8px;
+    margin: 16px 0;
+    font-family: monospace;
+    color: #fca5a5;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- START SCREEN -->
+  <div id="screen-start" class="screen active center">
+    <h1>$10 General Knowledge Challenge</h1>
+    <p class="subtitle">Answer 10 questions correctly. Win $10.</p>
+    <div class="prize">$10</div>
+    <div class="rules">
+      <strong>Rules</strong>
+      <ul>
+        <li>10 questions across all spheres of life</li>
+        <li>10 seconds per question</li>
+        <li>Difficulty increases with each correct answer</li>
+        <li>One wrong answer ends the game</li>
+        <li>No external help allowed — cheating is auto-detected</li>
+      </ul>
+    </div>
+    <p style="color:#fca5a5; font-size:13px; margin-top:12px;">
+      Tab-switching, devtools, copy-paste, and suspicious timing are monitored.
+    </p>
+    <button class="btn" onclick="startGame()">Start Challenge</button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="screen-quiz" class="screen">
+    <div id="warning" class="warning-banner"></div>
+    <div class="hud">
+      <div class="hud-item">
+        <div class="hud-label">Question</div>
+        <div class="hud-value"><span id="qnum">1</span>/10</div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">Prize</div>
+        <div class="hud-value" style="color:#f7d774;">$<span id="prize">0</span></div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">Time</div>
+        <div class="hud-value" id="time">10</div>
+      </div>
+    </div>
+    <div class="progress-bar"><div id="progress" class="progress-fill"></div></div>
+    <div class="timer-bar"><div id="timerFill" class="timer-fill"></div></div>
+    <div>
+      <span id="category" class="category-tag">CATEGORY</span>
+      <span id="difficulty" class="difficulty-tag diff-easy">EASY</span>
+    </div>
+    <div id="question" class="question">Loading...</div>
+    <div id="options" class="options"></div>
+  </div>
+
+  <!-- WIN SCREEN -->
+  <div id="screen-win" class="screen center">
+    <h1>You Won!</h1>
+    <div class="prize">$10</div>
+    <p>You answered all 10 questions correctly.</p>
+    <p style="color:#888; margin-top:8px; font-size:14px;">
+      Total time: <span id="winTime"></span>s · Avg per question: <span id="winAvg"></span>s
+    </p>
+    <button class="btn" onclick="location.reload()">Play Again</button>
+  </div>
+
+  <!-- LOSE SCREEN -->
+  <div id="screen-lose" class="screen center">
+    <h1 style="background: linear-gradient(90deg,#ef4444,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Game Over</h1>
+    <p style="margin: 20px 0; font-size: 18px;" id="loseReason">You got it wrong!</p>
+    <p style="color:#888;">You answered <span id="loseScore">0</span>/10 correctly.</p>
+    <p id="correctAnswer" style="margin-top:16px; color:#4ade80; font-size:14px;"></p>
+    <button class="btn" onclick="location.reload()">Try Again</button>
+  </div>
+
+  <!-- CHEAT SCREEN -->
+  <div id="screen-cheat" class="screen cheat-screen">
+    <h2>Cheating Detected</h2>
+    <p>The challenge has been terminated.</p>
+    <div id="cheatReason" class="cheat-reason"></div>
+    <p style="color:#888; font-size:13px;">
+      External help, tab switching, devtools, and suspicious timing patterns are forbidden.
+    </p>
+    <button class="btn" onclick="location.reload()">Restart</button>
+  </div>
+
+</div>
+
+<script>
+/* ========== QUESTION BANK ==========
+   Difficulty 1 = easy, 4 = expert. Questions ordered by index in game. */
+const QUESTIONS = [
+  // Q1 — Easy
+  { cat: "Sport", diff: 1,
+    q: "How many players are on a standard soccer (football) team on the field?",
+    opts: ["9", "10", "11", "12"], a: 2 },
+  // Q2 — Easy
+  { cat: "Science", diff: 1,
+    q: "What gas do plants primarily absorb from the atmosphere for photosynthesis?",
+    opts: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"], a: 2 },
+  // Q3 — Easy/Medium
+  { cat: "Music", diff: 2,
+    q: "Which Beatles album features the song 'Come Together'?",
+    opts: ["Abbey Road", "Revolver", "Let It Be", "Sgt. Pepper's"], a: 0 },
+  // Q4 — Medium
+  { cat: "History", diff: 2,
+    q: "In which year did the Berlin Wall fall?",
+    opts: ["1987", "1989", "1991", "1993"], a: 1 },
+  // Q5 — Medium
+  { cat: "Religion", diff: 2,
+    q: "In Hinduism, who is known as the 'Destroyer' in the Trimurti?",
+    opts: ["Brahma", "Vishnu", "Shiva", "Indra"], a: 2 },
+  // Q6 — Hard
+  { cat: "Art", diff: 3,
+    q: "Which artist painted 'The Persistence of Memory' (the melting clocks)?",
+    opts: ["Pablo Picasso", "Salvador Dalí", "René Magritte", "Joan Miró"], a: 1 },
+  // Q7 — Hard
+  { cat: "Lifestyle", diff: 3,
+    q: "What is the traditional gift for a 25th wedding anniversary?",
+    opts: ["Gold", "Pearl", "Silver", "Ruby"], a: 2 },
+  // Q8 — Hard
+  { cat: "Science", diff: 3,
+    q: "What is the SI unit of electric conductance?",
+    opts: ["Ohm", "Siemens", "Farad", "Tesla"], a: 1 },
+  // Q9 — Expert
+  { cat: "History", diff: 4,
+    q: "Who was the Byzantine Emperor when Constantinople fell in 1453?",
+    opts: ["Justinian I", "Basil II", "Constantine XI", "Alexios I"], a: 2 },
+  // Q10 — Expert
+  { cat: "Literature", diff: 4,
+    q: "In Dante's 'Inferno', which sin is punished in the ninth (lowest) circle of Hell?",
+    opts: ["Heresy", "Violence", "Fraud", "Treachery"], a: 3 }
+];
+
+const DIFF_LABEL = { 1: "EASY", 2: "MEDIUM", 3: "HARD", 4: "EXPERT" };
+const DIFF_CLASS = { 1: "diff-easy", 2: "diff-medium", 3: "diff-hard", 4: "diff-expert" };
+const TIMER_SECONDS = 10;
+
+let state = {
+  index: 0,
+  correct: 0,
+  startTime: 0,
+  qStartTime: 0,
+  timerId: null,
+  answered: false,
+  blurCount: 0,
+  warningCount: 0,
+  fastAnswers: 0,
+  totalElapsed: 0,
+  ended: false
+};
+
+/* ========== ANTI-CHEAT ========== */
+function endByCheat(reason) {
+  if (state.ended) return;
+  state.ended = true;
+  clearInterval(state.timerId);
+  document.getElementById('cheatReason').textContent = reason;
+  show('cheat');
+}
+
+function warn(msg) {
+  state.warningCount++;
+  const w = document.getElementById('warning');
+  w.textContent = "⚠️ " + msg + " (Warning " + state.warningCount + "/2)";
+  w.classList.add('show');
+  setTimeout(() => w.classList.remove('show'), 3500);
+  if (state.warningCount >= 2) {
+    endByCheat("Multiple suspicious actions detected. Final trigger: " + msg);
+  }
+}
+
+// Tab/window focus loss — primary AI-help signal
+document.addEventListener('visibilitychange', () => {
+  if (!quizActive()) return;
+  if (document.hidden) {
+    state.blurCount++;
+    endByCheat("You switched away from the quiz window. (External lookup attempt detected.)");
+  }
+});
+
+window.addEventListener('blur', () => {
+  if (!quizActive()) return;
+  state.blurCount++;
+  if (state.blurCount >= 1) {
+    endByCheat("Window lost focus. External help is not allowed.");
+  }
+});
+
+// Copy / paste / cut
+['copy','cut','paste'].forEach(evt => {
+  document.addEventListener(evt, e => {
+    if (!quizActive()) return;
+    e.preventDefault();
+    endByCheat("Clipboard activity (" + evt + ") detected. Cheating prevention triggered.");
+  });
+});
+
+// Right-click
+document.addEventListener('contextmenu', e => {
+  if (!quizActive()) return;
+  e.preventDefault();
+  warn("Right-click is disabled during the quiz.");
+});
+
+// DevTools detection (size-diff heuristic + keyboard shortcut block)
+document.addEventListener('keydown', e => {
+  if (!quizActive()) return;
+  const k = e.key.toLowerCase();
+  // Block F12, Ctrl+Shift+I/J/C, Ctrl+U
+  if (e.key === 'F12' ||
+      (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(k)) ||
+      (e.ctrlKey && k === 'u')) {
+    e.preventDefault();
+    endByCheat("Developer tools shortcut blocked. (" + e.key + ")");
+  }
+});
+
+// Crude devtools-open detection via window dimensions
+setInterval(() => {
+  if (!quizActive()) return;
+  const widthDiff = window.outerWidth - window.innerWidth;
+  const heightDiff = window.outerHeight - window.innerHeight;
+  if (widthDiff > 200 || heightDiff > 250) {
+    endByCheat("Developer tools appear to be open. Close them and restart.");
+  }
+}, 1000);
+
+function quizActive() {
+  return !state.ended && document.getElementById('screen-quiz').classList.contains('active');
+}
+
+/* ========== GAME FLOW ========== */
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function startGame() {
+  state = {
+    index: 0, correct: 0, startTime: Date.now(), qStartTime: 0,
+    timerId: null, answered: false, blurCount: 0, warningCount: 0,
+    fastAnswers: 0, totalElapsed: 0, ended: false
+  };
+  show('quiz');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  state.answered = false;
+  const q = QUESTIONS[state.index];
+  document.getElementById('qnum').textContent = state.index + 1;
+  document.getElementById('prize').textContent = state.correct;
+  document.getElementById('progress').style.width = (state.correct * 10) + '%';
+  document.getElementById('category').textContent = q.cat.toUpperCase();
+  const diffEl = document.getElementById('difficulty');
+  diffEl.textContent = DIFF_LABEL[q.diff];
+  diffEl.className = 'difficulty-tag ' + DIFF_CLASS[q.diff];
+  document.getElementById('question').textContent = q.q;
+
+  const optsDiv = document.getElementById('options');
+  optsDiv.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = String.fromCharCode(65 + i) + ". " + opt;
+    btn.onclick = () => answer(i, btn);
+    optsDiv.appendChild(btn);
+  });
+
+  state.qStartTime = Date.now();
+  startTimer();
+}
+
+function startTimer() {
+  let remaining = TIMER_SECONDS;
+  document.getElementById('time').textContent = remaining;
+  document.getElementById('timerFill').style.width = '100%';
+  const startedAt = Date.now();
+  clearInterval(state.timerId);
+  state.timerId = setInterval(() => {
+    const elapsed = (Date.now() - startedAt) / 1000;
+    const left = Math.max(0, TIMER_SECONDS - elapsed);
+    document.getElementById('time').textContent = Math.ceil(left);
+    document.getElementById('timerFill').style.width = (left / TIMER_SECONDS * 100) + '%';
+    if (left <= 0) {
+      clearInterval(state.timerId);
+      if (!state.answered) answer(-1, null); // timeout = wrong
+    }
+  }, 100);
+}
+
+function answer(picked, btn) {
+  if (state.answered || state.ended) return;
+  state.answered = true;
+  clearInterval(state.timerId);
+
+  const q = QUESTIONS[state.index];
+  const elapsed = (Date.now() - state.qStartTime) / 1000;
+  state.totalElapsed += elapsed;
+
+  // Suspicious-timing check: too fast on hard/expert questions
+  // <1.5s on diff>=3 is implausible without lookup or prior knowledge
+  if (picked !== -1 && q.diff >= 3 && elapsed < 1.5) {
+    state.fastAnswers++;
+    if (state.fastAnswers >= 2) {
+      return endByCheat("Multiple sub-1.5s answers on hard questions — implausible without external help.");
+    } else {
+      warn("Answered a hard question in " + elapsed.toFixed(2) + "s — unusually fast.");
+    }
+  }
+
+  // Highlight buttons
+  const allBtns = document.querySelectorAll('.option');
+  allBtns.forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.a) b.classList.add('correct');
+    if (i === picked && picked !== q.a) b.classList.add('wrong');
+  });
+
+  if (picked === q.a) {
+    state.correct++;
+    document.getElementById('prize').textContent = state.correct;
+    document.getElementById('progress').style.width = (state.correct * 10) + '%';
+    setTimeout(() => {
+      state.index++;
+      if (state.index >= QUESTIONS.length) {
+        winGame();
+      } else {
+        renderQuestion();
+      }
+    }, 900);
+  } else {
+    setTimeout(() => {
+      const reason = picked === -1 ? "Time ran out!" : "Wrong answer!";
+      document.getElementById('loseReason').textContent = reason;
+      document.getElementById('loseScore').textContent = state.correct;
+      document.getElementById('correctAnswer').textContent =
+        "Correct answer was: " + q.opts[q.a];
+      show('lose');
+    }, 1100);
+  }
+}
+
+function winGame() {
+  const total = ((Date.now() - state.startTime) / 1000).toFixed(1);
+  const avg = (state.totalElapsed / 10).toFixed(1);
+  document.getElementById('winTime').textContent = total;
+  document.getElementById('winAvg').textContent = avg;
+  show('win');
+}
+</script>
+</body>
+</html>
