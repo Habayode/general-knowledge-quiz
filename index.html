@@ -24,7 +24,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     padding: 40px;
-    max-width: 700px;
+    max-width: 720px;
     width: 100%;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   }
@@ -37,6 +37,7 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+  h2 { text-align: center; margin-bottom: 20px; font-size: 22px; }
   .subtitle {
     text-align: center;
     color: #aaa;
@@ -144,11 +145,16 @@
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
-    margin-top: 20px;
+    margin: 10px 6px 0;
     font-family: inherit;
     transition: transform 0.2s;
   }
   .btn:hover { transform: scale(1.05); }
+  .btn-secondary {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
   .center { text-align: center; }
   .prize {
     font-size: 64px;
@@ -191,6 +197,55 @@
     font-family: monospace;
     color: #fca5a5;
   }
+  .name-input {
+    width: 100%;
+    padding: 14px;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    color: #fff;
+    font-size: 16px;
+    font-family: inherit;
+    margin: 12px 0;
+    text-align: center;
+  }
+  .name-input:focus { outline: none; border-color: #f7d774; }
+  .leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  .leaderboard-table th, .leaderboard-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .leaderboard-table th {
+    background: rgba(0,0,0,0.3);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+  }
+  .leaderboard-table tr:hover td { background: rgba(255,255,255,0.03); }
+  .lb-rank { font-weight: bold; color: #f7d774; width: 40px; }
+  .lb-row-1 td { background: rgba(247, 215, 116, 0.1); }
+  .lb-row-1 .lb-rank::before { content: "🥇 "; }
+  .lb-row-2 .lb-rank::before { content: "🥈 "; }
+  .lb-row-3 .lb-rank::before { content: "🥉 "; }
+  .lb-winner { color: #4ade80; font-weight: bold; }
+  .lb-empty {
+    text-align: center;
+    color: #666;
+    padding: 30px;
+    font-style: italic;
+  }
+  .info-row {
+    color: #888;
+    font-size: 13px;
+    margin-top: 4px;
+  }
 </style>
 </head>
 <body>
@@ -204,17 +259,18 @@
     <div class="rules">
       <strong>Rules</strong>
       <ul>
-        <li>10 questions across all spheres of life</li>
+        <li>10 random questions across all spheres of life</li>
         <li>10 seconds per question</li>
-        <li>Difficulty increases with each correct answer</li>
-        <li>One wrong answer ends the game</li>
-        <li>No external help allowed — cheating is auto-detected</li>
+        <li>Difficulty increases as you progress</li>
+        <li>One wrong answer (or timeout) ends the game</li>
+        <li>No external help — cheating is auto-detected</li>
       </ul>
     </div>
     <p style="color:#fca5a5; font-size:13px; margin-top:12px;">
       Tab-switching, devtools, copy-paste, and suspicious timing are monitored.
     </p>
     <button class="btn" onclick="startGame()">Start Challenge</button>
+    <button class="btn btn-secondary" onclick="showLeaderboard('start')">🏆 Leaderboard</button>
   </div>
 
   <!-- QUIZ SCREEN -->
@@ -244,24 +300,37 @@
     <div id="options" class="options"></div>
   </div>
 
+  <!-- NAME ENTRY -->
+  <div id="screen-name" class="screen center">
+    <h2 id="nameTitle">Save your score</h2>
+    <p style="color:#aaa;">Score: <span id="nameScore"></span>/10 · Prize: $<span id="namePrize"></span></p>
+    <input id="nameInput" class="name-input" type="text" placeholder="Enter your name" maxlength="20" autocomplete="off" />
+    <div>
+      <button class="btn" onclick="saveScore()">Save</button>
+      <button class="btn btn-secondary" onclick="skipSave()">Skip</button>
+    </div>
+  </div>
+
   <!-- WIN SCREEN -->
   <div id="screen-win" class="screen center">
     <h1>You Won!</h1>
     <div class="prize">$10</div>
     <p>You answered all 10 questions correctly.</p>
-    <p style="color:#888; margin-top:8px; font-size:14px;">
+    <p class="info-row">
       Total time: <span id="winTime"></span>s · Avg per question: <span id="winAvg"></span>s
     </p>
     <button class="btn" onclick="location.reload()">Play Again</button>
+    <button class="btn btn-secondary" onclick="showLeaderboard('win')">🏆 Leaderboard</button>
   </div>
 
   <!-- LOSE SCREEN -->
   <div id="screen-lose" class="screen center">
     <h1 style="background: linear-gradient(90deg,#ef4444,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Game Over</h1>
     <p style="margin: 20px 0; font-size: 18px;" id="loseReason">You got it wrong!</p>
-    <p style="color:#888;">You answered <span id="loseScore">0</span>/10 correctly.</p>
+    <p style="color:#888;">You answered <span id="loseScore">0</span>/10 correctly · Prize: $<span id="losePrize">0</span></p>
     <p id="correctAnswer" style="margin-top:16px; color:#4ade80; font-size:14px;"></p>
     <button class="btn" onclick="location.reload()">Try Again</button>
+    <button class="btn btn-secondary" onclick="showLeaderboard('lose')">🏆 Leaderboard</button>
   </div>
 
   <!-- CHEAT SCREEN -->
@@ -275,75 +344,157 @@
     <button class="btn" onclick="location.reload()">Restart</button>
   </div>
 
+  <!-- LEADERBOARD -->
+  <div id="screen-leaderboard" class="screen">
+    <h2>🏆 Leaderboard</h2>
+    <p style="color:#888; font-size:13px; text-align:center; margin-bottom:16px;">
+      Top 10 on this device · Ranked by correct answers, then by speed
+    </p>
+    <div id="leaderboardBody"></div>
+    <div class="center">
+      <button class="btn" onclick="goBack()">Back</button>
+      <button class="btn btn-secondary" onclick="clearLeaderboard()">Clear</button>
+    </div>
+  </div>
+
 </div>
 
 <script>
-/* ========== QUESTION BANK ==========
-   Difficulty 1 = easy, 4 = expert. Questions ordered by index in game. */
-const QUESTIONS = [
-  // Q1 — Easy
-  { cat: "Sport", diff: 1,
-    q: "How many players are on a standard soccer (football) team on the field?",
-    opts: ["9", "10", "11", "12"], a: 2 },
-  // Q2 — Easy
-  { cat: "Science", diff: 1,
-    q: "What gas do plants primarily absorb from the atmosphere for photosynthesis?",
-    opts: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"], a: 2 },
-  // Q3 — Easy/Medium
-  { cat: "Music", diff: 2,
-    q: "Which Beatles album features the song 'Come Together'?",
-    opts: ["Abbey Road", "Revolver", "Let It Be", "Sgt. Pepper's"], a: 0 },
-  // Q4 — Medium
-  { cat: "History", diff: 2,
-    q: "In which year did the Berlin Wall fall?",
-    opts: ["1987", "1989", "1991", "1993"], a: 1 },
-  // Q5 — Medium
-  { cat: "Religion", diff: 2,
-    q: "In Hinduism, who is known as the 'Destroyer' in the Trimurti?",
-    opts: ["Brahma", "Vishnu", "Shiva", "Indra"], a: 2 },
-  // Q6 — Hard
-  { cat: "Art", diff: 3,
-    q: "Which artist painted 'The Persistence of Memory' (the melting clocks)?",
-    opts: ["Pablo Picasso", "Salvador Dalí", "René Magritte", "Joan Miró"], a: 1 },
-  // Q7 — Hard
-  { cat: "Lifestyle", diff: 3,
-    q: "What is the traditional gift for a 25th wedding anniversary?",
-    opts: ["Gold", "Pearl", "Silver", "Ruby"], a: 2 },
-  // Q8 — Hard
-  { cat: "Science", diff: 3,
-    q: "What is the SI unit of electric conductance?",
-    opts: ["Ohm", "Siemens", "Farad", "Tesla"], a: 1 },
-  // Q9 — Expert
-  { cat: "History", diff: 4,
-    q: "Who was the Byzantine Emperor when Constantinople fell in 1453?",
-    opts: ["Justinian I", "Basil II", "Constantine XI", "Alexios I"], a: 2 },
-  // Q10 — Expert
-  { cat: "Literature", diff: 4,
-    q: "In Dante's 'Inferno', which sin is punished in the ninth (lowest) circle of Hell?",
-    opts: ["Heresy", "Violence", "Fraud", "Treachery"], a: 3 }
-];
+/* ========== QUESTION BANK ========== */
+const POOL = {
+  easy: [
+    { cat: "Sport", q: "How many players from one team are on a soccer pitch?", opts: ["9","10","11","12"], a: 2 },
+    { cat: "Science", q: "What gas do plants primarily absorb for photosynthesis?", opts: ["Oxygen","Nitrogen","Carbon Dioxide","Hydrogen"], a: 2 },
+    { cat: "Geography", q: "What is the capital of France?", opts: ["Lyon","Marseille","Paris","Nice"], a: 2 },
+    { cat: "Music", q: "How many strings does a standard guitar have?", opts: ["4","5","6","7"], a: 2 },
+    { cat: "Animals", q: "How many legs does a spider have?", opts: ["6","8","10","12"], a: 1 },
+    { cat: "History", q: "Who was the first President of the United States?", opts: ["Lincoln","Jefferson","Adams","Washington"], a: 3 },
+    { cat: "Food", q: "What is the main ingredient of guacamole?", opts: ["Tomato","Avocado","Pepper","Onion"], a: 1 },
+    { cat: "Movies", q: "In 'The Lion King', what is the villain's name?", opts: ["Mufasa","Scar","Zazu","Rafiki"], a: 1 },
+    { cat: "Religion", q: "How many testaments are in the Christian Bible?", opts: ["1","2","3","4"], a: 1 },
+    { cat: "Art", q: "What color do you get by mixing blue and yellow?", opts: ["Purple","Orange","Green","Brown"], a: 2 },
+    { cat: "Sport", q: "Which sport uses the terms 'love', 'deuce', and 'ace'?", opts: ["Golf","Tennis","Cricket","Badminton"], a: 1 },
+    { cat: "Lifestyle", q: "How many days are in a leap year?", opts: ["364","365","366","367"], a: 2 },
+    { cat: "Geography", q: "Which is the largest ocean on Earth?", opts: ["Atlantic","Indian","Arctic","Pacific"], a: 3 },
+    { cat: "Literature", q: "Who wrote the 'Harry Potter' book series?", opts: ["J.R.R. Tolkien","J.K. Rowling","C.S. Lewis","Roald Dahl"], a: 1 },
+    { cat: "Animals", q: "Which is the largest land mammal?", opts: ["Rhino","Hippo","Elephant","Giraffe"], a: 2 },
+    { cat: "Science", q: "How many planets are in our solar system?", opts: ["7","8","9","10"], a: 1 },
+    { cat: "Music", q: "Which instrument has 88 keys?", opts: ["Organ","Harp","Piano","Accordion"], a: 2 },
+    { cat: "Food", q: "Sushi is a traditional dish of which country?", opts: ["China","Korea","Japan","Thailand"], a: 2 },
+    { cat: "History", q: "In which country were the ancient pyramids of Giza built?", opts: ["Mexico","Egypt","Iraq","Sudan"], a: 1 },
+    { cat: "Sport", q: "How many rings appear on the Olympic flag?", opts: ["4","5","6","7"], a: 1 }
+  ],
+  medium: [
+    { cat: "History", q: "In which year did the Berlin Wall fall?", opts: ["1987","1989","1991","1993"], a: 1 },
+    { cat: "Religion", q: "In Hinduism, who is the 'Destroyer' in the Trimurti?", opts: ["Brahma","Vishnu","Shiva","Indra"], a: 2 },
+    { cat: "Music", q: "Which Beatles album features the song 'Come Together'?", opts: ["Abbey Road","Revolver","Let It Be","Sgt. Pepper's"], a: 0 },
+    { cat: "Science", q: "What is the chemical symbol for gold?", opts: ["Gd","Au","Ag","Go"], a: 1 },
+    { cat: "Geography", q: "What is the capital of Australia?", opts: ["Sydney","Melbourne","Canberra","Perth"], a: 2 },
+    { cat: "Sport", q: "How many points is a 'try' worth in rugby union?", opts: ["3","4","5","6"], a: 2 },
+    { cat: "Art", q: "Who painted the Mona Lisa?", opts: ["Michelangelo","Raphael","Donatello","Leonardo da Vinci"], a: 3 },
+    { cat: "Literature", q: "Who wrote the novel '1984'?", opts: ["Aldous Huxley","George Orwell","Ray Bradbury","H.G. Wells"], a: 1 },
+    { cat: "Movies", q: "Who directed 'Pulp Fiction'?", opts: ["Martin Scorsese","Quentin Tarantino","Steven Spielberg","David Fincher"], a: 1 },
+    { cat: "History", q: "Who was the first woman to fly solo across the Atlantic?", opts: ["Bessie Coleman","Amelia Earhart","Harriet Quimby","Jacqueline Cochran"], a: 1 },
+    { cat: "Science", q: "Which is the hardest natural substance on Earth?", opts: ["Quartz","Diamond","Granite","Titanium"], a: 1 },
+    { cat: "Music", q: "How many symphonies did Beethoven compose?", opts: ["7","8","9","10"], a: 2 },
+    { cat: "Religion", q: "Which of these is one of the Five Pillars of Islam?", opts: ["Eightfold Path","Hajj","Sacraments","Karma"], a: 1 },
+    { cat: "Lifestyle", q: "What is the traditional gift for a 25th wedding anniversary?", opts: ["Gold","Pearl","Silver","Ruby"], a: 2 },
+    { cat: "Food", q: "What is the national dish of Spain?", opts: ["Tapas","Paella","Gazpacho","Tortilla"], a: 1 },
+    { cat: "Geography", q: "Which river flows through Cairo?", opts: ["Tigris","Euphrates","Nile","Congo"], a: 2 },
+    { cat: "Sport", q: "Which country invented table tennis?", opts: ["China","Japan","England","France"], a: 2 },
+    { cat: "Science", q: "What part of the atom carries a negative charge?", opts: ["Proton","Neutron","Electron","Nucleus"], a: 2 },
+    { cat: "Animals", q: "What is a group of crows called?", opts: ["Flock","Herd","Murder","Pack"], a: 2 },
+    { cat: "History", q: "Which empire was ruled by Genghis Khan?", opts: ["Ottoman","Mongol","Persian","Roman"], a: 1 },
+    { cat: "Movies", q: "Which film features the line 'Here's looking at you, kid'?", opts: ["Gone with the Wind","Casablanca","Citizen Kane","The Maltese Falcon"], a: 1 },
+    { cat: "Literature", q: "Who wrote 'Pride and Prejudice'?", opts: ["Charlotte Brontë","Emily Brontë","Jane Austen","Mary Shelley"], a: 2 }
+  ],
+  hard: [
+    { cat: "Art", q: "Which artist painted 'The Persistence of Memory' (the melting clocks)?", opts: ["Pablo Picasso","Salvador Dalí","René Magritte","Joan Miró"], a: 1 },
+    { cat: "Science", q: "What is the SI unit of electric conductance?", opts: ["Ohm","Siemens","Farad","Tesla"], a: 1 },
+    { cat: "History", q: "In which year was the Treaty of Westphalia signed?", opts: ["1492","1588","1648","1715"], a: 2 },
+    { cat: "Music", q: "Who composed the opera 'La Traviata'?", opts: ["Verdi","Puccini","Wagner","Rossini"], a: 0 },
+    { cat: "Geography", q: "What is the capital of Mongolia?", opts: ["Astana","Ulaanbaatar","Tashkent","Bishkek"], a: 1 },
+    { cat: "Sport", q: "Which country won the first FIFA World Cup in 1930?", opts: ["Brazil","Italy","Argentina","Uruguay"], a: 3 },
+    { cat: "Religion", q: "Who founded Sikhism?", opts: ["Guru Gobind Singh","Guru Nanak","Guru Arjan","Guru Tegh Bahadur"], a: 1 },
+    { cat: "Literature", q: "Who wrote 'The Brothers Karamazov'?", opts: ["Tolstoy","Dostoevsky","Chekhov","Turgenev"], a: 1 },
+    { cat: "Science", q: "What is the approximate speed of light in a vacuum?", opts: ["3 × 10⁶ m/s","3 × 10⁷ m/s","3 × 10⁸ m/s","3 × 10⁹ m/s"], a: 2 },
+    { cat: "History", q: "The Hundred Years' War was fought between which two countries?", opts: ["England and France","Spain and Portugal","Russia and Sweden","Austria and Prussia"], a: 0 },
+    { cat: "Movies", q: "Which film won the Academy Award for Best Picture in 2020?", opts: ["1917","Joker","Parasite","Once Upon a Time in Hollywood"], a: 2 },
+    { cat: "Music", q: "Which language is Mozart's opera 'The Magic Flute' sung in?", opts: ["Italian","German","French","Latin"], a: 1 },
+    { cat: "Art", q: "Which art movement did Picasso and Braque co-found?", opts: ["Surrealism","Cubism","Impressionism","Expressionism"], a: 1 },
+    { cat: "Science", q: "Which scientist developed the laws of planetary motion?", opts: ["Galileo","Newton","Kepler","Copernicus"], a: 2 },
+    { cat: "Geography", q: "Which African country was formerly known as Abyssinia?", opts: ["Eritrea","Somalia","Ethiopia","Sudan"], a: 2 },
+    { cat: "Religion", q: "What is the Jewish day of rest called?", opts: ["Yom Kippur","Shabbat","Purim","Sukkot"], a: 1 },
+    { cat: "Literature", q: "In Greek mythology, who flew too close to the sun?", opts: ["Hermes","Icarus","Theseus","Perseus"], a: 1 },
+    { cat: "Sport", q: "In golf, what is a score of three under par on a single hole called?", opts: ["Birdie","Eagle","Albatross","Condor"], a: 2 },
+    { cat: "History", q: "Who was the longest-reigning British monarch before Elizabeth II?", opts: ["Victoria","George III","Henry VIII","Edward VII"], a: 0 },
+    { cat: "Science", q: "What is the most abundant gas in Earth's atmosphere?", opts: ["Oxygen","Nitrogen","Argon","Carbon Dioxide"], a: 1 }
+  ],
+  expert: [
+    { cat: "History", q: "Who was the Byzantine Emperor when Constantinople fell in 1453?", opts: ["Justinian I","Basil II","Constantine XI","Alexios I"], a: 2 },
+    { cat: "Literature", q: "In Dante's 'Inferno', which sin is punished in the ninth (lowest) circle of Hell?", opts: ["Heresy","Violence","Fraud","Treachery"], a: 3 },
+    { cat: "Science", q: "Heisenberg's uncertainty principle relates which two physical quantities?", opts: ["Energy and time","Position and momentum","Mass and velocity","Charge and spin"], a: 1 },
+    { cat: "Music", q: "Who composed 'The Rite of Spring' (1913)?", opts: ["Debussy","Ravel","Stravinsky","Schoenberg"], a: 2 },
+    { cat: "Geography", q: "What is the smallest country in the world by area?", opts: ["Monaco","San Marino","Vatican City","Liechtenstein"], a: 2 },
+    { cat: "Religion", q: "The Bhagavad Gita is part of which Hindu epic?", opts: ["Ramayana","Mahabharata","Vedas","Upanishads"], a: 1 },
+    { cat: "Art", q: "Who painted 'The Garden of Earthly Delights'?", opts: ["Hieronymus Bosch","Jan van Eyck","Pieter Bruegel","Albrecht Dürer"], a: 0 },
+    { cat: "History", q: "In which year was the Edict of Nantes issued?", opts: ["1517","1572","1598","1648"], a: 2 },
+    { cat: "Sport", q: "As of 2024, who is the only player to have won the Ballon d'Or eight times?", opts: ["Cristiano Ronaldo","Lionel Messi","Michel Platini","Johan Cruyff"], a: 1 },
+    { cat: "Science", q: "What is the atomic number of einsteinium?", opts: ["97","99","101","103"], a: 1 },
+    { cat: "Literature", q: "Who wrote the novel 'One Hundred Years of Solitude'?", opts: ["Mario Vargas Llosa","Gabriel García Márquez","Jorge Luis Borges","Pablo Neruda"], a: 1 },
+    { cat: "Music", q: "Which key is Beethoven's famous 5th Symphony in?", opts: ["C major","C minor","D minor","E♭ major"], a: 1 },
+    { cat: "Geography", q: "The Strait of Hormuz connects the Persian Gulf to which body of water?", opts: ["Red Sea","Gulf of Oman","Mediterranean Sea","Caspian Sea"], a: 1 },
+    { cat: "History", q: "Who was the last Tsar of Russia?", opts: ["Alexander III","Nicholas II","Peter III","Paul I"], a: 1 },
+    { cat: "Science", q: "Which particle mediates the strong nuclear force?", opts: ["Photon","Gluon","W boson","Graviton"], a: 1 },
+    { cat: "Art", q: "Which Dutch post-Impressionist famously cut off part of his own ear?", opts: ["Rembrandt","Vermeer","Van Gogh","Mondrian"], a: 2 },
+    { cat: "Religion", q: "What is the holy book of Zoroastrianism called?", opts: ["Tripitaka","Avesta","Tao Te Ching","Guru Granth Sahib"], a: 1 },
+    { cat: "Sport", q: "Which country has won the most men's Cricket World Cups (as of 2023)?", opts: ["India","Australia","West Indies","England"], a: 1 }
+  ]
+};
 
 const DIFF_LABEL = { 1: "EASY", 2: "MEDIUM", 3: "HARD", 4: "EXPERT" };
 const DIFF_CLASS = { 1: "diff-easy", 2: "diff-medium", 3: "diff-hard", 4: "diff-expert" };
 const TIMER_SECONDS = 10;
+const COMPOSITION = [
+  ...Array(2).fill('easy'),
+  ...Array(3).fill('medium'),
+  ...Array(3).fill('hard'),
+  ...Array(2).fill('expert')
+];
+const TIER_DIFF = { easy: 1, medium: 2, hard: 3, expert: 4 };
+const LB_KEY = 'gkq_leaderboard_v1';
 
-let state = {
-  index: 0,
-  correct: 0,
-  startTime: 0,
-  qStartTime: 0,
-  timerId: null,
-  answered: false,
-  blurCount: 0,
-  warningCount: 0,
-  fastAnswers: 0,
-  totalElapsed: 0,
-  ended: false
-};
+let state = null;
+let currentQuestions = [];
+let previousScreen = 'start';
+let pendingResult = null;
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildGameQuestions() {
+  const buckets = { easy: 0, medium: 0, hard: 0, expert: 0 };
+  COMPOSITION.forEach(t => buckets[t]++);
+  const picks = {};
+  for (const tier in buckets) {
+    picks[tier] = shuffle(POOL[tier]).slice(0, buckets[tier]);
+  }
+  const cursor = { easy: 0, medium: 0, hard: 0, expert: 0 };
+  return COMPOSITION.map(tier => {
+    const q = picks[tier][cursor[tier]++];
+    return { ...q, diff: TIER_DIFF[tier] };
+  });
+}
 
 /* ========== ANTI-CHEAT ========== */
 function endByCheat(reason) {
-  if (state.ended) return;
+  if (!state || state.ended) return;
   state.ended = true;
   clearInterval(state.timerId);
   document.getElementById('cheatReason').textContent = reason;
@@ -351,6 +502,7 @@ function endByCheat(reason) {
 }
 
 function warn(msg) {
+  if (!state) return;
   state.warningCount++;
   const w = document.getElementById('warning');
   w.textContent = "⚠️ " + msg + " (Warning " + state.warningCount + "/2)";
@@ -361,24 +513,18 @@ function warn(msg) {
   }
 }
 
-// Tab/window focus loss — primary AI-help signal
 document.addEventListener('visibilitychange', () => {
   if (!quizActive()) return;
   if (document.hidden) {
-    state.blurCount++;
     endByCheat("You switched away from the quiz window. (External lookup attempt detected.)");
   }
 });
 
 window.addEventListener('blur', () => {
   if (!quizActive()) return;
-  state.blurCount++;
-  if (state.blurCount >= 1) {
-    endByCheat("Window lost focus. External help is not allowed.");
-  }
+  endByCheat("Window lost focus. External help is not allowed.");
 });
 
-// Copy / paste / cut
 ['copy','cut','paste'].forEach(evt => {
   document.addEventListener(evt, e => {
     if (!quizActive()) return;
@@ -387,18 +533,15 @@ window.addEventListener('blur', () => {
   });
 });
 
-// Right-click
 document.addEventListener('contextmenu', e => {
   if (!quizActive()) return;
   e.preventDefault();
   warn("Right-click is disabled during the quiz.");
 });
 
-// DevTools detection (size-diff heuristic + keyboard shortcut block)
 document.addEventListener('keydown', e => {
   if (!quizActive()) return;
-  const k = e.key.toLowerCase();
-  // Block F12, Ctrl+Shift+I/J/C, Ctrl+U
+  const k = (e.key || '').toLowerCase();
   if (e.key === 'F12' ||
       (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(k)) ||
       (e.ctrlKey && k === 'u')) {
@@ -407,7 +550,6 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// Crude devtools-open detection via window dimensions
 setInterval(() => {
   if (!quizActive()) return;
   const widthDiff = window.outerWidth - window.innerWidth;
@@ -418,7 +560,7 @@ setInterval(() => {
 }, 1000);
 
 function quizActive() {
-  return !state.ended && document.getElementById('screen-quiz').classList.contains('active');
+  return state && !state.ended && document.getElementById('screen-quiz').classList.contains('active');
 }
 
 /* ========== GAME FLOW ========== */
@@ -430,16 +572,17 @@ function show(id) {
 function startGame() {
   state = {
     index: 0, correct: 0, startTime: Date.now(), qStartTime: 0,
-    timerId: null, answered: false, blurCount: 0, warningCount: 0,
+    timerId: null, answered: false, warningCount: 0,
     fastAnswers: 0, totalElapsed: 0, ended: false
   };
+  currentQuestions = buildGameQuestions();
   show('quiz');
   renderQuestion();
 }
 
 function renderQuestion() {
   state.answered = false;
-  const q = QUESTIONS[state.index];
+  const q = currentQuestions[state.index];
   document.getElementById('qnum').textContent = state.index + 1;
   document.getElementById('prize').textContent = state.correct;
   document.getElementById('progress').style.width = (state.correct * 10) + '%';
@@ -464,8 +607,7 @@ function renderQuestion() {
 }
 
 function startTimer() {
-  let remaining = TIMER_SECONDS;
-  document.getElementById('time').textContent = remaining;
+  document.getElementById('time').textContent = TIMER_SECONDS;
   document.getElementById('timerFill').style.width = '100%';
   const startedAt = Date.now();
   clearInterval(state.timerId);
@@ -476,7 +618,7 @@ function startTimer() {
     document.getElementById('timerFill').style.width = (left / TIMER_SECONDS * 100) + '%';
     if (left <= 0) {
       clearInterval(state.timerId);
-      if (!state.answered) answer(-1, null); // timeout = wrong
+      if (!state.answered) answer(-1, null);
     }
   }, 100);
 }
@@ -486,12 +628,10 @@ function answer(picked, btn) {
   state.answered = true;
   clearInterval(state.timerId);
 
-  const q = QUESTIONS[state.index];
+  const q = currentQuestions[state.index];
   const elapsed = (Date.now() - state.qStartTime) / 1000;
   state.totalElapsed += elapsed;
 
-  // Suspicious-timing check: too fast on hard/expert questions
-  // <1.5s on diff>=3 is implausible without lookup or prior knowledge
   if (picked !== -1 && q.diff >= 3 && elapsed < 1.5) {
     state.fastAnswers++;
     if (state.fastAnswers >= 2) {
@@ -501,9 +641,7 @@ function answer(picked, btn) {
     }
   }
 
-  // Highlight buttons
-  const allBtns = document.querySelectorAll('.option');
-  allBtns.forEach((b, i) => {
+  document.querySelectorAll('.option').forEach((b, i) => {
     b.disabled = true;
     if (i === q.a) b.classList.add('correct');
     if (i === picked && picked !== q.a) b.classList.add('wrong');
@@ -515,7 +653,7 @@ function answer(picked, btn) {
     document.getElementById('progress').style.width = (state.correct * 10) + '%';
     setTimeout(() => {
       state.index++;
-      if (state.index >= QUESTIONS.length) {
+      if (state.index >= currentQuestions.length) {
         winGame();
       } else {
         renderQuestion();
@@ -526,9 +664,10 @@ function answer(picked, btn) {
       const reason = picked === -1 ? "Time ran out!" : "Wrong answer!";
       document.getElementById('loseReason').textContent = reason;
       document.getElementById('loseScore').textContent = state.correct;
+      document.getElementById('losePrize').textContent = state.correct === 10 ? 10 : 0;
       document.getElementById('correctAnswer').textContent =
         "Correct answer was: " + q.opts[q.a];
-      show('lose');
+      promptForName('lose');
     }, 1100);
   }
 }
@@ -538,8 +677,112 @@ function winGame() {
   const avg = (state.totalElapsed / 10).toFixed(1);
   document.getElementById('winTime').textContent = total;
   document.getElementById('winAvg').textContent = avg;
-  show('win');
+  promptForName('win');
 }
+
+/* ========== LEADERBOARD ========== */
+function loadLB() {
+  try {
+    const raw = localStorage.getItem(LB_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+
+function saveLB(arr) {
+  try { localStorage.setItem(LB_KEY, JSON.stringify(arr)); } catch(e) {}
+}
+
+function promptForName(outcome) {
+  pendingResult = {
+    score: state.correct,
+    prize: state.correct === 10 ? 10 : 0,
+    won: state.correct === 10,
+    totalTime: parseFloat(((Date.now() - state.startTime) / 1000).toFixed(1)),
+    date: new Date().toISOString().slice(0, 10),
+    nextScreen: outcome
+  };
+  document.getElementById('nameTitle').textContent =
+    outcome === 'win' ? "🎉 You won $10! Save your score" : "Save your score";
+  document.getElementById('nameScore').textContent = pendingResult.score;
+  document.getElementById('namePrize').textContent = pendingResult.prize;
+  document.getElementById('nameInput').value = localStorage.getItem('gkq_last_name') || '';
+  show('name');
+  setTimeout(() => document.getElementById('nameInput').focus(), 100);
+}
+
+function saveScore() {
+  if (!pendingResult) return;
+  const name = (document.getElementById('nameInput').value || '').trim().slice(0, 20) || 'Anonymous';
+  localStorage.setItem('gkq_last_name', name);
+  const entry = { name, score: pendingResult.score, prize: pendingResult.prize,
+                  won: pendingResult.won, totalTime: pendingResult.totalTime, date: pendingResult.date };
+  const lb = loadLB();
+  lb.push(entry);
+  lb.sort((a, b) => b.score - a.score || a.totalTime - b.totalTime);
+  saveLB(lb.slice(0, 50));
+  const next = pendingResult.nextScreen;
+  pendingResult = null;
+  show(next);
+}
+
+function skipSave() {
+  if (!pendingResult) return;
+  const next = pendingResult.nextScreen;
+  pendingResult = null;
+  show(next);
+}
+
+function showLeaderboard(from) {
+  previousScreen = from || 'start';
+  renderLeaderboard();
+  show('leaderboard');
+}
+
+function renderLeaderboard() {
+  const lb = loadLB().slice(0, 10);
+  const body = document.getElementById('leaderboardBody');
+  if (lb.length === 0) {
+    body.innerHTML = '<div class="lb-empty">No scores yet. Be the first!</div>';
+    return;
+  }
+  let html = '<table class="leaderboard-table"><thead><tr>' +
+    '<th>#</th><th>Name</th><th>Score</th><th>Prize</th><th>Time</th><th>Date</th>' +
+    '</tr></thead><tbody>';
+  lb.forEach((e, i) => {
+    const rowClass = i < 3 ? 'lb-row-' + (i + 1) : '';
+    const nameClass = e.won ? 'lb-winner' : '';
+    html += '<tr class="' + rowClass + '">' +
+      '<td class="lb-rank">' + (i + 1) + '</td>' +
+      '<td class="' + nameClass + '">' + escapeHtml(e.name) + (e.won ? ' ⭐' : '') + '</td>' +
+      '<td>' + e.score + '/10</td>' +
+      '<td>$' + e.prize + '</td>' +
+      '<td>' + e.totalTime + 's</td>' +
+      '<td>' + e.date + '</td>' +
+      '</tr>';
+  });
+  html += '</tbody></table>';
+  body.innerHTML = html;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function goBack() { show(previousScreen); }
+
+function clearLeaderboard() {
+  if (confirm('Clear all leaderboard entries on this device?')) {
+    localStorage.removeItem(LB_KEY);
+    renderLeaderboard();
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('screen-name').classList.contains('active')) {
+    saveScore();
+  }
+});
 </script>
 </body>
 </html>
