@@ -1,0 +1,10 @@
+gkall.online, www.gkall.online {
+	encode gzip
+	reverse_proxy 127.0.0.1:8080
+	log {
+		output file C:/quiz/caddy.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+	}
+}

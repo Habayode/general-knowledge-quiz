@@ -463,6 +463,8 @@ const COMPOSITION = [
 ];
 const TIER_DIFF = { easy: 1, medium: 2, hard: 3, expert: 4 };
 const LB_KEY = 'gkq_leaderboard_v1';
+const API_BASE = ''; // same-origin; set to e.g. 'https://gkall.online' if hosting from a different origin
+let LB_MODE = 'local'; // 'global' if last fetch succeeded
 
 let state = null;
 let currentQuestions = [];
@@ -681,15 +683,42 @@ function winGame() {
 }
 
 /* ========== LEADERBOARD ========== */
-function loadLB() {
+function loadLocalLB() {
   try {
     const raw = localStorage.getItem(LB_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch (e) { return []; }
 }
 
-function saveLB(arr) {
+function saveLocalLB(arr) {
   try { localStorage.setItem(LB_KEY, JSON.stringify(arr)); } catch(e) {}
+}
+
+async function fetchGlobalLB() {
+  try {
+    const res = await fetch(API_BASE + '/api/leaderboard', { cache: 'no-store' });
+    if (!res.ok) throw new Error('http ' + res.status);
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('bad shape');
+    LB_MODE = 'global';
+    return data;
+  } catch (e) {
+    LB_MODE = 'local';
+    return null;
+  }
+}
+
+async function postGlobalScore(entry) {
+  try {
+    const res = await fetch(API_BASE + '/api/leaderboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry)
+    });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
 }
 
 function promptForName(outcome) {
@@ -710,16 +739,22 @@ function promptForName(outcome) {
   setTimeout(() => document.getElementById('nameInput').focus(), 100);
 }
 
-function saveScore() {
+async function saveScore() {
   if (!pendingResult) return;
   const name = (document.getElementById('nameInput').value || '').trim().slice(0, 20) || 'Anonymous';
   localStorage.setItem('gkq_last_name', name);
   const entry = { name, score: pendingResult.score, prize: pendingResult.prize,
                   won: pendingResult.won, totalTime: pendingResult.totalTime, date: pendingResult.date };
-  const lb = loadLB();
+  // Always save locally
+  const lb = loadLocalLB();
   lb.push(entry);
   lb.sort((a, b) => b.score - a.score || a.totalTime - b.totalTime);
-  saveLB(lb.slice(0, 50));
+  saveLocalLB(lb.slice(0, 50));
+  // Try global submit (fire-and-forget)
+  postGlobalScore({
+    name, score: entry.score, prize: entry.prize,
+    won: entry.won, totalTime: entry.totalTime
+  });
   const next = pendingResult.nextScreen;
   pendingResult = null;
   show(next);
@@ -732,23 +767,30 @@ function skipSave() {
   show(next);
 }
 
-function showLeaderboard(from) {
+async function showLeaderboard(from) {
   previousScreen = from || 'start';
-  renderLeaderboard();
   show('leaderboard');
+  document.getElementById('leaderboardBody').innerHTML =
+    '<div class="lb-empty">Loading…</div>';
+  await renderLeaderboard();
 }
 
-function renderLeaderboard() {
-  const lb = loadLB().slice(0, 10);
+async function renderLeaderboard() {
+  // Try global first
+  const global = await fetchGlobalLB();
+  const list = (global && global.length ? global : loadLocalLB()).slice(0, 10);
   const body = document.getElementById('leaderboardBody');
-  if (lb.length === 0) {
-    body.innerHTML = '<div class="lb-empty">No scores yet. Be the first!</div>';
+  const modeLabel = LB_MODE === 'global'
+    ? '<div style="text-align:center;color:#4ade80;font-size:12px;margin-bottom:8px;">🌍 Global Leaderboard</div>'
+    : '<div style="text-align:center;color:#f7d774;font-size:12px;margin-bottom:8px;">📱 Local Leaderboard (offline)</div>';
+  if (list.length === 0) {
+    body.innerHTML = modeLabel + '<div class="lb-empty">No scores yet. Be the first!</div>';
     return;
   }
-  let html = '<table class="leaderboard-table"><thead><tr>' +
+  let html = modeLabel + '<table class="leaderboard-table"><thead><tr>' +
     '<th>#</th><th>Name</th><th>Score</th><th>Prize</th><th>Time</th><th>Date</th>' +
     '</tr></thead><tbody>';
-  lb.forEach((e, i) => {
+  list.forEach((e, i) => {
     const rowClass = i < 3 ? 'lb-row-' + (i + 1) : '';
     const nameClass = e.won ? 'lb-winner' : '';
     html += '<tr class="' + rowClass + '">' +
@@ -757,7 +799,7 @@ function renderLeaderboard() {
       '<td>' + e.score + '/10</td>' +
       '<td>$' + e.prize + '</td>' +
       '<td>' + e.totalTime + 's</td>' +
-      '<td>' + e.date + '</td>' +
+      '<td>' + (e.date || '') + '</td>' +
       '</tr>';
   });
   html += '</tbody></table>';
