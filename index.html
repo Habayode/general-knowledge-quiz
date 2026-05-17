@@ -2,829 +2,925 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>$10 General Knowledge Challenge</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>gkall — Win $10 USDT for 10 correct answers</title>
+<meta name="description" content="A general-knowledge skill challenge. Answer 10 questions correctly under a 10-second timer per question and win $10 USDT (TRC20). Sponsored, anti-cheat verified, transparent leaderboard." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    color: #fff;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    user-select: none;
-    -webkit-user-select: none;
+  :root {
+    --bg-0:#06070d; --bg-1:#0b0f1f; --bg-2:#111733;
+    --card:rgba(255,255,255,0.04); --card-2:rgba(255,255,255,0.06);
+    --border:rgba(255,255,255,0.08); --border-2:rgba(255,255,255,0.14);
+    --text:#e6e7ec; --muted:#8a90a6; --dim:#5b6178;
+    --accent:#f5c451; --accent-2:#ffae3a; --accent-soft:rgba(245,196,81,0.12);
+    --green:#34d399; --red:#f87171; --blue:#60a5fa; --purple:#c084fc;
+    --maxw:1180px;
   }
-  .container {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    padding: 40px;
-    max-width: 720px;
-    width: 100%;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:var(--bg-0); color:var(--text); line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
   }
-  h1 {
-    text-align: center;
-    font-size: 28px;
-    margin-bottom: 8px;
-    background: linear-gradient(90deg, #f7d774, #ffb347);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  body::before{
+    content:""; position:fixed; inset:0; z-index:-1;
+    background:
+      radial-gradient(60% 50% at 80% 0%, rgba(245,196,81,0.10), transparent 60%),
+      radial-gradient(50% 40% at 0% 40%, rgba(96,165,250,0.10), transparent 60%),
+      linear-gradient(180deg,#06070d 0%, #0b0f1f 70%, #06070d 100%);
   }
-  h2 { text-align: center; margin-bottom: 20px; font-size: 22px; }
-  .subtitle {
-    text-align: center;
-    color: #aaa;
-    font-size: 14px;
-    margin-bottom: 30px;
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer}
+  h1,h2,h3,h4{font-family:'Space Grotesk','Inter',sans-serif;letter-spacing:-0.02em;line-height:1.15}
+  h1{font-size:clamp(2rem,5vw,3.4rem);font-weight:700}
+  h2{font-size:clamp(1.5rem,3.5vw,2.2rem);font-weight:700;margin-bottom:0.5em}
+  h3{font-size:1.15rem;font-weight:600;margin-bottom:0.4em}
+  .container{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  .gold{
+    background:linear-gradient(135deg,#f5c451 0%, #ffae3a 60%, #f59e0b 100%);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
   }
-  .hud {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    padding: 16px;
-    background: rgba(0,0,0,0.3);
-    border-radius: 12px;
+  .center{text-align:center}
+  .muted{color:var(--muted)}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:var(--card);border:1px solid var(--border);font-size:0.85rem;font-weight:500;color:var(--muted)}
+  .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green)}
+
+  /* ===== Header ===== */
+  header{
+    position:sticky;top:0;z-index:100;
+    backdrop-filter:blur(14px);
+    background:rgba(6,7,13,0.7);
+    border-bottom:1px solid var(--border);
   }
-  .hud-item { text-align: center; flex: 1; }
-  .hud-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-  .hud-value { font-size: 22px; font-weight: bold; margin-top: 4px; }
-  .progress-bar {
-    height: 6px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 3px;
-    overflow: hidden;
-    margin-bottom: 20px;
+  .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk';font-weight:700;font-size:1.15rem}
+  .brand-mark{
+    width:32px;height:32px;border-radius:8px;
+    background:linear-gradient(135deg,#f5c451,#f59e0b);
+    display:flex;align-items:center;justify-content:center;
+    color:#0b0f1f;font-weight:800;font-size:0.95rem;
+    box-shadow:0 6px 24px rgba(245,196,81,0.35);
   }
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #4ade80, #22d3ee);
-    width: 0%;
-    transition: width 0.3s ease;
+  .nav-links{display:flex;gap:6px;align-items:center}
+  .nav-links a{
+    padding:8px 14px;border-radius:8px;color:var(--muted);font-weight:500;font-size:0.92rem;
+    transition:all 0.15s;
   }
-  .timer-bar {
-    height: 8px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 24px;
+  .nav-links a:hover{color:var(--text);background:var(--card)}
+  .nav-links a.active{color:var(--accent);background:var(--accent-soft)}
+  @media (max-width:700px){
+    .nav-links a{padding:6px 10px;font-size:0.85rem}
+    .nav-links a span.lbl{display:none}
   }
-  .timer-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #4ade80, #facc15, #ef4444);
-    width: 100%;
-    transition: width 0.1s linear;
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:11px 22px;border:none;border-radius:10px;
+    font-weight:600;font-size:0.95rem;
+    transition:transform 0.15s, box-shadow 0.15s, background 0.15s;
   }
-  .category-tag {
-    display: inline-block;
-    padding: 4px 12px;
-    background: rgba(247, 215, 116, 0.2);
-    color: #f7d774;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    letter-spacing: 0.5px;
+  .btn-primary{
+    background:linear-gradient(135deg,#f5c451,#ffae3a);
+    color:#0b0f1f;
+    box-shadow:0 8px 24px rgba(245,196,81,0.25);
   }
-  .difficulty-tag {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 16px;
-    margin-left: 8px;
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 12px 32px rgba(245,196,81,0.35)}
+  .btn-ghost{background:var(--card);border:1px solid var(--border);color:var(--text)}
+  .btn-ghost:hover{background:var(--card-2);border-color:var(--border-2)}
+  .btn-big{padding:16px 32px;font-size:1.05rem;border-radius:12px}
+
+  /* ===== Views ===== */
+  .view{display:none;padding:40px 0 80px}
+  .view.active{display:block;animation:fadeIn 0.3s}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* ===== Hero ===== */
+  .hero{padding:60px 0 40px}
+  .hero-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:48px;align-items:center}
+  @media (max-width:900px){.hero-grid{grid-template-columns:1fr;gap:32px}}
+  .hero h1 span.prize{font-size:1.1em}
+  .hero p.lede{color:var(--muted);font-size:1.1rem;margin:18px 0 30px;max-width:560px}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+  .hero-meta{display:flex;gap:18px;flex-wrap:wrap;margin-top:26px;color:var(--muted);font-size:0.88rem}
+  .hero-meta .icon{color:var(--accent)}
+
+  .hero-card{
+    background:linear-gradient(160deg,rgba(245,196,81,0.06),rgba(255,255,255,0.03));
+    border:1px solid var(--border);border-radius:20px;padding:30px;
+    position:relative;overflow:hidden;
   }
-  .diff-easy { background: rgba(74,222,128,0.2); color: #4ade80; }
-  .diff-medium { background: rgba(250,204,21,0.2); color: #facc15; }
-  .diff-hard { background: rgba(239,68,68,0.2); color: #ef4444; }
-  .diff-expert { background: rgba(168,85,247,0.2); color: #a855f7; }
-  .question {
-    font-size: 20px;
-    line-height: 1.5;
-    margin-bottom: 24px;
-    min-height: 60px;
+  .hero-card::before{
+    content:""; position:absolute; inset:-1px; border-radius:20px; padding:1px;
+    background:linear-gradient(135deg,rgba(245,196,81,0.5),transparent 40%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude;
+    pointer-events:none;
   }
-  .options { display: grid; gap: 12px; }
-  .option {
-    padding: 16px 20px;
-    background: rgba(255,255,255,0.05);
-    border: 2px solid rgba(255,255,255,0.1);
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 16px;
-    color: #fff;
-    text-align: left;
-    transition: all 0.2s;
-    font-family: inherit;
+  .prize-amount{font-family:'Space Grotesk';font-size:5.2rem;font-weight:700;line-height:1;margin:8px 0}
+  .prize-label{color:var(--muted);font-size:0.85rem;letter-spacing:0.1em;text-transform:uppercase}
+  .prize-sub{margin-top:10px;color:var(--muted);font-size:0.95rem}
+  .prize-row{display:flex;align-items:baseline;gap:12px;margin-top:14px}
+  .chip{padding:4px 10px;border-radius:6px;background:rgba(52,211,153,0.12);color:var(--green);font-size:0.75rem;font-weight:600;letter-spacing:0.05em}
+
+  /* ===== Stats ===== */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:40px 0}
+  @media (max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{
+    background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;
   }
-  .option:hover:not(:disabled) {
-    background: rgba(255,255,255,0.1);
-    border-color: rgba(255,255,255,0.3);
-    transform: translateX(4px);
+  .stat .v{font-family:'Space Grotesk';font-size:1.7rem;font-weight:700}
+  .stat .l{color:var(--muted);font-size:0.8rem;margin-top:4px}
+
+  /* ===== How it works ===== */
+  .section{padding:50px 0}
+  .section .header-row{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media (max-width:800px){.cards{grid-template-columns:1fr}}
+  .card{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;
+    transition:transform 0.2s, border-color 0.2s;
   }
-  .option:disabled { cursor: not-allowed; opacity: 0.6; }
-  .option.correct { background: rgba(74,222,128,0.3); border-color: #4ade80; }
-  .option.wrong { background: rgba(239,68,68,0.3); border-color: #ef4444; }
-  .screen { display: none; }
-  .screen.active { display: block; }
-  .btn {
-    display: inline-block;
-    padding: 14px 32px;
-    background: linear-gradient(90deg, #f7d774, #ffb347);
-    color: #1a1a2e;
-    border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    margin: 10px 6px 0;
-    font-family: inherit;
-    transition: transform 0.2s;
+  .card:hover{transform:translateY(-2px);border-color:var(--border-2)}
+  .card .step{
+    display:inline-flex;width:32px;height:32px;align-items:center;justify-content:center;
+    border-radius:8px;background:var(--accent-soft);color:var(--accent);
+    font-weight:700;font-size:0.9rem;margin-bottom:14px;
   }
-  .btn:hover { transform: scale(1.05); }
-  .btn-secondary {
-    background: rgba(255,255,255,0.1);
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.2);
+  .card p{color:var(--muted);font-size:0.95rem}
+
+  /* ===== Quiz ===== */
+  .quiz-wrap{max-width:760px;margin:0 auto}
+  .hud{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+  .hud-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+  .hud-l{font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em}
+  .hud-v{font-family:'Space Grotesk';font-size:1.6rem;font-weight:700;margin-top:6px}
+  .hud-v.acc{color:var(--accent)}
+  .bar{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-bottom:10px}
+  .bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));width:0%;transition:width 0.4s}
+  .tbar{height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;margin-bottom:20px}
+  .tbar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--accent),var(--red));width:100%;transition:width 0.1s linear}
+  .qtags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .tag{padding:5px 12px;border-radius:999px;font-size:0.72rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase}
+  .tag-cat{background:var(--accent-soft);color:var(--accent)}
+  .tag-d1{background:rgba(52,211,153,0.15);color:var(--green)}
+  .tag-d2{background:rgba(245,196,81,0.15);color:var(--accent)}
+  .tag-d3{background:rgba(248,113,113,0.15);color:var(--red)}
+  .tag-d4{background:rgba(192,132,252,0.15);color:var(--purple)}
+  .question{font-size:1.35rem;line-height:1.5;margin-bottom:24px;min-height:80px;font-weight:500}
+  .opts{display:grid;gap:12px}
+  .opt{
+    background:var(--card);border:2px solid var(--border);border-radius:12px;
+    padding:16px 20px;color:var(--text);font-size:1rem;text-align:left;
+    transition:all 0.15s;display:flex;align-items:center;gap:14px;
   }
-  .center { text-align: center; }
-  .prize {
-    font-size: 64px;
-    font-weight: bold;
-    margin: 20px 0;
-    background: linear-gradient(90deg, #f7d774, #ffb347);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  .opt:hover:not(:disabled){background:var(--card-2);border-color:var(--border-2);transform:translateX(4px)}
+  .opt:disabled{cursor:not-allowed;opacity:0.85}
+  .opt-letter{
+    flex:0 0 28px;height:28px;border-radius:8px;background:rgba(255,255,255,0.06);
+    display:flex;align-items:center;justify-content:center;font-weight:600;font-size:0.9rem;color:var(--muted);
   }
-  .rules {
-    text-align: left;
-    background: rgba(0,0,0,0.3);
-    padding: 20px;
-    border-radius: 12px;
-    margin: 20px 0;
-    font-size: 14px;
-    line-height: 1.8;
+  .opt.correct{background:rgba(52,211,153,0.18);border-color:var(--green)}
+  .opt.correct .opt-letter{background:var(--green);color:#06070d}
+  .opt.wrong{background:rgba(248,113,113,0.18);border-color:var(--red)}
+  .opt.wrong .opt-letter{background:var(--red);color:#06070d}
+
+  .warning{
+    background:rgba(248,113,113,0.12);border:1px solid var(--red);
+    color:#fecaca;padding:12px 16px;border-radius:10px;margin-bottom:14px;font-size:0.88rem;display:none;
   }
-  .rules li { margin-left: 20px; margin-bottom: 4px; }
-  .warning-banner {
-    background: rgba(239,68,68,0.2);
-    border: 1px solid #ef4444;
-    color: #fecaca;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    font-size: 13px;
-    text-align: center;
-    display: none;
+  .warning.show{display:block;animation:fadeIn 0.2s}
+
+  /* ===== Result panels ===== */
+  .panel{
+    max-width:620px;margin:30px auto;
+    background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px;text-align:center;
   }
-  .warning-banner.show { display: block; }
-  .cheat-screen { text-align: center; }
-  .cheat-screen h2 { color: #ef4444; font-size: 32px; margin-bottom: 16px; }
-  .cheat-reason {
-    background: rgba(0,0,0,0.4);
-    padding: 16px;
-    border-radius: 8px;
-    margin: 16px 0;
-    font-family: monospace;
-    color: #fca5a5;
+  .panel-trophy{font-size:64px;margin-bottom:8px}
+  .panel-prize{font-family:'Space Grotesk';font-size:3.5rem;font-weight:700;margin:14px 0}
+  .panel-meta{color:var(--muted);font-size:0.9rem;margin-top:6px}
+  .panel-actions{display:flex;justify-content:center;gap:10px;margin-top:24px;flex-wrap:wrap}
+
+  /* ===== Leaderboard ===== */
+  .lb-table{width:100%;border-collapse:separate;border-spacing:0;font-size:0.92rem;
+    background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+  .lb-table th{background:rgba(0,0,0,0.3);text-align:left;padding:14px 16px;font-size:0.75rem;
+    color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:600}
+  .lb-table td{padding:14px 16px;border-top:1px solid var(--border)}
+  .lb-table tr:hover td{background:rgba(255,255,255,0.02)}
+  .lb-rank{font-family:'Space Grotesk';font-weight:700;color:var(--accent);width:60px}
+  .lb-row-1 td{background:rgba(245,196,81,0.07)}
+  .lb-row-2 td{background:rgba(192,132,252,0.04)}
+  .lb-row-3 td{background:rgba(96,165,250,0.04)}
+  .lb-winner{color:var(--green);font-weight:600}
+  .lb-empty{text-align:center;color:var(--dim);padding:50px 20px;font-style:italic}
+  .mode-badge{display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--muted);margin-bottom:12px;
+    padding:4px 10px;border-radius:6px;background:var(--card);border:1px solid var(--border)}
+  .mode-badge.online .dot{background:var(--green)}
+  .mode-badge.offline .dot{background:var(--red)}
+  .mode-badge .dot{width:7px;height:7px;border-radius:50%}
+
+  /* ===== Sponsor ===== */
+  .sponsor-grid{display:grid;grid-template-columns:1.2fr 0.8fr;gap:32px;align-items:start}
+  @media (max-width:900px){.sponsor-grid{grid-template-columns:1fr}}
+  .wallet-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:18px}
+  .wallet-label{font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px}
+  .wallet-addr{font-family:'Courier New',monospace;font-size:0.92rem;color:var(--text);word-break:break-all;
+    background:rgba(0,0,0,0.3);padding:14px;border-radius:8px;border:1px solid var(--border)}
+  .net-row{display:flex;gap:18px;color:var(--muted);font-size:0.88rem;margin:14px 0}
+  .net-row b{color:var(--text)}
+  .qr-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;text-align:center}
+  .qr-card img{width:100%;max-width:240px;background:white;border-radius:10px;padding:8px}
+  .copy-row{display:flex;gap:8px;margin-top:10px}
+  .copy-row .btn{flex:1}
+
+  /* ===== Claim form ===== */
+  .form-row{margin-bottom:16px}
+  .form-row label{display:block;font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;font-weight:600}
+  .form-row input, .form-row textarea{
+    width:100%;padding:13px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;
+    color:var(--text);font-family:inherit;font-size:0.95rem;
   }
-  .name-input {
-    width: 100%;
-    padding: 14px;
-    background: rgba(255,255,255,0.08);
-    border: 2px solid rgba(255,255,255,0.15);
-    border-radius: 10px;
-    color: #fff;
-    font-size: 16px;
-    font-family: inherit;
-    margin: 12px 0;
-    text-align: center;
-  }
-  .name-input:focus { outline: none; border-color: #f7d774; }
-  .leaderboard-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 16px 0;
-    font-size: 14px;
-  }
-  .leaderboard-table th, .leaderboard-table td {
-    padding: 10px 12px;
-    text-align: left;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-  }
-  .leaderboard-table th {
-    background: rgba(0,0,0,0.3);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #888;
-  }
-  .leaderboard-table tr:hover td { background: rgba(255,255,255,0.03); }
-  .lb-rank { font-weight: bold; color: #f7d774; width: 40px; }
-  .lb-row-1 td { background: rgba(247, 215, 116, 0.1); }
-  .lb-row-1 .lb-rank::before { content: "🥇 "; }
-  .lb-row-2 .lb-rank::before { content: "🥈 "; }
-  .lb-row-3 .lb-rank::before { content: "🥉 "; }
-  .lb-winner { color: #4ade80; font-weight: bold; }
-  .lb-empty {
-    text-align: center;
-    color: #666;
-    padding: 30px;
-    font-style: italic;
-  }
-  .info-row {
-    color: #888;
-    font-size: 13px;
-    margin-top: 4px;
-  }
+  .form-row input:focus, .form-row textarea:focus{outline:none;border-color:var(--accent)}
+  .form-row .hint{font-size:0.8rem;color:var(--dim);margin-top:6px}
+  .form-err{background:rgba(248,113,113,0.12);border:1px solid var(--red);color:#fecaca;padding:10px 14px;border-radius:8px;margin:12px 0;font-size:0.88rem;display:none}
+  .form-err.show{display:block}
+  .form-ok{background:rgba(52,211,153,0.12);border:1px solid var(--green);color:#a7f3d0;padding:10px 14px;border-radius:8px;margin:12px 0;font-size:0.88rem;display:none}
+  .form-ok.show{display:block}
+
+  /* ===== FAQ ===== */
+  .faq{display:grid;gap:10px;max-width:780px;margin:0 auto}
+  details{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px}
+  details[open]{border-color:var(--border-2)}
+  details summary{cursor:pointer;font-weight:600;list-style:none}
+  details summary::after{content:"+";float:right;font-weight:300;font-size:1.4rem;line-height:1;color:var(--accent);transition:transform 0.2s}
+  details[open] summary::after{transform:rotate(45deg)}
+  details p{color:var(--muted);margin-top:10px;font-size:0.95rem}
+
+  /* ===== Footer ===== */
+  footer{border-top:1px solid var(--border);margin-top:40px;padding:30px 0;color:var(--muted);font-size:0.85rem}
+  .foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
+  .foot a:hover{color:var(--accent)}
 </style>
 </head>
 <body>
-<div class="container">
 
-  <!-- START SCREEN -->
-  <div id="screen-start" class="screen active center">
-    <h1>$10 General Knowledge Challenge</h1>
-    <p class="subtitle">Answer 10 questions correctly. Win $10.</p>
-    <div class="prize">$10</div>
-    <div class="rules">
-      <strong>Rules</strong>
-      <ul>
-        <li>10 random questions across all spheres of life</li>
-        <li>10 seconds per question</li>
-        <li>Difficulty increases as you progress</li>
-        <li>One wrong answer (or timeout) ends the game</li>
-        <li>No external help — cheating is auto-detected</li>
-      </ul>
+<header>
+  <div class="container nav">
+    <a href="#home" class="brand">
+      <div class="brand-mark">G</div>
+      <span>gkall<span style="color:var(--muted);font-weight:400">.online</span></span>
+    </a>
+    <nav class="nav-links">
+      <a href="#home" data-view="home"><span class="lbl">Home</span></a>
+      <a href="#play" data-view="play"><span class="lbl">Play</span></a>
+      <a href="#leaderboard" data-view="leaderboard"><span class="lbl">Leaderboard</span></a>
+      <a href="#sponsor" data-view="sponsor"><span class="lbl">Sponsor</span></a>
+      <a href="#how" data-view="how"><span class="lbl">FAQ</span></a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ HOME ============ -->
+<section id="view-home" class="view active">
+  <div class="container hero">
+    <div class="hero-grid">
+      <div>
+        <span class="pill"><span class="dot"></span> Live · Global leaderboard</span>
+        <h1 style="margin-top:20px">Test your knowledge.<br><span class="gold">Win $10 USDT.</span></h1>
+        <p class="lede">A skill-based general-knowledge challenge. Answer 10 questions correctly under a 10-second timer per question and claim your prize in USDT on the Tron network. No accounts. No tricks. Just brains.</p>
+        <div class="hero-cta">
+          <button class="btn btn-primary btn-big" onclick="go('play')">Start Challenge →</button>
+          <button class="btn btn-ghost btn-big" onclick="go('how')">How it works</button>
+        </div>
+        <div class="hero-meta">
+          <span><span class="icon">●</span> 10 questions per round</span>
+          <span><span class="icon">●</span> 10 seconds per question</span>
+          <span><span class="icon">●</span> Anti-cheat enforced</span>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="prize-label">Current jackpot</div>
+        <div class="prize-amount gold">$10</div>
+        <div class="prize-row">
+          <span class="chip">USDT · TRC20</span>
+          <span class="muted" style="font-size:0.9rem">Sponsored payout</span>
+        </div>
+        <div class="prize-sub">Awarded per 10/10 round. Funded by sponsors and verified by manual review.</div>
+      </div>
     </div>
-    <p style="color:#fca5a5; font-size:13px; margin-top:12px;">
-      Tab-switching, devtools, copy-paste, and suspicious timing are monitored.
-    </p>
-    <button class="btn" onclick="startGame()">Start Challenge</button>
-    <button class="btn btn-secondary" onclick="showLeaderboard('start')">🏆 Leaderboard</button>
+
+    <div class="stats">
+      <div class="stat"><div class="v" id="st-plays">—</div><div class="l">Total plays</div></div>
+      <div class="stat"><div class="v" id="st-winners">—</div><div class="l">Winners</div></div>
+      <div class="stat"><div class="v" id="st-paid">$<span id="st-paid-n">—</span></div><div class="l">Paid out (USDT)</div></div>
+      <div class="stat"><div class="v" id="st-questions">—</div><div class="l">Questions in pool</div></div>
+    </div>
   </div>
 
-  <!-- QUIZ SCREEN -->
-  <div id="screen-quiz" class="screen">
-    <div id="warning" class="warning-banner"></div>
-    <div class="hud">
-      <div class="hud-item">
-        <div class="hud-label">Question</div>
-        <div class="hud-value"><span id="qnum">1</span>/10</div>
-      </div>
-      <div class="hud-item">
-        <div class="hud-label">Prize</div>
-        <div class="hud-value" style="color:#f7d774;">$<span id="prize">0</span></div>
-      </div>
-      <div class="hud-item">
-        <div class="hud-label">Time</div>
-        <div class="hud-value" id="time">10</div>
+  <div class="container section">
+    <div class="header-row">
+      <div>
+        <h2>How it works</h2>
+        <p class="muted">Three steps. No registration.</p>
       </div>
     </div>
-    <div class="progress-bar"><div id="progress" class="progress-fill"></div></div>
-    <div class="timer-bar"><div id="timerFill" class="timer-fill"></div></div>
+    <div class="cards">
+      <div class="card">
+        <div class="step">1</div>
+        <h3>Answer 10 questions</h3>
+        <p>Random draws across Sport, Science, History, Religion, Art, Music, Geography, Literature, and more. Difficulty rises as you progress.</p>
+      </div>
+      <div class="card">
+        <div class="step">2</div>
+        <h3>Beat the clock</h3>
+        <p>10 seconds per question. Switching tabs, opening devtools, copy-paste, or implausibly fast answers end the round. Skill only.</p>
+      </div>
+      <div class="card">
+        <div class="step">3</div>
+        <h3>Claim $10 USDT</h3>
+        <p>Hit 10/10 and submit your Tron (TRC20) wallet. Each claim is reviewed manually and paid from the sponsorship pool.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PLAY ============ -->
+<section id="view-play" class="view">
+  <div class="container">
+    <div class="quiz-wrap">
+      <div id="warning" class="warning"></div>
+
+      <div id="quiz-active" style="display:none">
+        <div class="hud">
+          <div class="hud-item"><div class="hud-l">Question</div><div class="hud-v"><span id="qnum">1</span>/10</div></div>
+          <div class="hud-item"><div class="hud-l">Prize so far</div><div class="hud-v acc">$<span id="prize">0</span></div></div>
+          <div class="hud-item"><div class="hud-l">Time</div><div class="hud-v" id="time">10</div></div>
+        </div>
+        <div class="bar"><div class="bar-fill" id="progress"></div></div>
+        <div class="tbar"><div class="tbar-fill" id="timerFill"></div></div>
+        <div class="qtags">
+          <span class="tag tag-cat" id="cat">CATEGORY</span>
+          <span class="tag tag-d1" id="diff">EASY</span>
+        </div>
+        <div class="question" id="question">Loading…</div>
+        <div class="opts" id="options"></div>
+      </div>
+
+      <div id="quiz-intro" class="panel">
+        <h2>Ready to play?</h2>
+        <p class="muted" style="margin-bottom:16px">Make sure you have ~3 minutes uninterrupted. Once you start, switching away forfeits the round.</p>
+        <div class="form-row" style="max-width:300px;margin:0 auto 20px">
+          <label>Your name (shown on leaderboard)</label>
+          <input id="playerName" type="text" placeholder="Anonymous" maxlength="24" autocomplete="off" />
+        </div>
+        <button class="btn btn-primary btn-big" onclick="startGame()">Start Challenge</button>
+      </div>
+
+      <div id="quiz-win" class="panel" style="display:none">
+        <div class="panel-trophy">🏆</div>
+        <h2>You won!</h2>
+        <div class="panel-prize gold">$10 USDT</div>
+        <p class="muted">10 out of 10 correct. You're eligible to claim your prize.</p>
+        <div class="panel-meta">Total time: <b id="winTime"></b>s · Avg per question: <b id="winAvg"></b>s</div>
+        <div class="panel-actions">
+          <button class="btn btn-primary" onclick="go('claim')">Claim $10 USDT →</button>
+          <button class="btn btn-ghost" onclick="resetAndPlay()">Play again</button>
+        </div>
+      </div>
+
+      <div id="quiz-lose" class="panel" style="display:none">
+        <h2 style="color:var(--red)">Round over</h2>
+        <p style="margin:8px 0 4px" id="loseReason">You got it wrong.</p>
+        <p class="muted">You answered <b id="loseScore">0</b>/10 correctly.</p>
+        <p style="margin-top:14px;color:var(--green);font-size:0.92rem">Correct answer was: <span id="correctAns"></span></p>
+        <div class="panel-actions">
+          <button class="btn btn-primary" onclick="resetAndPlay()">Try again</button>
+          <button class="btn btn-ghost" onclick="go('leaderboard')">Leaderboard</button>
+        </div>
+      </div>
+
+      <div id="quiz-cheat" class="panel" style="display:none">
+        <h2 style="color:var(--red)">Round terminated</h2>
+        <p class="muted" style="margin:14px 0">Suspicious activity detected.</p>
+        <div style="background:rgba(0,0,0,0.4);padding:14px;border-radius:10px;font-family:monospace;font-size:0.85rem;color:#fca5a5;margin:12px 0" id="cheatReason"></div>
+        <p class="muted" style="font-size:0.85rem">Tab switching, devtools, clipboard activity, and implausibly fast answers are blocked. Replay fairly to be eligible.</p>
+        <div class="panel-actions">
+          <button class="btn btn-ghost" onclick="resetAndPlay()">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LEADERBOARD ============ -->
+<section id="view-leaderboard" class="view">
+  <div class="container">
+    <div class="header-row">
+      <div>
+        <h2>Leaderboard</h2>
+        <p class="muted">Top 50. Ranked by correct answers, ties broken by speed.</p>
+      </div>
+      <span id="lb-mode" class="mode-badge online"><span class="dot"></span> Global</span>
+    </div>
+    <div id="lb-body"></div>
+  </div>
+</section>
+
+<!-- ============ SPONSOR ============ -->
+<section id="view-sponsor" class="view">
+  <div class="container">
+    <h2>Sponsor a winner</h2>
+    <p class="muted" style="max-width:680px">Donations fund the $10 USDT prize pool. Every cent goes to winners — no operating fees, no skim. Send USDT on the Tron (TRC20) network to the wallet below. Thank you for keeping the lights on.</p>
+    <div class="sponsor-grid" style="margin-top:30px">
+      <div>
+        <div class="wallet-box">
+          <div class="wallet-label">USDT — Tron (TRC20)</div>
+          <div class="wallet-addr" id="sponsor-wallet">TMNVuGuxMfTVVFJuVcjsxswYsCkMnTZRSy</div>
+          <div class="copy-row">
+            <button class="btn btn-ghost" id="copyBtn" onclick="copyWallet()">Copy address</button>
+          </div>
+          <div class="net-row" style="margin-top:18px;flex-direction:column;gap:6px">
+            <div>Network: <b>Tron (TRC20)</b></div>
+            <div>Asset: <b>USDT</b> only — other tokens will not be recovered</div>
+            <div>Minimum: any amount welcome</div>
+          </div>
+        </div>
+        <div class="net-row" style="margin-top:20px">
+          <p style="font-size:0.88rem">Pending claims: <b id="st-pending">—</b> · Paid out: <b>$<span id="st-paid-2">—</span></b></p>
+        </div>
+      </div>
+      <div class="qr-card">
+        <img id="sponsor-qr" alt="USDT TRC20 wallet QR code" />
+        <p class="muted" style="font-size:0.82rem;margin-top:10px">Scan with any TRC20 wallet</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CLAIM ============ -->
+<section id="view-claim" class="view">
+  <div class="container">
+    <div class="quiz-wrap">
+      <div id="claim-eligible" style="display:none">
+        <h2>Claim your $10 USDT</h2>
+        <p class="muted">Enter your Tron (TRC20) USDT wallet. Claims are reviewed manually and paid from the sponsorship pool.</p>
+        <div id="claim-err" class="form-err"></div>
+        <div id="claim-ok" class="form-ok"></div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-top:24px">
+          <div class="form-row">
+            <label>Name on leaderboard</label>
+            <input id="claim-name" type="text" maxlength="24" />
+          </div>
+          <div class="form-row">
+            <label>USDT (TRC20) Wallet Address *</label>
+            <input id="claim-wallet" type="text" placeholder="T..." spellcheck="false" autocomplete="off" />
+            <div class="hint">Must start with T and be exactly 34 characters. Funds sent to a wrong address cannot be recovered.</div>
+          </div>
+          <div class="form-row">
+            <label>Contact (email or Telegram) — optional</label>
+            <input id="claim-contact" type="text" maxlength="100" placeholder="@yourhandle or you@example.com" />
+            <div class="hint">So we can notify you when the payout is processed.</div>
+          </div>
+          <button class="btn btn-primary btn-big" id="claim-submit" onclick="submitClaim()">Submit claim</button>
+        </div>
+      </div>
+
+      <div id="claim-not-eligible" class="panel">
+        <h2>No active prize claim</h2>
+        <p class="muted">You need to complete a round with 10/10 to be eligible for the $10 USDT prize.</p>
+        <div class="panel-actions">
+          <button class="btn btn-primary" onclick="go('play')">Play now</button>
+        </div>
+      </div>
+
+      <div id="claim-success" class="panel" style="display:none">
+        <div class="panel-trophy">✅</div>
+        <h2>Claim received</h2>
+        <p class="muted">Claim <b>#<span id="claim-id">—</span></b> is queued for manual review.</p>
+        <p class="muted" style="margin-top:10px">You'll be paid in USDT (TRC20) once verified. If you provided a contact, we'll reach out.</p>
+        <div class="panel-actions">
+          <button class="btn btn-ghost" onclick="go('home')">Back home</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section id="view-how" class="view">
+  <div class="container">
+    <h2 class="center">FAQ &amp; Rules</h2>
+    <div class="faq" style="margin-top:30px">
+      <details><summary>How do I win?</summary><p>Answer all 10 questions correctly within the per-question 10-second timer. The round ends immediately on a wrong answer, a timeout, or any anti-cheat trigger.</p></details>
+      <details><summary>How is the prize paid?</summary><p>Winners submit their Tron (TRC20) USDT wallet via the Claim page. Each claim is reviewed manually by the operator and paid from the sponsorship pool. No private keys are held on the server — payouts are not automatic, but they are real.</p></details>
+      <details><summary>What counts as cheating?</summary><p>Switching tabs or applications, opening developer tools, attempting to copy/paste, right-clicking, or answering implausibly fast (under 1.5s) on hard questions. Triggering any of these forfeits the round.</p></details>
+      <details><summary>Will I see the same questions twice?</summary><p>The site avoids questions you've already seen on this device. Pool currently contains 200+ items across four difficulty tiers. Once you exhaust the unseen pool, repeats may appear.</p></details>
+      <details><summary>Do I need an account?</summary><p>No. The leaderboard takes a display name only. Claims require a wallet address and optional contact.</p></details>
+      <details><summary>Where does the prize money come from?</summary><p>Sponsorship donations to the TRC20 wallet on the Sponsor page. The pool is finite and shared across winners. If donations run low, claims queue until refilled.</p></details>
+      <details><summary>Can I lose money playing?</summary><p>No. Playing is free. You only ever receive funds — never spend them — for completed wins.</p></details>
+      <details><summary>Why TRC20 (Tron) instead of ERC20?</summary><p>Tron USDT transfers cost a fraction of a cent vs. several dollars on Ethereum. More of every donation reaches winners.</p></details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container foot">
+    <div>© <span id="year"></span> gkall.online · A skill-based knowledge challenge</div>
     <div>
-      <span id="category" class="category-tag">CATEGORY</span>
-      <span id="difficulty" class="difficulty-tag diff-easy">EASY</span>
-    </div>
-    <div id="question" class="question">Loading...</div>
-    <div id="options" class="options"></div>
-  </div>
-
-  <!-- NAME ENTRY -->
-  <div id="screen-name" class="screen center">
-    <h2 id="nameTitle">Save your score</h2>
-    <p style="color:#aaa;">Score: <span id="nameScore"></span>/10 · Prize: $<span id="namePrize"></span></p>
-    <input id="nameInput" class="name-input" type="text" placeholder="Enter your name" maxlength="20" autocomplete="off" />
-    <div>
-      <button class="btn" onclick="saveScore()">Save</button>
-      <button class="btn btn-secondary" onclick="skipSave()">Skip</button>
+      <a href="#sponsor">Sponsor</a> · <a href="#how">FAQ</a> ·
+      Questions partly via <a href="https://opentdb.com/" target="_blank" rel="noopener">Open Trivia DB</a> (CC BY-SA 4.0)
     </div>
   </div>
-
-  <!-- WIN SCREEN -->
-  <div id="screen-win" class="screen center">
-    <h1>You Won!</h1>
-    <div class="prize">$10</div>
-    <p>You answered all 10 questions correctly.</p>
-    <p class="info-row">
-      Total time: <span id="winTime"></span>s · Avg per question: <span id="winAvg"></span>s
-    </p>
-    <button class="btn" onclick="location.reload()">Play Again</button>
-    <button class="btn btn-secondary" onclick="showLeaderboard('win')">🏆 Leaderboard</button>
-  </div>
-
-  <!-- LOSE SCREEN -->
-  <div id="screen-lose" class="screen center">
-    <h1 style="background: linear-gradient(90deg,#ef4444,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Game Over</h1>
-    <p style="margin: 20px 0; font-size: 18px;" id="loseReason">You got it wrong!</p>
-    <p style="color:#888;">You answered <span id="loseScore">0</span>/10 correctly · Prize: $<span id="losePrize">0</span></p>
-    <p id="correctAnswer" style="margin-top:16px; color:#4ade80; font-size:14px;"></p>
-    <button class="btn" onclick="location.reload()">Try Again</button>
-    <button class="btn btn-secondary" onclick="showLeaderboard('lose')">🏆 Leaderboard</button>
-  </div>
-
-  <!-- CHEAT SCREEN -->
-  <div id="screen-cheat" class="screen cheat-screen">
-    <h2>Cheating Detected</h2>
-    <p>The challenge has been terminated.</p>
-    <div id="cheatReason" class="cheat-reason"></div>
-    <p style="color:#888; font-size:13px;">
-      External help, tab switching, devtools, and suspicious timing patterns are forbidden.
-    </p>
-    <button class="btn" onclick="location.reload()">Restart</button>
-  </div>
-
-  <!-- LEADERBOARD -->
-  <div id="screen-leaderboard" class="screen">
-    <h2>🏆 Leaderboard</h2>
-    <p style="color:#888; font-size:13px; text-align:center; margin-bottom:16px;">
-      Top 10 on this device · Ranked by correct answers, then by speed
-    </p>
-    <div id="leaderboardBody"></div>
-    <div class="center">
-      <button class="btn" onclick="goBack()">Back</button>
-      <button class="btn btn-secondary" onclick="clearLeaderboard()">Clear</button>
-    </div>
-  </div>
-
-</div>
+</footer>
 
 <script>
-/* ========== QUESTION BANK ========== */
-const POOL = {
-  easy: [
-    { cat: "Sport", q: "How many players from one team are on a soccer pitch?", opts: ["9","10","11","12"], a: 2 },
-    { cat: "Science", q: "What gas do plants primarily absorb for photosynthesis?", opts: ["Oxygen","Nitrogen","Carbon Dioxide","Hydrogen"], a: 2 },
-    { cat: "Geography", q: "What is the capital of France?", opts: ["Lyon","Marseille","Paris","Nice"], a: 2 },
-    { cat: "Music", q: "How many strings does a standard guitar have?", opts: ["4","5","6","7"], a: 2 },
-    { cat: "Animals", q: "How many legs does a spider have?", opts: ["6","8","10","12"], a: 1 },
-    { cat: "History", q: "Who was the first President of the United States?", opts: ["Lincoln","Jefferson","Adams","Washington"], a: 3 },
-    { cat: "Food", q: "What is the main ingredient of guacamole?", opts: ["Tomato","Avocado","Pepper","Onion"], a: 1 },
-    { cat: "Movies", q: "In 'The Lion King', what is the villain's name?", opts: ["Mufasa","Scar","Zazu","Rafiki"], a: 1 },
-    { cat: "Religion", q: "How many testaments are in the Christian Bible?", opts: ["1","2","3","4"], a: 1 },
-    { cat: "Art", q: "What color do you get by mixing blue and yellow?", opts: ["Purple","Orange","Green","Brown"], a: 2 },
-    { cat: "Sport", q: "Which sport uses the terms 'love', 'deuce', and 'ace'?", opts: ["Golf","Tennis","Cricket","Badminton"], a: 1 },
-    { cat: "Lifestyle", q: "How many days are in a leap year?", opts: ["364","365","366","367"], a: 2 },
-    { cat: "Geography", q: "Which is the largest ocean on Earth?", opts: ["Atlantic","Indian","Arctic","Pacific"], a: 3 },
-    { cat: "Literature", q: "Who wrote the 'Harry Potter' book series?", opts: ["J.R.R. Tolkien","J.K. Rowling","C.S. Lewis","Roald Dahl"], a: 1 },
-    { cat: "Animals", q: "Which is the largest land mammal?", opts: ["Rhino","Hippo","Elephant","Giraffe"], a: 2 },
-    { cat: "Science", q: "How many planets are in our solar system?", opts: ["7","8","9","10"], a: 1 },
-    { cat: "Music", q: "Which instrument has 88 keys?", opts: ["Organ","Harp","Piano","Accordion"], a: 2 },
-    { cat: "Food", q: "Sushi is a traditional dish of which country?", opts: ["China","Korea","Japan","Thailand"], a: 2 },
-    { cat: "History", q: "In which country were the ancient pyramids of Giza built?", opts: ["Mexico","Egypt","Iraq","Sudan"], a: 1 },
-    { cat: "Sport", q: "How many rings appear on the Olympic flag?", opts: ["4","5","6","7"], a: 1 }
-  ],
-  medium: [
-    { cat: "History", q: "In which year did the Berlin Wall fall?", opts: ["1987","1989","1991","1993"], a: 1 },
-    { cat: "Religion", q: "In Hinduism, who is the 'Destroyer' in the Trimurti?", opts: ["Brahma","Vishnu","Shiva","Indra"], a: 2 },
-    { cat: "Music", q: "Which Beatles album features the song 'Come Together'?", opts: ["Abbey Road","Revolver","Let It Be","Sgt. Pepper's"], a: 0 },
-    { cat: "Science", q: "What is the chemical symbol for gold?", opts: ["Gd","Au","Ag","Go"], a: 1 },
-    { cat: "Geography", q: "What is the capital of Australia?", opts: ["Sydney","Melbourne","Canberra","Perth"], a: 2 },
-    { cat: "Sport", q: "How many points is a 'try' worth in rugby union?", opts: ["3","4","5","6"], a: 2 },
-    { cat: "Art", q: "Who painted the Mona Lisa?", opts: ["Michelangelo","Raphael","Donatello","Leonardo da Vinci"], a: 3 },
-    { cat: "Literature", q: "Who wrote the novel '1984'?", opts: ["Aldous Huxley","George Orwell","Ray Bradbury","H.G. Wells"], a: 1 },
-    { cat: "Movies", q: "Who directed 'Pulp Fiction'?", opts: ["Martin Scorsese","Quentin Tarantino","Steven Spielberg","David Fincher"], a: 1 },
-    { cat: "History", q: "Who was the first woman to fly solo across the Atlantic?", opts: ["Bessie Coleman","Amelia Earhart","Harriet Quimby","Jacqueline Cochran"], a: 1 },
-    { cat: "Science", q: "Which is the hardest natural substance on Earth?", opts: ["Quartz","Diamond","Granite","Titanium"], a: 1 },
-    { cat: "Music", q: "How many symphonies did Beethoven compose?", opts: ["7","8","9","10"], a: 2 },
-    { cat: "Religion", q: "Which of these is one of the Five Pillars of Islam?", opts: ["Eightfold Path","Hajj","Sacraments","Karma"], a: 1 },
-    { cat: "Lifestyle", q: "What is the traditional gift for a 25th wedding anniversary?", opts: ["Gold","Pearl","Silver","Ruby"], a: 2 },
-    { cat: "Food", q: "What is the national dish of Spain?", opts: ["Tapas","Paella","Gazpacho","Tortilla"], a: 1 },
-    { cat: "Geography", q: "Which river flows through Cairo?", opts: ["Tigris","Euphrates","Nile","Congo"], a: 2 },
-    { cat: "Sport", q: "Which country invented table tennis?", opts: ["China","Japan","England","France"], a: 2 },
-    { cat: "Science", q: "What part of the atom carries a negative charge?", opts: ["Proton","Neutron","Electron","Nucleus"], a: 2 },
-    { cat: "Animals", q: "What is a group of crows called?", opts: ["Flock","Herd","Murder","Pack"], a: 2 },
-    { cat: "History", q: "Which empire was ruled by Genghis Khan?", opts: ["Ottoman","Mongol","Persian","Roman"], a: 1 },
-    { cat: "Movies", q: "Which film features the line 'Here's looking at you, kid'?", opts: ["Gone with the Wind","Casablanca","Citizen Kane","The Maltese Falcon"], a: 1 },
-    { cat: "Literature", q: "Who wrote 'Pride and Prejudice'?", opts: ["Charlotte Brontë","Emily Brontë","Jane Austen","Mary Shelley"], a: 2 }
-  ],
-  hard: [
-    { cat: "Art", q: "Which artist painted 'The Persistence of Memory' (the melting clocks)?", opts: ["Pablo Picasso","Salvador Dalí","René Magritte","Joan Miró"], a: 1 },
-    { cat: "Science", q: "What is the SI unit of electric conductance?", opts: ["Ohm","Siemens","Farad","Tesla"], a: 1 },
-    { cat: "History", q: "In which year was the Treaty of Westphalia signed?", opts: ["1492","1588","1648","1715"], a: 2 },
-    { cat: "Music", q: "Who composed the opera 'La Traviata'?", opts: ["Verdi","Puccini","Wagner","Rossini"], a: 0 },
-    { cat: "Geography", q: "What is the capital of Mongolia?", opts: ["Astana","Ulaanbaatar","Tashkent","Bishkek"], a: 1 },
-    { cat: "Sport", q: "Which country won the first FIFA World Cup in 1930?", opts: ["Brazil","Italy","Argentina","Uruguay"], a: 3 },
-    { cat: "Religion", q: "Who founded Sikhism?", opts: ["Guru Gobind Singh","Guru Nanak","Guru Arjan","Guru Tegh Bahadur"], a: 1 },
-    { cat: "Literature", q: "Who wrote 'The Brothers Karamazov'?", opts: ["Tolstoy","Dostoevsky","Chekhov","Turgenev"], a: 1 },
-    { cat: "Science", q: "What is the approximate speed of light in a vacuum?", opts: ["3 × 10⁶ m/s","3 × 10⁷ m/s","3 × 10⁸ m/s","3 × 10⁹ m/s"], a: 2 },
-    { cat: "History", q: "The Hundred Years' War was fought between which two countries?", opts: ["England and France","Spain and Portugal","Russia and Sweden","Austria and Prussia"], a: 0 },
-    { cat: "Movies", q: "Which film won the Academy Award for Best Picture in 2020?", opts: ["1917","Joker","Parasite","Once Upon a Time in Hollywood"], a: 2 },
-    { cat: "Music", q: "Which language is Mozart's opera 'The Magic Flute' sung in?", opts: ["Italian","German","French","Latin"], a: 1 },
-    { cat: "Art", q: "Which art movement did Picasso and Braque co-found?", opts: ["Surrealism","Cubism","Impressionism","Expressionism"], a: 1 },
-    { cat: "Science", q: "Which scientist developed the laws of planetary motion?", opts: ["Galileo","Newton","Kepler","Copernicus"], a: 2 },
-    { cat: "Geography", q: "Which African country was formerly known as Abyssinia?", opts: ["Eritrea","Somalia","Ethiopia","Sudan"], a: 2 },
-    { cat: "Religion", q: "What is the Jewish day of rest called?", opts: ["Yom Kippur","Shabbat","Purim","Sukkot"], a: 1 },
-    { cat: "Literature", q: "In Greek mythology, who flew too close to the sun?", opts: ["Hermes","Icarus","Theseus","Perseus"], a: 1 },
-    { cat: "Sport", q: "In golf, what is a score of three under par on a single hole called?", opts: ["Birdie","Eagle","Albatross","Condor"], a: 2 },
-    { cat: "History", q: "Who was the longest-reigning British monarch before Elizabeth II?", opts: ["Victoria","George III","Henry VIII","Edward VII"], a: 0 },
-    { cat: "Science", q: "What is the most abundant gas in Earth's atmosphere?", opts: ["Oxygen","Nitrogen","Argon","Carbon Dioxide"], a: 1 }
-  ],
-  expert: [
-    { cat: "History", q: "Who was the Byzantine Emperor when Constantinople fell in 1453?", opts: ["Justinian I","Basil II","Constantine XI","Alexios I"], a: 2 },
-    { cat: "Literature", q: "In Dante's 'Inferno', which sin is punished in the ninth (lowest) circle of Hell?", opts: ["Heresy","Violence","Fraud","Treachery"], a: 3 },
-    { cat: "Science", q: "Heisenberg's uncertainty principle relates which two physical quantities?", opts: ["Energy and time","Position and momentum","Mass and velocity","Charge and spin"], a: 1 },
-    { cat: "Music", q: "Who composed 'The Rite of Spring' (1913)?", opts: ["Debussy","Ravel","Stravinsky","Schoenberg"], a: 2 },
-    { cat: "Geography", q: "What is the smallest country in the world by area?", opts: ["Monaco","San Marino","Vatican City","Liechtenstein"], a: 2 },
-    { cat: "Religion", q: "The Bhagavad Gita is part of which Hindu epic?", opts: ["Ramayana","Mahabharata","Vedas","Upanishads"], a: 1 },
-    { cat: "Art", q: "Who painted 'The Garden of Earthly Delights'?", opts: ["Hieronymus Bosch","Jan van Eyck","Pieter Bruegel","Albrecht Dürer"], a: 0 },
-    { cat: "History", q: "In which year was the Edict of Nantes issued?", opts: ["1517","1572","1598","1648"], a: 2 },
-    { cat: "Sport", q: "As of 2024, who is the only player to have won the Ballon d'Or eight times?", opts: ["Cristiano Ronaldo","Lionel Messi","Michel Platini","Johan Cruyff"], a: 1 },
-    { cat: "Science", q: "What is the atomic number of einsteinium?", opts: ["97","99","101","103"], a: 1 },
-    { cat: "Literature", q: "Who wrote the novel 'One Hundred Years of Solitude'?", opts: ["Mario Vargas Llosa","Gabriel García Márquez","Jorge Luis Borges","Pablo Neruda"], a: 1 },
-    { cat: "Music", q: "Which key is Beethoven's famous 5th Symphony in?", opts: ["C major","C minor","D minor","E♭ major"], a: 1 },
-    { cat: "Geography", q: "The Strait of Hormuz connects the Persian Gulf to which body of water?", opts: ["Red Sea","Gulf of Oman","Mediterranean Sea","Caspian Sea"], a: 1 },
-    { cat: "History", q: "Who was the last Tsar of Russia?", opts: ["Alexander III","Nicholas II","Peter III","Paul I"], a: 1 },
-    { cat: "Science", q: "Which particle mediates the strong nuclear force?", opts: ["Photon","Gluon","W boson","Graviton"], a: 1 },
-    { cat: "Art", q: "Which Dutch post-Impressionist famously cut off part of his own ear?", opts: ["Rembrandt","Vermeer","Van Gogh","Mondrian"], a: 2 },
-    { cat: "Religion", q: "What is the holy book of Zoroastrianism called?", opts: ["Tripitaka","Avesta","Tao Te Ching","Guru Granth Sahib"], a: 1 },
-    { cat: "Sport", q: "Which country has won the most men's Cricket World Cups (as of 2023)?", opts: ["India","Australia","West Indies","England"], a: 1 }
-  ]
+// ============================== Constants ==============================
+const API = ''; // same-origin
+const TIMER = 10;
+const PRIZE_USDT = 10;
+const LS = {
+  SEEN: 'gkq_seen_v1',
+  NAME: 'gkq_name',
+  LOCAL_LB: 'gkq_local_lb',
+  PENDING: 'gkq_pending_claim_v1',
+  CLAIMED: 'gkq_claimed_score_ids_v1',
 };
 
-const DIFF_LABEL = { 1: "EASY", 2: "MEDIUM", 3: "HARD", 4: "EXPERT" };
-const DIFF_CLASS = { 1: "diff-easy", 2: "diff-medium", 3: "diff-hard", 4: "diff-expert" };
-const TIMER_SECONDS = 10;
-const COMPOSITION = [
-  ...Array(2).fill('easy'),
-  ...Array(3).fill('medium'),
-  ...Array(3).fill('hard'),
-  ...Array(2).fill('expert')
-];
-const TIER_DIFF = { easy: 1, medium: 2, hard: 3, expert: 4 };
-const LB_KEY = 'gkq_leaderboard_v1';
-const API_BASE = ''; // same-origin; set to e.g. 'https://gkall.online' if hosting from a different origin
-let LB_MODE = 'local'; // 'global' if last fetch succeeded
-
+// ============================== State ==============================
 let state = null;
-let currentQuestions = [];
-let previousScreen = 'start';
-let pendingResult = null;
+let questions = [];
+let pendingClaim = null;
 
-function shuffle(arr) {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+// ============================== Routing ==============================
+function go(view) {
+  if (!['home','play','leaderboard','sponsor','claim','how'].includes(view)) view = 'home';
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a =>
+    a.classList.toggle('active', a.dataset.view === view));
+  if (view === 'leaderboard') loadLeaderboard();
+  if (view === 'play')        showPlayPanel();
+  if (view === 'sponsor')     loadSponsor();
+  if (view === 'claim')       showClaimPanel();
+  if (location.hash.slice(1) !== view) history.replaceState(null, '', '#' + view);
+  window.scrollTo({top: 0, behavior: 'instant'});
 }
+window.addEventListener('hashchange', () => go(location.hash.slice(1) || 'home'));
 
-function buildGameQuestions() {
-  const buckets = { easy: 0, medium: 0, hard: 0, expert: 0 };
-  COMPOSITION.forEach(t => buckets[t]++);
-  const picks = {};
-  for (const tier in buckets) {
-    picks[tier] = shuffle(POOL[tier]).slice(0, buckets[tier]);
-  }
-  const cursor = { easy: 0, medium: 0, hard: 0, expert: 0 };
-  return COMPOSITION.map(tier => {
-    const q = picks[tier][cursor[tier]++];
-    return { ...q, diff: TIER_DIFF[tier] };
-  });
-}
-
-/* ========== ANTI-CHEAT ========== */
+// ============================== Anti-cheat ==============================
 function endByCheat(reason) {
   if (!state || state.ended) return;
   state.ended = true;
   clearInterval(state.timerId);
   document.getElementById('cheatReason').textContent = reason;
-  show('cheat');
+  showQuizPanel('cheat');
 }
-
 function warn(msg) {
   if (!state) return;
-  state.warningCount++;
+  state.warnCount = (state.warnCount || 0) + 1;
   const w = document.getElementById('warning');
-  w.textContent = "⚠️ " + msg + " (Warning " + state.warningCount + "/2)";
+  w.textContent = '⚠ ' + msg + ' (warning ' + state.warnCount + '/2)';
   w.classList.add('show');
   setTimeout(() => w.classList.remove('show'), 3500);
-  if (state.warningCount >= 2) {
-    endByCheat("Multiple suspicious actions detected. Final trigger: " + msg);
-  }
+  if (state.warnCount >= 2) endByCheat('Multiple suspicious actions: ' + msg);
 }
-
+function quizActive() {
+  return state && !state.ended &&
+    document.getElementById('quiz-active').style.display !== 'none' &&
+    document.getElementById('view-play').classList.contains('active');
+}
 document.addEventListener('visibilitychange', () => {
-  if (!quizActive()) return;
-  if (document.hidden) {
-    endByCheat("You switched away from the quiz window. (External lookup attempt detected.)");
-  }
+  if (quizActive() && document.hidden)
+    endByCheat('You switched away from the quiz window. External lookups are not allowed.');
 });
-
 window.addEventListener('blur', () => {
-  if (!quizActive()) return;
-  endByCheat("Window lost focus. External help is not allowed.");
+  if (quizActive()) endByCheat('Window lost focus. External help is not allowed.');
 });
-
-['copy','cut','paste'].forEach(evt => {
-  document.addEventListener(evt, e => {
-    if (!quizActive()) return;
-    e.preventDefault();
-    endByCheat("Clipboard activity (" + evt + ") detected. Cheating prevention triggered.");
-  });
-});
-
-document.addEventListener('contextmenu', e => {
+['copy','cut','paste'].forEach(e => document.addEventListener(e, ev => {
   if (!quizActive()) return;
-  e.preventDefault();
-  warn("Right-click is disabled during the quiz.");
-});
-
-document.addEventListener('keydown', e => {
+  ev.preventDefault();
+  endByCheat('Clipboard activity (' + e + ') detected.');
+}));
+document.addEventListener('contextmenu', ev => {
   if (!quizActive()) return;
-  const k = (e.key || '').toLowerCase();
-  if (e.key === 'F12' ||
-      (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(k)) ||
-      (e.ctrlKey && k === 'u')) {
-    e.preventDefault();
-    endByCheat("Developer tools shortcut blocked. (" + e.key + ")");
+  ev.preventDefault();
+  warn('Right-click is disabled during the quiz.');
+});
+document.addEventListener('keydown', ev => {
+  if (!quizActive()) return;
+  const k = (ev.key || '').toLowerCase();
+  if (ev.key === 'F12' || (ev.ctrlKey && ev.shiftKey && ['i','j','c'].includes(k))
+      || (ev.ctrlKey && k === 'u')) {
+    ev.preventDefault();
+    endByCheat('Developer-tools shortcut blocked (' + ev.key + ').');
   }
 });
-
 setInterval(() => {
   if (!quizActive()) return;
-  const widthDiff = window.outerWidth - window.innerWidth;
-  const heightDiff = window.outerHeight - window.innerHeight;
-  if (widthDiff > 200 || heightDiff > 250) {
-    endByCheat("Developer tools appear to be open. Close them and restart.");
-  }
+  if ((window.outerWidth - window.innerWidth) > 200 ||
+      (window.outerHeight - window.innerHeight) > 250)
+    endByCheat('Developer tools appear to be open.');
 }, 1000);
 
-function quizActive() {
-  return state && !state.ended && document.getElementById('screen-quiz').classList.contains('active');
+// ============================== Storage helpers ==============================
+function loadSeen() { try { return JSON.parse(localStorage.getItem(LS.SEEN) || '[]'); } catch(e) { return []; } }
+function saveSeen(ids) { try { localStorage.setItem(LS.SEEN, JSON.stringify(ids.slice(-500))); } catch(e){} }
+function loadLocalLB() { try { return JSON.parse(localStorage.getItem(LS.LOCAL_LB) || '[]'); } catch(e) { return []; } }
+function saveLocalLB(a) { try { localStorage.setItem(LS.LOCAL_LB, JSON.stringify(a.slice(0, 50))); } catch(e){} }
+function getPending() { try { return JSON.parse(localStorage.getItem(LS.PENDING) || 'null'); } catch(e) { return null; } }
+function setPending(p) { if (p) localStorage.setItem(LS.PENDING, JSON.stringify(p)); else localStorage.removeItem(LS.PENDING); }
+function markClaimed(scoreId) {
+  let arr = []; try { arr = JSON.parse(localStorage.getItem(LS.CLAIMED) || '[]'); } catch(e){}
+  arr.push(scoreId);
+  try { localStorage.setItem(LS.CLAIMED, JSON.stringify(arr.slice(-50))); } catch(e){}
 }
 
-/* ========== GAME FLOW ========== */
-function show(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + id).classList.add('active');
+// ============================== Stats & Sponsor ==============================
+async function loadStats() {
+  try {
+    const r = await fetch(API + '/api/stats'); const s = await r.json();
+    document.getElementById('st-plays').textContent      = s.plays.toLocaleString();
+    document.getElementById('st-winners').textContent    = s.winners.toLocaleString();
+    document.getElementById('st-paid-n').textContent     = s.paid_usdt.toLocaleString();
+    document.getElementById('st-questions').textContent  = s.questions.toLocaleString();
+    document.getElementById('st-pending').textContent    = s.pending_claims;
+    document.getElementById('st-paid-2').textContent     = s.paid_usdt;
+  } catch(e) { console.warn('stats failed', e); }
+}
+async function loadSponsor() {
+  try {
+    const r = await fetch(API + '/api/sponsor'); const s = await r.json();
+    document.getElementById('sponsor-wallet').textContent = s.wallet;
+    document.getElementById('sponsor-qr').src =
+      'https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=8&data=' + encodeURIComponent(s.wallet);
+  } catch(e) { console.warn('sponsor failed', e); }
+  loadStats();
+}
+function copyWallet() {
+  const w = document.getElementById('sponsor-wallet').textContent;
+  navigator.clipboard.writeText(w).then(() => {
+    const b = document.getElementById('copyBtn');
+    const t = b.textContent;
+    b.textContent = '✓ Copied';
+    setTimeout(() => b.textContent = t, 1500);
+  });
 }
 
-function startGame() {
+// ============================== Quiz flow ==============================
+function showPlayPanel() {
+  ['quiz-intro','quiz-active','quiz-win','quiz-lose','quiz-cheat'].forEach(id =>
+    document.getElementById(id).style.display = 'none');
+  document.getElementById('quiz-intro').style.display = 'block';
+  document.getElementById('playerName').value = localStorage.getItem(LS.NAME) || '';
+}
+function showQuizPanel(which) {
+  ['quiz-intro','quiz-active','quiz-win','quiz-lose','quiz-cheat'].forEach(id =>
+    document.getElementById(id).style.display = 'none');
+  document.getElementById('quiz-' + which).style.display = 'block';
+}
+
+async function startGame() {
+  const name = (document.getElementById('playerName').value || '').trim().slice(0,24) || 'Anonymous';
+  localStorage.setItem(LS.NAME, name);
   state = {
-    index: 0, correct: 0, startTime: Date.now(), qStartTime: 0,
-    timerId: null, answered: false, warningCount: 0,
-    fastAnswers: 0, totalElapsed: 0, ended: false
+    name, index:0, correct:0, startTime:Date.now(), qStartTime:0,
+    timerId:null, answered:false, warnCount:0, fastAnswers:0,
+    totalElapsed:0, ended:false, seenThisGame:[]
   };
-  currentQuestions = buildGameQuestions();
-  show('quiz');
-  renderQuestion();
+  // Load questions from API, excluding seen IDs
+  document.getElementById('quiz-intro').style.display = 'none';
+  showQuizPanel('active');
+  document.getElementById('question').textContent = 'Loading questions…';
+  document.getElementById('options').innerHTML = '';
+  const seen = loadSeen();
+  let url = '/api/questions/draw';
+  if (seen.length) url += '?exclude=' + seen.join(',');
+  try {
+    const r = await fetch(API + url);
+    questions = await r.json();
+    if (!questions || questions.length < 10) throw new Error('not enough questions');
+  } catch(e) {
+    document.getElementById('question').textContent = 'Failed to load questions. Please reload the page.';
+    return;
+  }
+  // Record seen
+  saveSeen([...seen, ...questions.map(q => q.id)]);
+  render();
 }
 
-function renderQuestion() {
+const DIFF_LABEL = {1:'EASY', 2:'MEDIUM', 3:'HARD', 4:'EXPERT'};
+function render() {
   state.answered = false;
-  const q = currentQuestions[state.index];
+  const q = questions[state.index];
   document.getElementById('qnum').textContent = state.index + 1;
   document.getElementById('prize').textContent = state.correct;
   document.getElementById('progress').style.width = (state.correct * 10) + '%';
-  document.getElementById('category').textContent = q.cat.toUpperCase();
-  const diffEl = document.getElementById('difficulty');
-  diffEl.textContent = DIFF_LABEL[q.diff];
-  diffEl.className = 'difficulty-tag ' + DIFF_CLASS[q.diff];
+  document.getElementById('cat').textContent = (q.cat || 'GENERAL').toUpperCase();
+  const dEl = document.getElementById('diff');
+  dEl.textContent = DIFF_LABEL[q.diff] || 'EASY';
+  dEl.className = 'tag tag-d' + q.diff;
   document.getElementById('question').textContent = q.q;
-
-  const optsDiv = document.getElementById('options');
-  optsDiv.innerHTML = '';
+  const o = document.getElementById('options');
+  o.innerHTML = '';
   q.opts.forEach((opt, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'option';
-    btn.textContent = String.fromCharCode(65 + i) + ". " + opt;
-    btn.onclick = () => answer(i, btn);
-    optsDiv.appendChild(btn);
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.innerHTML = '<span class="opt-letter">' + String.fromCharCode(65+i) + '</span><span>' + escapeHtml(opt) + '</span>';
+    b.onclick = () => answer(i);
+    o.appendChild(b);
   });
-
   state.qStartTime = Date.now();
-  startTimer();
+  tickTimer();
 }
-
-function startTimer() {
-  document.getElementById('time').textContent = TIMER_SECONDS;
+function tickTimer() {
+  document.getElementById('time').textContent = TIMER;
   document.getElementById('timerFill').style.width = '100%';
-  const startedAt = Date.now();
+  const start = Date.now();
   clearInterval(state.timerId);
   state.timerId = setInterval(() => {
-    const elapsed = (Date.now() - startedAt) / 1000;
-    const left = Math.max(0, TIMER_SECONDS - elapsed);
+    const e = (Date.now() - start) / 1000;
+    const left = Math.max(0, TIMER - e);
     document.getElementById('time').textContent = Math.ceil(left);
-    document.getElementById('timerFill').style.width = (left / TIMER_SECONDS * 100) + '%';
-    if (left <= 0) {
-      clearInterval(state.timerId);
-      if (!state.answered) answer(-1, null);
-    }
+    document.getElementById('timerFill').style.width = (left/TIMER*100) + '%';
+    if (left <= 0) { clearInterval(state.timerId); if (!state.answered) answer(-1); }
   }, 100);
 }
-
-function answer(picked, btn) {
+function answer(picked) {
   if (state.answered || state.ended) return;
   state.answered = true;
   clearInterval(state.timerId);
-
-  const q = currentQuestions[state.index];
-  const elapsed = (Date.now() - state.qStartTime) / 1000;
-  state.totalElapsed += elapsed;
-
-  if (picked !== -1 && q.diff >= 3 && elapsed < 1.5) {
+  const q = questions[state.index];
+  const el = (Date.now() - state.qStartTime) / 1000;
+  state.totalElapsed += el;
+  if (picked !== -1 && q.diff >= 3 && el < 1.5) {
     state.fastAnswers++;
-    if (state.fastAnswers >= 2) {
-      return endByCheat("Multiple sub-1.5s answers on hard questions — implausible without external help.");
-    } else {
-      warn("Answered a hard question in " + elapsed.toFixed(2) + "s — unusually fast.");
-    }
+    if (state.fastAnswers >= 2) return endByCheat('Multiple sub-1.5s answers on hard questions.');
+    warn('Answered a hard question in ' + el.toFixed(2) + 's — unusually fast.');
   }
-
-  document.querySelectorAll('.option').forEach((b, i) => {
+  document.querySelectorAll('.opt').forEach((b, i) => {
     b.disabled = true;
     if (i === q.a) b.classList.add('correct');
     if (i === picked && picked !== q.a) b.classList.add('wrong');
   });
-
   if (picked === q.a) {
     state.correct++;
     document.getElementById('prize').textContent = state.correct;
     document.getElementById('progress').style.width = (state.correct * 10) + '%';
     setTimeout(() => {
       state.index++;
-      if (state.index >= currentQuestions.length) {
-        winGame();
-      } else {
-        renderQuestion();
-      }
-    }, 900);
+      if (state.index >= questions.length) winGame();
+      else render();
+    }, 850);
   } else {
     setTimeout(() => {
-      const reason = picked === -1 ? "Time ran out!" : "Wrong answer!";
-      document.getElementById('loseReason').textContent = reason;
+      document.getElementById('loseReason').textContent = picked === -1 ? 'Time ran out.' : 'Wrong answer.';
       document.getElementById('loseScore').textContent = state.correct;
-      document.getElementById('losePrize').textContent = state.correct === 10 ? 10 : 0;
-      document.getElementById('correctAnswer').textContent =
-        "Correct answer was: " + q.opts[q.a];
-      promptForName('lose');
-    }, 1100);
+      document.getElementById('correctAns').textContent = q.opts[q.a];
+      submitScore(false).finally(() => showQuizPanel('lose'));
+    }, 1050);
   }
 }
-
-function winGame() {
+async function winGame() {
   const total = ((Date.now() - state.startTime) / 1000).toFixed(1);
   const avg = (state.totalElapsed / 10).toFixed(1);
   document.getElementById('winTime').textContent = total;
   document.getElementById('winAvg').textContent = avg;
-  promptForName('win');
-}
-
-/* ========== LEADERBOARD ========== */
-function loadLocalLB() {
-  try {
-    const raw = localStorage.getItem(LB_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) { return []; }
-}
-
-function saveLocalLB(arr) {
-  try { localStorage.setItem(LB_KEY, JSON.stringify(arr)); } catch(e) {}
-}
-
-async function fetchGlobalLB() {
-  try {
-    const res = await fetch(API_BASE + '/api/leaderboard', { cache: 'no-store' });
-    if (!res.ok) throw new Error('http ' + res.status);
-    const data = await res.json();
-    if (!Array.isArray(data)) throw new Error('bad shape');
-    LB_MODE = 'global';
-    return data;
-  } catch (e) {
-    LB_MODE = 'local';
-    return null;
+  const res = await submitScore(true);
+  if (res && res.score_id) {
+    setPending({ score_id: res.score_id, won_at: Date.now(), name: state.name });
   }
+  showQuizPanel('win');
+  loadStats();
 }
-
-async function postGlobalScore(entry) {
-  try {
-    const res = await fetch(API_BASE + '/api/leaderboard', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(entry)
-    });
-    return res.ok;
-  } catch (e) {
-    return false;
-  }
-}
-
-function promptForName(outcome) {
-  pendingResult = {
+async function submitScore(won) {
+  const totalTime = parseFloat(((Date.now() - state.startTime) / 1000).toFixed(1));
+  const payload = {
+    name: state.name,
     score: state.correct,
-    prize: state.correct === 10 ? 10 : 0,
-    won: state.correct === 10,
-    totalTime: parseFloat(((Date.now() - state.startTime) / 1000).toFixed(1)),
-    date: new Date().toISOString().slice(0, 10),
-    nextScreen: outcome
+    prize: won ? PRIZE_USDT : 0,
+    won: won,
+    totalTime,
   };
-  document.getElementById('nameTitle').textContent =
-    outcome === 'win' ? "🎉 You won $10! Save your score" : "Save your score";
-  document.getElementById('nameScore').textContent = pendingResult.score;
-  document.getElementById('namePrize').textContent = pendingResult.prize;
-  document.getElementById('nameInput').value = localStorage.getItem('gkq_last_name') || '';
-  show('name');
-  setTimeout(() => document.getElementById('nameInput').focus(), 100);
-}
-
-async function saveScore() {
-  if (!pendingResult) return;
-  const name = (document.getElementById('nameInput').value || '').trim().slice(0, 20) || 'Anonymous';
-  localStorage.setItem('gkq_last_name', name);
-  const entry = { name, score: pendingResult.score, prize: pendingResult.prize,
-                  won: pendingResult.won, totalTime: pendingResult.totalTime, date: pendingResult.date };
   // Always save locally
   const lb = loadLocalLB();
-  lb.push(entry);
-  lb.sort((a, b) => b.score - a.score || a.totalTime - b.totalTime);
-  saveLocalLB(lb.slice(0, 50));
-  // Try global submit (fire-and-forget)
-  postGlobalScore({
-    name, score: entry.score, prize: entry.prize,
-    won: entry.won, totalTime: entry.totalTime
-  });
-  const next = pendingResult.nextScreen;
-  pendingResult = null;
-  show(next);
+  lb.push({ ...payload, date: new Date().toISOString().slice(0,10) });
+  lb.sort((a,b) => b.score - a.score || a.totalTime - b.totalTime);
+  saveLocalLB(lb);
+  try {
+    const r = await fetch(API + '/api/leaderboard', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if (r.ok) return await r.json();
+  } catch(e) { console.warn('score submit failed', e); }
+  return null;
 }
+function resetAndPlay() { showPlayPanel(); }
 
-function skipSave() {
-  if (!pendingResult) return;
-  const next = pendingResult.nextScreen;
-  pendingResult = null;
-  show(next);
-}
-
-async function showLeaderboard(from) {
-  previousScreen = from || 'start';
-  show('leaderboard');
-  document.getElementById('leaderboardBody').innerHTML =
-    '<div class="lb-empty">Loading…</div>';
-  await renderLeaderboard();
-}
-
-async function renderLeaderboard() {
-  // Try global first
-  const global = await fetchGlobalLB();
-  const list = (global && global.length ? global : loadLocalLB()).slice(0, 10);
-  const body = document.getElementById('leaderboardBody');
-  const modeLabel = LB_MODE === 'global'
-    ? '<div style="text-align:center;color:#4ade80;font-size:12px;margin-bottom:8px;">🌍 Global Leaderboard</div>'
-    : '<div style="text-align:center;color:#f7d774;font-size:12px;margin-bottom:8px;">📱 Local Leaderboard (offline)</div>';
-  if (list.length === 0) {
-    body.innerHTML = modeLabel + '<div class="lb-empty">No scores yet. Be the first!</div>';
+// ============================== Leaderboard ==============================
+async function loadLeaderboard() {
+  const body = document.getElementById('lb-body');
+  const mode = document.getElementById('lb-mode');
+  body.innerHTML = '<div class="lb-empty">Loading…</div>';
+  let list = null, isGlobal = false;
+  try {
+    const r = await fetch(API + '/api/leaderboard');
+    if (r.ok) { list = await r.json(); isGlobal = true; }
+  } catch(e) {}
+  if (!list || !list.length) list = loadLocalLB();
+  mode.className = 'mode-badge ' + (isGlobal ? 'online' : 'offline');
+  mode.innerHTML = '<span class="dot"></span> ' + (isGlobal ? 'Global' : 'Local fallback (offline)');
+  if (!list.length) {
+    body.innerHTML = '<div class="lb-empty">No scores yet. Be the first.</div>';
     return;
   }
-  let html = modeLabel + '<table class="leaderboard-table"><thead><tr>' +
-    '<th>#</th><th>Name</th><th>Score</th><th>Prize</th><th>Time</th><th>Date</th>' +
-    '</tr></thead><tbody>';
-  list.forEach((e, i) => {
-    const rowClass = i < 3 ? 'lb-row-' + (i + 1) : '';
-    const nameClass = e.won ? 'lb-winner' : '';
-    html += '<tr class="' + rowClass + '">' +
-      '<td class="lb-rank">' + (i + 1) + '</td>' +
-      '<td class="' + nameClass + '">' + escapeHtml(e.name) + (e.won ? ' ⭐' : '') + '</td>' +
-      '<td>' + e.score + '/10</td>' +
-      '<td>$' + e.prize + '</td>' +
-      '<td>' + e.totalTime + 's</td>' +
-      '<td>' + (e.date || '') + '</td>' +
-      '</tr>';
+  let html = '<table class="lb-table"><thead><tr><th>#</th><th>Name</th><th>Score</th><th>Prize</th><th>Time</th><th>Date</th></tr></thead><tbody>';
+  list.slice(0, 50).forEach((e, i) => {
+    const rc = i < 3 ? 'lb-row-' + (i+1) : '';
+    html += '<tr class="' + rc + '"><td class="lb-rank">' + (i+1) + '</td>'
+      + '<td class="' + (e.won ? 'lb-winner' : '') + '">' + escapeHtml(e.name) + (e.won ? ' ⭐' : '') + '</td>'
+      + '<td>' + e.score + '/10</td>'
+      + '<td>$' + e.prize + '</td>'
+      + '<td>' + Number(e.totalTime).toFixed(1) + 's</td>'
+      + '<td>' + escapeHtml(e.date || '') + '</td></tr>';
   });
   html += '</tbody></table>';
   body.innerHTML = html;
 }
 
+// ============================== Claim flow ==============================
+function showClaimPanel() {
+  pendingClaim = getPending();
+  let claimed = [];
+  try { claimed = JSON.parse(localStorage.getItem(LS.CLAIMED) || '[]'); } catch(e){}
+  const elig = document.getElementById('claim-eligible');
+  const not  = document.getElementById('claim-not-eligible');
+  const ok   = document.getElementById('claim-success');
+  elig.style.display = 'none'; not.style.display = 'none'; ok.style.display = 'none';
+  if (!pendingClaim || claimed.includes(pendingClaim.score_id)) {
+    not.style.display = 'block';
+    return;
+  }
+  // Older than 7 days → expire
+  if (Date.now() - pendingClaim.won_at > 7 * 24 * 3600 * 1000) {
+    setPending(null); not.style.display = 'block'; return;
+  }
+  elig.style.display = 'block';
+  document.getElementById('claim-name').value = pendingClaim.name || localStorage.getItem(LS.NAME) || '';
+  document.getElementById('claim-err').className = 'form-err';
+  document.getElementById('claim-ok').className = 'form-ok';
+}
+async function submitClaim() {
+  const wallet = document.getElementById('claim-wallet').value.trim();
+  const name   = document.getElementById('claim-name').value.trim();
+  const contact= document.getElementById('claim-contact').value.trim();
+  const err = document.getElementById('claim-err');
+  const ok  = document.getElementById('claim-ok');
+  err.className = 'form-err'; ok.className = 'form-ok';
+  if (!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(wallet)) {
+    err.textContent = 'Invalid TRC20 address. Must start with T and be exactly 34 characters.';
+    err.className = 'form-err show'; return;
+  }
+  if (!pendingClaim) { err.textContent = 'No active claim found.'; err.className = 'form-err show'; return; }
+  const btn = document.getElementById('claim-submit');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+  try {
+    const r = await fetch(API + '/api/claim', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name, wallet, contact, score_id: pendingClaim.score_id })
+    });
+    const j = await r.json();
+    if (!r.ok) {
+      err.textContent = j.detail || j.error || 'Submission failed.';
+      err.className = 'form-err show';
+      btn.disabled = false; btn.textContent = 'Submit claim';
+      return;
+    }
+    markClaimed(pendingClaim.score_id);
+    setPending(null);
+    document.getElementById('claim-id').textContent = j.claim_id;
+    document.getElementById('claim-eligible').style.display = 'none';
+    document.getElementById('claim-success').style.display = 'block';
+  } catch(e) {
+    err.textContent = 'Network error. Try again.';
+    err.className = 'form-err show';
+    btn.disabled = false; btn.textContent = 'Submit claim';
+  }
+}
+
+// ============================== Helpers ==============================
 function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c =>
-    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-function goBack() { show(previousScreen); }
+// ============================== Boot ==============================
+document.getElementById('year').textContent = new Date().getFullYear();
+go(location.hash.slice(1) || 'home');
+loadStats();
 
-function clearLeaderboard() {
-  if (confirm('Clear all leaderboard entries on this device?')) {
-    localStorage.removeItem(LB_KEY);
-    renderLeaderboard();
-  }
-}
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && document.getElementById('screen-name').classList.contains('active')) {
-    saveScore();
-  }
-});
 </script>
 </body>
 </html>
