@@ -924,9 +924,14 @@ async function startGame() {
     startMouseCapture();
     renderQuestion(data.question);
   } catch(e) {
-    document.getElementById('question').textContent = 'Could not start: ' + e.message + '. Please reload.';
     console.warn('start failed', e);
+    // Return to intro panel so the player can retry cleanly
+    showQuizPanel('intro');
     resetTurnstile();
+    const btn = document.getElementById('startBtn');
+    btn.disabled = true;
+    btn.textContent = 'Could not start — please try again';
+    setTimeout(() => { btn.disabled = false; btn.textContent = 'Start Challenge'; }, 3000);
   }
 }
 

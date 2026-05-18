@@ -223,10 +223,12 @@ def verify_turnstile(token, ip):
     if not token:
         return False
     try:
+        # remoteip intentionally omitted — Caddy reverse-proxy means the IP
+        # Python sees may not match the IP that issued the token. The secret +
+        # token check is itself sufficient.
         data = urllib.parse.urlencode({
             "secret": TURNSTILE_SECRET,
             "response": token,
-            "remoteip": ip
         }).encode("utf-8")
         req = urllib.request.Request(
             "https://challenges.cloudflare.com/turnstile/v0/siteverify",
@@ -235,6 +237,8 @@ def verify_turnstile(token, ip):
         )
         with urllib.request.urlopen(req, timeout=10) as r:
             result = json.loads(r.read().decode("utf-8"))
+        if not result.get("success"):
+            print("turnstile rejected:", result.get("error-codes"))
         return bool(result.get("success"))
     except Exception as e:
         print("turnstile verify error:", e); return False
