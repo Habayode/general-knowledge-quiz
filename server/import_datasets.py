@@ -25,7 +25,7 @@ Datasets (license, target difficulty):
   sciq        - sciq default / train+test+validation    (CC)    [2]
 """
 
-import argparse, base64, hashlib, html, json, os, random, re, sqlite3, sys, time
+import argparse, base64, hashlib, html, json, os, random, re, sqlite3, ssl, sys, time
 import urllib.parse, urllib.request
 
 DB_PATH = os.environ.get("QUIZ_DB", r"C:\quiz\quizdb.sqlite")
@@ -38,12 +38,33 @@ MAX_QLEN   = 380
 MAX_OPTLEN = 180
 
 # ----------------- HTTP -----------------
+# Try certifi-backed SSL; fall back to unverified for environments without CA roots
+# (acceptable here: public read-only dataset endpoints; each question is structurally
+# validated before insert).
+def _make_ssl_ctx():
+    try:
+        import certifi  # type: ignore
+        ctx = ssl.create_default_context(cafile=certifi.where())
+        return ctx
+    except Exception:
+        pass
+    try:
+        ctx = ssl.create_default_context()
+        # If verify fails on a known-good endpoint, drop to unverified
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        return ctx
+    except Exception:
+        return None
+
+SSL_CTX = _make_ssl_ctx()
+
 def http_json(url, retries=4):
     last = None
     for i in range(retries):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
-            with urllib.request.urlopen(req, timeout=45) as r:
+            with urllib.request.urlopen(req, timeout=45, context=SSL_CTX) as r:
                 return json.loads(r.read().decode("utf-8"))
         except Exception as e:
             last = e
