@@ -316,12 +316,13 @@ IMPORTERS = {
 }
 
 def main():
+    global DB_PATH
     ap = argparse.ArgumentParser()
     ap.add_argument("datasets", nargs="*", help="subset to run; empty=all")
-    ap.add_argument("--db", default=DB_PATH)
+    ap.add_argument("--db", default=None)
     args = ap.parse_args()
-    global DB_PATH
-    DB_PATH = args.db
+    if args.db:
+        DB_PATH = args.db
     targets = args.datasets or list(IMPORTERS.keys())
     print(f"DB: {DB_PATH}\nDatasets: {targets}\n", flush=True)
     conn = open_db()
