@@ -459,6 +459,40 @@ class Handler(BaseHTTPRequestHandler):
                 ).fetchall()
             return self._json(200, [dict(r) for r in rows])
 
+        if p == "/api/admin/monthly":
+            if not self._admin_ok(): return self._json(401, {"error":"unauthorized"})
+            with db() as c:
+                # auto-finalize any past months that need it
+                try: maybe_finalize_past_months(c)
+                except Exception as e: print("auto-finalize err:", e)
+                rows = c.execute("""
+                    SELECT id, year_month AS ym, rank, name, score, total_time,
+                           score_id, prize_usdt, status, wallet, contact, tx_hash,
+                           datetime(finalized_at,'unixepoch') AS finalized,
+                           datetime(paid_at,'unixepoch') AS paid_at
+                    FROM monthly_winners
+                    ORDER BY year_month DESC, rank ASC
+                """).fetchall()
+            return self._json(200, [dict(r) for r in rows])
+
+        if p == "/api/admin/overview":
+            if not self._admin_ok(): return self._json(401, {"error":"unauthorized"})
+            with db() as c:
+                pending_instant = c.execute("SELECT COUNT(*), COALESCE(SUM(amount_usdt),0) FROM claims WHERE status='pending'").fetchone()
+                pending_monthly = c.execute("SELECT COUNT(*), COALESCE(SUM(prize_usdt),0) FROM monthly_winners WHERE status='pending'").fetchone()
+                paid_instant    = c.execute("SELECT COUNT(*), COALESCE(SUM(amount_usdt),0) FROM claims WHERE status='paid'").fetchone()
+                paid_monthly    = c.execute("SELECT COUNT(*), COALESCE(SUM(prize_usdt),0) FROM monthly_winners WHERE status='paid'").fetchone()
+            return self._json(200, {
+                "pending": {"instant": {"count": pending_instant[0], "amount": pending_instant[1]},
+                            "monthly": {"count": pending_monthly[0], "amount": pending_monthly[1]}},
+                "paid":    {"instant": {"count": paid_instant[0],    "amount": paid_instant[1]},
+                            "monthly": {"count": paid_monthly[0],    "amount": paid_monthly[1]}},
+            })
+
+        # /admin pretty URL
+        if p in ("/admin", "/admin/"):
+            return self._file(STATIC_DIR / "admin.html")
+
         # Static
         rel = p.lstrip("/")
         if rel == "": rel = "index.html"
