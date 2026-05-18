@@ -33,6 +33,7 @@ ADMIN_TOKEN  = os.environ.get("ADMIN_TOKEN", "change-me-admin-token")
 SPONSOR_WALLET = os.environ.get("SPONSOR_WALLET", "TMNVuGuxMfTVVFJuVcjsxswYsCkMnTZRSy")
 PRIZE_USDT   = 10
 MONTHLY_PRIZES = [100, 75, 50]   # 1st, 2nd, 3rd place at month end (USDT TRC20)
+QUALIFY_MIN  = 5                  # minimum score to appear on any ranked leaderboard
 CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"  # Crockford-ish, no 0/O/1/I
 OTDB_BATCH   = 50  # per difficulty
 TRC20_RE     = re.compile(r"^T[1-9A-HJ-NP-Za-km-z]{33}$")
@@ -199,7 +200,7 @@ def prev_ym(ym):
     return f"{y:04d}-{m-1:02d}"
 
 def month_leaderboard(c, ym, limit=10):
-    """Return top entries for the given month: best run per name."""
+    """Return top entries for the given month: best run per name. Only qualifying scores."""
     rows = c.execute("""
         WITH ranked AS (
             SELECT id, name, score, prize, won, total_time, created_at,
@@ -207,13 +208,14 @@ def month_leaderboard(c, ym, limit=10):
                                       ORDER BY score DESC, total_time ASC, created_at ASC) AS rn
             FROM scores
             WHERE strftime('%Y-%m', created_at, 'unixepoch') = ?
+              AND score >= ?
         )
         SELECT id AS score_id, name, score, prize, won, total_time,
                strftime('%Y-%m-%d', created_at, 'unixepoch') AS date
         FROM ranked WHERE rn=1
         ORDER BY score DESC, total_time ASC, created_at ASC
         LIMIT ?
-    """, (ym, limit)).fetchall()
+    """, (ym, QUALIFY_MIN, limit)).fetchall()
     return [dict(r) for r in rows]
 
 def finalize_month(c, ym):
@@ -425,13 +427,22 @@ class Handler(BaseHTTPRequestHandler):
             return self._draw_questions(exclude)
 
         if p == "/api/leaderboard":
+            # All-time: only qualifying scores (>= QUALIFY_MIN), best run per player
             with db() as c:
-                rows = c.execute(
-                    "SELECT id, name, score, prize, won, total_time AS totalTime, "
-                    "strftime('%Y-%m-%d', created_at,'unixepoch') AS date "
-                    "FROM scores ORDER BY score DESC, total_time ASC LIMIT ?",
-                    (MAX_LIMIT,)
-                ).fetchall()
+                rows = c.execute("""
+                    WITH ranked AS (
+                        SELECT id, name, score, prize, won, total_time, created_at,
+                               ROW_NUMBER() OVER (PARTITION BY LOWER(name)
+                                                  ORDER BY score DESC, total_time ASC, created_at ASC) AS rn
+                        FROM scores
+                        WHERE score >= ?
+                    )
+                    SELECT id, name, score, prize, won, total_time AS totalTime,
+                           strftime('%Y-%m-%d', created_at, 'unixepoch') AS date
+                    FROM ranked WHERE rn=1
+                    ORDER BY score DESC, total_time ASC, created_at ASC
+                    LIMIT ?
+                """, (QUALIFY_MIN, MAX_LIMIT)).fetchall()
             out = []
             for r in rows:
                 d = dict(r); d["won"] = bool(d["won"]); out.append(d)
