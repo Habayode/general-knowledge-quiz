@@ -727,9 +727,12 @@ class Handler(BaseHTTPRequestHandler):
             if not rate_ok(ip, "game_start_daily", window=86400, maxn=START_PER_DAY):
                 return self._json(429, {"error":"daily_limit", "detail":f"Daily limit ({START_PER_DAY} games) reached. Resets in 24h."})
 
-            payload = self._body(1024) or {}
+            # 8KB body cap — Turnstile tokens can be 1-2 KB
+            payload = self._body(8192) or {}
             name = str(payload.get("name","")).strip()[:MAX_NAME] or "Anonymous"
             turnstile_token = str(payload.get("turnstile_token","")).strip()
+            if TURNSTILE_SECRET and not turnstile_token:
+                print(f"WARN /api/game/start no token in body (size={self.headers.get('Content-Length')})")
 
             # Turnstile (only enforced when configured)
             if TURNSTILE_SECRET and not verify_turnstile(turnstile_token, ip):
