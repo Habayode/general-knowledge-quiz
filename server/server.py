@@ -32,6 +32,7 @@ LISTEN       = ("127.0.0.1", 8080)    # bound locally — Caddy fronts it on :44
 ADMIN_TOKEN  = os.environ.get("ADMIN_TOKEN", "change-me-admin-token")
 SPONSOR_WALLET = os.environ.get("SPONSOR_WALLET", "TMNVuGuxMfTVVFJuVcjsxswYsCkMnTZRSy")
 PRIZE_USDT   = 10
+MONTHLY_PRIZES = [100, 75, 50]   # 1st, 2nd, 3rd place at month end (USDT TRC20)
 OTDB_BATCH   = 50  # per difficulty
 TRC20_RE     = re.compile(r"^T[1-9A-HJ-NP-Za-km-z]{33}$")
 MAX_NAME     = 24
@@ -86,6 +87,25 @@ def init_db():
             created_at INTEGER NOT NULL,
             updated_at INTEGER NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS monthly_winners (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            year_month TEXT NOT NULL,              -- 'YYYY-MM'
+            rank INTEGER NOT NULL,                 -- 1, 2, or 3
+            name TEXT NOT NULL,
+            score INTEGER NOT NULL,
+            total_time REAL NOT NULL,
+            score_id INTEGER,
+            prize_usdt INTEGER NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',-- pending|paid|rejected
+            wallet TEXT,
+            contact TEXT,
+            tx_hash TEXT,
+            finalized_at INTEGER NOT NULL,
+            paid_at INTEGER,
+            UNIQUE(year_month, rank)
+        );
+        CREATE INDEX IF NOT EXISTS idx_mw_ym ON monthly_winners(year_month);
         """)
 
 def question_count():
@@ -156,6 +176,86 @@ def bootstrap_questions():
     if question_count() < 200:
         seed_from_otdb()
     print(f"questions in db: {question_count()}")
+
+# ---- Monthly leaderboard ----
+def current_ym():
+    """Current year-month in UTC, e.g. '2026-05'."""
+    return time.strftime("%Y-%m", time.gmtime())
+
+def prev_ym(ym):
+    """Given 'YYYY-MM', return previous month's 'YYYY-MM'."""
+    y, m = int(ym[:4]), int(ym[5:7])
+    if m == 1: return f"{y-1:04d}-12"
+    return f"{y:04d}-{m-1:02d}"
+
+def month_leaderboard(c, ym, limit=10):
+    """Return top entries for the given month: best run per name."""
+    rows = c.execute("""
+        WITH ranked AS (
+            SELECT id, name, score, prize, won, total_time, created_at,
+                   ROW_NUMBER() OVER (PARTITION BY LOWER(name)
+                                      ORDER BY score DESC, total_time ASC, created_at ASC) AS rn
+            FROM scores
+            WHERE strftime('%Y-%m', created_at, 'unixepoch') = ?
+        )
+        SELECT id AS score_id, name, score, prize, won, total_time,
+               strftime('%Y-%m-%d', created_at, 'unixepoch') AS date
+        FROM ranked WHERE rn=1
+        ORDER BY score DESC, total_time ASC, created_at ASC
+        LIMIT ?
+    """, (ym, limit)).fetchall()
+    return [dict(r) for r in rows]
+
+def finalize_month(c, ym):
+    """Snapshot top 3 best-run-per-name into monthly_winners. Idempotent."""
+    existing = c.execute("SELECT COUNT(*) FROM monthly_winners WHERE year_month=?", (ym,)).fetchone()[0]
+    if existing > 0:
+        return existing
+    top = month_leaderboard(c, ym, limit=3)
+    now = int(time.time())
+    inserted = 0
+    for i, row in enumerate(top):
+        rank = i + 1
+        prize = MONTHLY_PRIZES[i] if i < len(MONTHLY_PRIZES) else 0
+        try:
+            c.execute(
+                "INSERT INTO monthly_winners(year_month, rank, name, score, total_time, score_id, prize_usdt, finalized_at)"
+                " VALUES(?,?,?,?,?,?,?,?)",
+                (ym, rank, row["name"], row["score"], row["total_time"], row["score_id"], prize, now)
+            )
+            inserted += 1
+        except sqlite3.IntegrityError:
+            pass
+    c.commit()
+    return inserted
+
+def maybe_finalize_past_months(c):
+    """Auto-finalize any completed past months that have scores but no winners yet."""
+    cur = current_ym()
+    rows = c.execute("""
+        SELECT DISTINCT strftime('%Y-%m', created_at, 'unixepoch') AS ym FROM scores
+        WHERE strftime('%Y-%m', created_at, 'unixepoch') < ?
+    """, (cur,)).fetchall()
+    finalized = []
+    for r in rows:
+        ym = r["ym"]
+        if not ym: continue
+        existing = c.execute("SELECT COUNT(*) FROM monthly_winners WHERE year_month=?", (ym,)).fetchone()[0]
+        if existing == 0:
+            n = finalize_month(c, ym)
+            if n > 0: finalized.append({"ym": ym, "winners": n})
+    return finalized
+
+def month_meta(ym):
+    """Returns days_remaining (0 for past months) + is_current."""
+    y, m = int(ym[:4]), int(ym[5:7])
+    # last day of month
+    import calendar
+    last_day = calendar.monthrange(y, m)[1]
+    now = time.gmtime()
+    if (now.tm_year, now.tm_mon) == (y, m):
+        return {"is_current": True, "days_remaining": last_day - now.tm_mday + 1}
+    return {"is_current": False, "days_remaining": 0}
 
 # ---- Rate limit (in-memory) ----
 _subs = {}
@@ -230,17 +330,61 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(200, {"ok": True, "time": int(time.time())})
 
         if p == "/api/stats":
+            cur_ym = current_ym()
             with db() as c:
                 total_plays = c.execute("SELECT COUNT(*) FROM scores").fetchone()[0]
                 winners     = c.execute("SELECT COUNT(*) FROM scores WHERE won=1").fetchone()[0]
                 paid_out    = c.execute("SELECT COALESCE(SUM(amount_usdt),0) FROM claims WHERE status='paid'").fetchone()[0]
+                monthly_paid= c.execute("SELECT COALESCE(SUM(prize_usdt),0) FROM monthly_winners WHERE status='paid'").fetchone()[0]
                 pending     = c.execute("SELECT COUNT(*) FROM claims WHERE status='pending'").fetchone()[0]
                 qcount      = c.execute("SELECT COUNT(*) FROM questions").fetchone()[0]
+                month_players = c.execute("""
+                    SELECT COUNT(DISTINCT LOWER(name)) FROM scores
+                    WHERE strftime('%Y-%m', created_at, 'unixepoch') = ?
+                """, (cur_ym,)).fetchone()[0]
+            meta = month_meta(cur_ym)
             return self._json(200, {
                 "plays": total_plays, "winners": winners,
-                "paid_usdt": paid_out, "pending_claims": pending,
+                "paid_usdt": paid_out + monthly_paid, "pending_claims": pending,
                 "questions": qcount, "prize_usdt": PRIZE_USDT,
+                "monthly_prizes": MONTHLY_PRIZES,
+                "month": cur_ym, "month_players": month_players,
+                "days_remaining": meta["days_remaining"],
             })
+
+        if p == "/api/leaderboard/monthly":
+            qs = parse_qs(u.query)
+            ym = (qs.get("ym", [None])[0] or current_ym()).strip()[:7]
+            if not re.match(r"^\d{4}-\d{2}$", ym):
+                return self._json(400, {"error":"bad_ym"})
+            try:
+                with db() as c:
+                    rows = month_leaderboard(c, ym, limit=10)
+            except Exception as e:
+                return self._json(500, {"error": str(e)})
+            return self._json(200, {"ym": ym, "rows": rows, **month_meta(ym)})
+
+        if p == "/api/winners/monthly":
+            qs = parse_qs(u.query)
+            limit = min(int(qs.get("limit", ["12"])[0] or "12"), 36)
+            with db() as c:
+                # auto-finalize any past months that need it
+                try: maybe_finalize_past_months(c)
+                except Exception as e: print("auto-finalize err:", e)
+                rows = c.execute("""
+                    SELECT year_month AS ym, rank, name, score, total_time, prize_usdt,
+                           status, tx_hash, finalized_at,
+                           strftime('%Y-%m-%d', finalized_at, 'unixepoch') AS finalized_date
+                    FROM monthly_winners
+                    ORDER BY year_month DESC, rank ASC
+                """).fetchall()
+            # group by ym
+            grouped = {}
+            for r in rows:
+                d = dict(r)
+                grouped.setdefault(d["ym"], []).append(d)
+            months = [{"ym": ym, "winners": ws} for ym, ws in list(grouped.items())[:limit]]
+            return self._json(200, {"months": months})
 
         if p == "/api/sponsor":
             return self._json(200, {
@@ -394,6 +538,42 @@ class Handler(BaseHTTPRequestHandler):
                 cid = cur.lastrowid
                 c.commit()
             return self._json(200, {"ok": True, "claim_id": cid, "status": "pending"})
+
+        if p == "/api/admin/monthly/finalize":
+            if not self._admin_ok(): return self._json(401, {"error":"unauthorized"})
+            payload = self._body() or {}
+            ym = str(payload.get("ym","")).strip()[:7]
+            if not re.match(r"^\d{4}-\d{2}$", ym):
+                return self._json(400, {"error":"bad_ym"})
+            with db() as c:
+                n = finalize_month(c, ym)
+                rows = c.execute(
+                    "SELECT rank, name, score, total_time, prize_usdt, status FROM monthly_winners "
+                    "WHERE year_month=? ORDER BY rank", (ym,)
+                ).fetchall()
+            return self._json(200, {"ok": True, "ym": ym, "inserted": n, "winners": [dict(r) for r in rows]})
+
+        m_mw = re.match(r"^/api/admin/monthly/(\d+)/(paid|reject)$", p)
+        if m_mw:
+            if not self._admin_ok(): return self._json(401, {"error":"unauthorized"})
+            mid = int(m_mw.group(1)); action = m_mw.group(2)
+            payload = self._body() or {}
+            tx = str(payload.get("tx_hash","")).strip()[:128]
+            wallet = str(payload.get("wallet","")).strip()
+            contact = str(payload.get("contact","")).strip()[:MAX_CONTACT]
+            new_status = "paid" if action == "paid" else "rejected"
+            with db() as c:
+                r = c.execute("SELECT id FROM monthly_winners WHERE id=?", (mid,)).fetchone()
+                if not r: return self._json(404, {"error":"not_found"})
+                c.execute("""UPDATE monthly_winners
+                             SET status=?, tx_hash=COALESCE(NULLIF(?,''), tx_hash),
+                                 wallet=COALESCE(NULLIF(?,''), wallet),
+                                 contact=COALESCE(NULLIF(?,''), contact),
+                                 paid_at=CASE WHEN ?='paid' THEN strftime('%s','now') ELSE paid_at END
+                             WHERE id=?""",
+                          (new_status, tx, wallet, contact, new_status, mid))
+                c.commit()
+            return self._json(200, {"ok": True, "id": mid, "status": new_status})
 
         # /api/admin/claims/<id>/paid
         m = re.match(r"^/api/admin/claims/(\d+)/(paid|reject)$", p)

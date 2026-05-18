@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>gkall — Win $10 USDT for 10 correct answers · powered by HAG_Ai</title>
-<meta name="description" content="A general-knowledge skill challenge by HAG_Ai. Answer 10 questions correctly under a 10-second timer per question and win $10 USDT (TRC20). Sponsored, anti-cheat verified, transparent leaderboard. Contact: hello@gkall.online" />
+<title>gkall — Win up to $110 USDT · monthly $225 prize pool · powered by HAG_Ai</title>
+<meta name="description" content="A general-knowledge skill challenge by HAG_Ai. Get $10 USDT for every 10/10 round + a monthly $225 prize pool ($100/$75/$50 for top 3). Anti-cheat verified, transparent leaderboard, paid in USDT (TRC20). Contact: hello@gkall.online" />
 <meta name="author" content="HAG_Ai" />
 <meta property="og:title" content="gkall — Win $10 USDT · powered by HAG_Ai" />
 <meta property="og:description" content="Answer 10 questions correctly under a 10-second timer per question and win $10 USDT." />
@@ -129,6 +129,34 @@
   .prize-sub{margin-top:10px;color:var(--muted);font-size:0.95rem}
   .prize-row{display:flex;align-items:baseline;gap:12px;margin-top:14px}
   .chip{padding:4px 10px;border-radius:6px;background:rgba(52,211,153,0.12);color:var(--green);font-size:0.75rem;font-weight:600;letter-spacing:0.05em}
+  .monthly-pool{margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+  .mp-label{font-size:0.78rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px}
+  .mp-row{display:flex;gap:10px;justify-content:space-between}
+  .mp-pos{flex:1;background:rgba(0,0,0,0.2);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;transition:transform 0.15s}
+  .mp-pos:hover{transform:translateY(-2px);border-color:var(--border-2)}
+  .mp-rank{font-size:1.4rem;display:block}
+  .mp-amt{display:block;font-family:'Space Grotesk';font-weight:700;font-size:1.25rem;color:var(--accent);margin-top:4px}
+  .mp-sub{font-size:0.82rem;margin-top:12px;text-align:center}
+
+  .tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+  .tab{padding:9px 16px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-weight:500;font-size:0.92rem;font-family:inherit;transition:all 0.15s}
+  .tab.active{background:var(--accent-soft);color:var(--accent);border-color:rgba(245,196,81,0.35)}
+  .tab:hover:not(.active){background:var(--card-2);color:var(--text)}
+  .tab-badge{font-size:0.72rem;padding:2px 6px;background:rgba(255,255,255,0.08);border-radius:4px;margin-left:6px;color:inherit}
+  .month-card{background:linear-gradient(160deg,rgba(245,196,81,0.04),rgba(255,255,255,0.02));border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px}
+  .month-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px}
+  .month-card-head h3{margin:0;font-size:1.05rem}
+  .winner-rows{display:grid;gap:8px}
+  .winner-row{display:grid;grid-template-columns:36px 1fr auto auto;gap:14px;align-items:center;padding:10px 14px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px solid var(--border)}
+  .winner-rank{font-family:'Space Grotesk';font-weight:700;font-size:1.1rem;text-align:center}
+  .winner-prize{font-family:'Space Grotesk';font-weight:700;color:var(--accent)}
+  .winner-status{font-size:0.72rem;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600}
+  .ws-paid{background:rgba(52,211,153,0.15);color:var(--green)}
+  .ws-pending{background:rgba(250,204,21,0.12);color:var(--accent)}
+  .ws-rejected{background:rgba(248,113,113,0.12);color:var(--red)}
+  .countdown{display:inline-flex;align-items:center;gap:6px;font-size:0.85rem;color:var(--muted);padding:6px 12px;background:var(--card);border-radius:8px;border:1px solid var(--border)}
+  .countdown b{color:var(--accent)}
+  .prize-pool-info{padding:14px 18px;background:rgba(245,196,81,0.06);border:1px solid rgba(245,196,81,0.22);border-radius:12px;margin-bottom:18px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center}
 
   /* ===== Stats ===== */
   .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:40px 0}
@@ -294,8 +322,8 @@
     <div class="hero-grid">
       <div>
         <span class="pill"><span class="dot"></span> Live · Powered by HAG_Ai</span>
-        <h1 style="margin-top:20px">Test your knowledge.<br><span class="gold">Win $10 USDT.</span></h1>
-        <p class="lede">A skill-based general-knowledge challenge. Answer 10 questions correctly under a 10-second timer per question and claim your prize in USDT on the Tron network. No accounts. No tricks. Just brains.</p>
+        <h1 style="margin-top:20px">Test your knowledge.<br><span class="gold">Win up to $110 USDT.</span></h1>
+        <p class="lede">$10 USDT for every 10/10 round, plus a $225 monthly prize pool for the top 3 — $100, $75, $50. Skill-based. 16,000+ questions across every domain of human knowledge. Paid on Tron (TRC20). No accounts.</p>
         <div class="hero-cta">
           <button class="btn btn-primary btn-big" onclick="go('play')">Start Challenge →</button>
           <button class="btn btn-ghost btn-big" onclick="go('how')">How it works</button>
@@ -307,13 +335,21 @@
         </div>
       </div>
       <div class="hero-card">
-        <div class="prize-label">Current jackpot</div>
+        <div class="prize-label">Per round · Instant</div>
         <div class="prize-amount gold">$10</div>
         <div class="prize-row">
           <span class="chip">USDT · TRC20</span>
-          <span class="muted" style="font-size:0.9rem">Sponsored payout</span>
+          <span class="muted" style="font-size:0.9rem">Awarded for every 10/10</span>
         </div>
-        <div class="prize-sub">Awarded per 10/10 round. Funded by sponsors and verified by manual review.</div>
+        <div class="monthly-pool">
+          <div class="mp-label">Monthly Top 3 · Awarded at month end</div>
+          <div class="mp-row">
+            <div class="mp-pos"><span class="mp-rank">🥇</span><span class="mp-amt">$100</span></div>
+            <div class="mp-pos"><span class="mp-rank">🥈</span><span class="mp-amt">$75</span></div>
+            <div class="mp-pos"><span class="mp-rank">🥉</span><span class="mp-amt">$50</span></div>
+          </div>
+          <div class="mp-sub muted" id="mp-countdown">Loading…</div>
+        </div>
       </div>
     </div>
 
@@ -345,8 +381,8 @@
       </div>
       <div class="card">
         <div class="step">3</div>
-        <h3>Claim $10 USDT</h3>
-        <p>Hit 10/10 and submit your Tron (TRC20) wallet. Each claim is reviewed manually and paid from the sponsorship pool.</p>
+        <h3>Claim $10 + monthly bonus</h3>
+        <p>10/10 = instant $10 USDT to your Tron (TRC20) wallet. Top 3 on the monthly leaderboard get an extra <b style="color:var(--accent)">$100 / $75 / $50</b> at month end. Both stack.</p>
       </div>
     </div>
   </div>
@@ -426,11 +462,16 @@
     <div class="header-row">
       <div>
         <h2>Leaderboard</h2>
-        <p class="muted">Top 50. Ranked by correct answers, ties broken by speed.</p>
+        <p class="muted">All-time, monthly competition, and past champions.</p>
       </div>
       <span id="lb-mode" class="mode-badge online"><span class="dot"></span> Global</span>
     </div>
-    <div id="lb-body"></div>
+    <div class="tabs">
+      <button class="tab active" data-tab="month" onclick="switchTab('month')">This Month <span id="tab-month-badge" class="tab-badge">—</span></button>
+      <button class="tab" data-tab="all" onclick="switchTab('all')">All-time</button>
+      <button class="tab" data-tab="past" onclick="switchTab('past')">Past Winners</button>
+    </div>
+    <div id="lb-content"></div>
   </div>
 </section>
 
@@ -520,7 +561,10 @@
   <div class="container">
     <h2 class="center">FAQ &amp; Rules</h2>
     <div class="faq" style="margin-top:30px">
-      <details><summary>How do I win?</summary><p>Answer all 10 questions correctly within the per-question 10-second timer. The round ends immediately on a wrong answer, a timeout, or any anti-cheat trigger.</p></details>
+      <details><summary>How do I win?</summary><p>Two ways: (1) Hit 10/10 in any single round — you instantly get $10 USDT. (2) Finish in the top 3 of the monthly leaderboard for an additional $100 / $75 / $50 USDT at month end. Both can stack: top monthly champ with even a single 10/10 can walk away with $110.</p></details>
+      <details><summary>How does the monthly competition work?</summary><p>Each player's <b>best single run</b> in the current month is what counts (highest score, fastest time). Top 3 at the end of the month win $100 / $75 / $50 USDT respectively. Months reset on the 1st of every month at 00:00 UTC. Past winners are listed permanently on the Past Winners tab.</p></details>
+      <details><summary>What if I tie with someone on score?</summary><p>Ties are broken by total time (faster wins). If still tied, the earlier submission wins. Each name only counts once per month — keep playing, and only your best run is on the board.</p></details>
+      <details><summary>What if no one's played much in a month?</summary><p>Only filled positions are paid. If only 2 distinct players play, only 1st ($100) and 2nd ($75) are awarded. The unfilled prize rolls into next month's pool.</p></details>
       <details><summary>How is the prize paid?</summary><p>Winners submit their Tron (TRC20) USDT wallet via the Claim page. Each claim is reviewed manually by the operator and paid from the sponsorship pool. No private keys are held on the server — payouts are not automatic, but they are real.</p></details>
       <details><summary>What counts as cheating?</summary><p>Switching tabs or applications, opening developer tools, attempting to copy/paste, right-clicking, or answering implausibly fast (under 1.5s) on hard questions. Triggering any of these forfeits the round.</p></details>
       <details><summary>Will I see the same questions twice?</summary><p>The site avoids questions you've already seen on this device. Pool currently contains 200+ items across four difficulty tiers. Once you exhaust the unseen pool, repeats may appear.</p></details>
@@ -657,6 +701,12 @@ async function loadStats() {
     document.getElementById('st-questions').textContent  = s.questions.toLocaleString();
     document.getElementById('st-pending').textContent    = s.pending_claims;
     document.getElementById('st-paid-2').textContent     = s.paid_usdt;
+    const cd = document.getElementById('mp-countdown');
+    if (cd && s.days_remaining != null) {
+      cd.innerHTML = `<b style="color:var(--accent)">${s.days_remaining}</b> day${s.days_remaining===1?'':'s'} left this month · <b>${s.month_players||0}</b> player${(s.month_players||0)===1?'':'s'} ranked`;
+    }
+    const tb = document.getElementById('tab-month-badge');
+    if (tb && s.days_remaining != null) tb.textContent = s.days_remaining + 'd left';
   } catch(e) { console.warn('stats failed', e); }
 }
 async function loadSponsor() {
@@ -830,8 +880,62 @@ async function submitScore(won) {
 function resetAndPlay() { showPlayPanel(); }
 
 // ============================== Leaderboard ==============================
+let currentTab = 'month';
+const MONTHLY_PRIZES = [100, 75, 50];
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  loadLeaderboard();
+}
+
 async function loadLeaderboard() {
-  const body = document.getElementById('lb-body');
+  if (currentTab === 'all') return renderAllTime();
+  if (currentTab === 'past') return renderPastWinners();
+  return renderMonthly();
+}
+
+async function renderMonthly() {
+  const body = document.getElementById('lb-content');
+  const mode = document.getElementById('lb-mode');
+  body.innerHTML = '<div class="lb-empty">Loading…</div>';
+  let data = null, isGlobal = false;
+  try {
+    const r = await fetch(API + '/api/leaderboard/monthly');
+    if (r.ok) { data = await r.json(); isGlobal = true; }
+  } catch(e) {}
+  mode.className = 'mode-badge ' + (isGlobal ? 'online' : 'offline');
+  mode.innerHTML = '<span class="dot"></span> ' + (isGlobal ? 'Global · Monthly' : 'Offline');
+  if (!data) { body.innerHTML = '<div class="lb-empty">Monthly leaderboard unavailable.</div>'; return; }
+  const rows = data.rows || [];
+  let html = `
+    <div class="prize-pool-info">
+      <div>
+        <div class="muted" style="font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase">Current month · ${escapeHtml(data.ym)}</div>
+        <div style="margin-top:4px"><b>$225 prize pool</b> · 🥇 $100 · 🥈 $75 · 🥉 $50</div>
+      </div>
+      <div class="countdown">⏳ <b>${data.days_remaining}</b> day${data.days_remaining===1?'':'s'} remaining</div>
+    </div>`;
+  if (!rows.length) {
+    body.innerHTML = html + '<div class="lb-empty">No plays this month yet. Be the first on the board.</div>';
+    return;
+  }
+  html += '<table class="lb-table"><thead><tr><th>#</th><th>Name</th><th>Score</th><th>Time</th><th>Prize on hold</th></tr></thead><tbody>';
+  rows.forEach((e, i) => {
+    const rc = i < 3 ? 'lb-row-' + (i+1) : '';
+    const prize = i < 3 ? '<b style="color:var(--accent)">$' + MONTHLY_PRIZES[i] + '</b>' : '<span class="muted">—</span>';
+    html += '<tr class="' + rc + '"><td class="lb-rank">' + (i+1) + '</td>'
+      + '<td class="' + (e.won ? 'lb-winner' : '') + '">' + escapeHtml(e.name) + (e.won ? ' ⭐' : '') + '</td>'
+      + '<td>' + e.score + '/10</td>'
+      + '<td>' + Number(e.total_time).toFixed(1) + 's</td>'
+      + '<td>' + prize + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  body.innerHTML = html;
+}
+
+async function renderAllTime() {
+  const body = document.getElementById('lb-content');
   const mode = document.getElementById('lb-mode');
   body.innerHTML = '<div class="lb-empty">Loading…</div>';
   let list = null, isGlobal = false;
@@ -841,11 +945,8 @@ async function loadLeaderboard() {
   } catch(e) {}
   if (!list || !list.length) list = loadLocalLB();
   mode.className = 'mode-badge ' + (isGlobal ? 'online' : 'offline');
-  mode.innerHTML = '<span class="dot"></span> ' + (isGlobal ? 'Global' : 'Local fallback (offline)');
-  if (!list.length) {
-    body.innerHTML = '<div class="lb-empty">No scores yet. Be the first.</div>';
-    return;
-  }
+  mode.innerHTML = '<span class="dot"></span> ' + (isGlobal ? 'Global · All-time' : 'Local fallback');
+  if (!list.length) { body.innerHTML = '<div class="lb-empty">No scores yet.</div>'; return; }
   let html = '<table class="lb-table"><thead><tr><th>#</th><th>Name</th><th>Score</th><th>Prize</th><th>Time</th><th>Date</th></tr></thead><tbody>';
   list.slice(0, 50).forEach((e, i) => {
     const rc = i < 3 ? 'lb-row-' + (i+1) : '';
@@ -853,10 +954,48 @@ async function loadLeaderboard() {
       + '<td class="' + (e.won ? 'lb-winner' : '') + '">' + escapeHtml(e.name) + (e.won ? ' ⭐' : '') + '</td>'
       + '<td>' + e.score + '/10</td>'
       + '<td>$' + e.prize + '</td>'
-      + '<td>' + Number(e.totalTime).toFixed(1) + 's</td>'
+      + '<td>' + Number(e.totalTime || e.total_time || 0).toFixed(1) + 's</td>'
       + '<td>' + escapeHtml(e.date || '') + '</td></tr>';
   });
   html += '</tbody></table>';
+  body.innerHTML = html;
+}
+
+async function renderPastWinners() {
+  const body = document.getElementById('lb-content');
+  const mode = document.getElementById('lb-mode');
+  body.innerHTML = '<div class="lb-empty">Loading…</div>';
+  let data = null;
+  try {
+    const r = await fetch(API + '/api/winners/monthly');
+    if (r.ok) data = await r.json();
+  } catch(e) {}
+  mode.className = 'mode-badge online';
+  mode.innerHTML = '<span class="dot"></span> Hall of fame';
+  if (!data || !data.months || !data.months.length) {
+    body.innerHTML = `
+      <div class="lb-empty" style="text-align:left;font-style:normal;padding:20px">
+        <h3 style="color:var(--accent);margin-bottom:10px;font-size:1.05rem">No monthly winners yet</h3>
+        <p>The first monthly competition is in progress. Top 3 of this month will be announced here on the 1st of next month.</p>
+        <p style="margin-top:10px;font-size:0.92rem">Winners are paid in USDT (TRC20). Contact <a href="mailto:hello@gkall.online" style="color:var(--accent)">hello@gkall.online</a> with your wallet to claim.</p>
+      </div>`;
+    return;
+  }
+  const medal = ['🥇','🥈','🥉'];
+  let html = '';
+  data.months.forEach(m => {
+    html += `<div class="month-card"><div class="month-card-head"><h3>${escapeHtml(m.ym)}</h3><span class="muted" style="font-size:0.85rem">Finalized ${escapeHtml(m.winners[0]?.finalized_date || '')}</span></div><div class="winner-rows">`;
+    m.winners.forEach(w => {
+      const sclass = w.status === 'paid' ? 'ws-paid' : (w.status === 'rejected' ? 'ws-rejected' : 'ws-pending');
+      html += `<div class="winner-row">
+        <div class="winner-rank">${medal[w.rank-1] || '#'+w.rank}</div>
+        <div><b>${escapeHtml(w.name)}</b> <span class="muted" style="font-size:0.85rem">· ${w.score}/10 in ${Number(w.total_time).toFixed(1)}s</span></div>
+        <div class="winner-prize">$${w.prize_usdt}</div>
+        <div class="winner-status ${sclass}">${escapeHtml(w.status)}</div>
+      </div>`;
+    });
+    html += '</div></div>';
+  });
   body.innerHTML = html;
 }
 
