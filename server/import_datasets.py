@@ -59,16 +59,22 @@ def _make_ssl_ctx():
 
 SSL_CTX = _make_ssl_ctx()
 
-def http_json(url, retries=4):
+def http_json(url, retries=6):
     last = None
     for i in range(retries):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
             with urllib.request.urlopen(req, timeout=45, context=SSL_CTX) as r:
                 return json.loads(r.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            last = e
+            # exponential backoff for 429 (rate limited) and 5xx
+            if e.code == 429: time.sleep(15 * (i + 1))
+            elif 500 <= e.code < 600: time.sleep(5 * (i + 1))
+            else: time.sleep(2 * (i + 1))
         except Exception as e:
             last = e
-            time.sleep(1.5 * (i + 1))
+            time.sleep(2 * (i + 1))
     raise RuntimeError(f"HTTP failed after retries: {url} :: {last}")
 
 def hf_rows(dataset, config, split, max_rows=200_000):
@@ -268,6 +274,13 @@ def imp_csqa(conn):
         q_field="question", choices_field="choices", answer_field="answerKey",
         category_field=None, answer_kind="letter")
 
+def imp_qasc(conn):
+    """QASC: question + 8 choices + answerKey (A-H). We pick correct + 3 distractors."""
+    return imp_hf_simple(conn, "allenai/qasc", "default", ["train","validation"],
+        target_diff=2, source_label="qasc",
+        q_field="question", choices_field="choices", answer_field="answerKey",
+        category_field=None, answer_kind="letter")
+
 def imp_truthfulqa(conn):
     """TruthfulQA mc1: row has question + mc1_targets:{choices,labels}."""
     print(f"\n=== truthfulqa ===", flush=True)
@@ -332,6 +345,7 @@ IMPORTERS = {
     "arc_chal": imp_arc_chal,
     "obqa": imp_obqa,
     "csqa": imp_csqa,
+    "qasc": imp_qasc,
     "truthfulqa": imp_truthfulqa,
     "sciq": imp_sciq,
 }
