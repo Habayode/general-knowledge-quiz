@@ -257,7 +257,7 @@ def imp_arc_chal(conn):
         category_field=None, answer_kind="letter")
 
 def imp_obqa(conn):
-    return imp_hf_simple(conn, "openbookqa", "main", ["train","validation","test"],
+    return imp_hf_simple(conn, "allenai/openbookqa", "main", ["train","validation","test"],
         target_diff=2, source_label="openbookqa",
         q_field="question_stem", choices_field="choices", answer_field="answerKey",
         category_field=None, answer_kind="letter")
@@ -273,7 +273,7 @@ def imp_truthfulqa(conn):
     print(f"\n=== truthfulqa ===", flush=True)
     inserted = 0
     try:
-        for row in hf_rows("truthful_qa", "multiple_choice", "validation"):
+        for row in hf_rows("truthfulqa/truthful_qa", "multiple_choice", "validation"):
             try:
                 q = row.get("question")
                 mc = row.get("mc1_targets") or {}
@@ -305,7 +305,7 @@ def imp_sciq(conn):
     inserted = 0
     for split in ["train","validation","test"]:
         try:
-            for row in hf_rows("sciq", "default", split):
+            for row in hf_rows("allenai/sciq", "default", split):
                 try:
                     q = row.get("question")
                     correct = row.get("correct_answer")
