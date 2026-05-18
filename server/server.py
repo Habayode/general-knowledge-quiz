@@ -33,6 +33,8 @@ ADMIN_TOKEN  = os.environ.get("ADMIN_TOKEN", "change-me-admin-token")
 SPONSOR_WALLET = os.environ.get("SPONSOR_WALLET", "TMNVuGuxMfTVVFJuVcjsxswYsCkMnTZRSy")
 TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "")  # e.g. "7890123456:ABC..."
 TG_CHANNEL   = os.environ.get("TG_CHANNEL", "")    # e.g. "@gkall_official" or "-100123..."
+TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")   # public; ok to send to client
+TURNSTILE_SECRET   = os.environ.get("TURNSTILE_SECRET", "")     # private; server-side only
 PRIZE_USDT   = 10
 MONTHLY_PRIZES = [100, 75, 50]   # 1st, 2nd, 3rd place at month end (USDT TRC20)
 QUALIFY_MIN  = 5                  # minimum score to appear on any ranked leaderboard
@@ -41,6 +43,9 @@ TIMER_SEC    = 10                 # per-question timer (client + server)
 TIMER_BUFFER = 1.5                # seconds of slack on server check (network + animation)
 SESSION_TTL  = 600                # active session expires after this many seconds idle
 GAME_COMPOSITION = [(1, 2), (2, 3), (3, 3), (4, 2)]  # (difficulty, count)
+START_PER_MIN     = 5             # max /api/game/start per IP per minute
+START_PER_DAY     = 50            # max /api/game/start per IP per 24h
+ACTIVE_SESSIONS_PER_IP = 1        # max concurrent active sessions for one IP
 OTDB_BATCH   = 50  # per difficulty
 TRC20_RE     = re.compile(r"^T[1-9A-HJ-NP-Za-km-z]{33}$")
 MAX_NAME     = 24
@@ -209,6 +214,30 @@ def bootstrap_questions():
     if question_count() < 200:
         seed_from_otdb()
     print(f"questions in db: {question_count()}")
+
+# ---- Cloudflare Turnstile ----
+def verify_turnstile(token, ip):
+    """Return True if Turnstile token is valid, OR if Turnstile not configured."""
+    if not TURNSTILE_SECRET:
+        return True   # feature disabled — let through
+    if not token:
+        return False
+    try:
+        data = urllib.parse.urlencode({
+            "secret": TURNSTILE_SECRET,
+            "response": token,
+            "remoteip": ip
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data=data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            result = json.loads(r.read().decode("utf-8"))
+        return bool(result.get("success"))
+    except Exception as e:
+        print("turnstile verify error:", e); return False
 
 # ---- Game session helpers ----
 def _now(): return int(time.time())
@@ -485,6 +514,12 @@ class Handler(BaseHTTPRequestHandler):
         if p == "/api/health":
             return self._json(200, {"ok": True, "time": int(time.time())})
 
+        if p == "/api/config":
+            return self._json(200, {
+                "turnstile_site_key": TURNSTILE_SITE_KEY or "",
+                "turnstile_enabled": bool(TURNSTILE_SECRET),
+            }, cache="public, max-age=60")
+
         if p == "/api/stats":
             cur_ym = current_ym()
             with db() as c:
@@ -682,12 +717,30 @@ class Handler(BaseHTTPRequestHandler):
         u = urlparse(self.path); p = u.path; ip = self._client_ip()
 
         if p == "/api/game/start":
-            if not rate_ok(ip, "game_start", window=60, maxn=8):
-                return self._json(429, {"error":"rate_limited"})
+            # Rate limits: 5/min and 50/day per IP
+            if not rate_ok(ip, "game_start", window=60, maxn=START_PER_MIN):
+                return self._json(429, {"error":"rate_limited", "detail":"Too many starts in the past minute. Slow down."})
+            if not rate_ok(ip, "game_start_daily", window=86400, maxn=START_PER_DAY):
+                return self._json(429, {"error":"daily_limit", "detail":f"Daily limit ({START_PER_DAY} games) reached. Resets in 24h."})
+
             payload = self._body(1024) or {}
             name = str(payload.get("name","")).strip()[:MAX_NAME] or "Anonymous"
+            turnstile_token = str(payload.get("turnstile_token","")).strip()
+
+            # Turnstile (only enforced when configured)
+            if TURNSTILE_SECRET and not verify_turnstile(turnstile_token, ip):
+                return self._json(403, {"error":"captcha_failed", "detail":"Please complete the human-verification check."})
+
             with db() as c:
                 _expire_old_sessions(c)
+
+                # Single active session per IP — kill any existing
+                c.execute(
+                    "UPDATE game_sessions SET status='superseded', last_action_at=? "
+                    "WHERE ip=? AND status='active'",
+                    (_now(), ip)
+                )
+
                 try:
                     plan = _build_question_plan(c)
                 except Exception as e:
@@ -713,7 +766,7 @@ class Handler(BaseHTTPRequestHandler):
         if p == "/api/game/answer":
             if not rate_ok(ip, "game_answer", window=60, maxn=200):
                 return self._json(429, {"error":"rate_limited"})
-            payload = self._body(1024)
+            payload = self._body(8192)   # allow bigger body for behavioral data
             if not payload: return self._json(400, {"error":"bad_json"})
             sid = str(payload.get("session_id","")).strip()
             try:
@@ -723,6 +776,14 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(400, {"error":"bad_fields"})
             if not sid: return self._json(400, {"error":"missing_session"})
             if not (0 <= choice <= 3): return self._json(400, {"error":"bad_choice"})
+
+            # Behavioral fingerprint (optional — capped to avoid bloat)
+            mouse_samples = payload.get("mouse", [])
+            if not isinstance(mouse_samples, list): mouse_samples = []
+            mouse_samples = mouse_samples[:60]   # max 60 samples per question (15s at 4Hz)
+            client_elapsed_ms = payload.get("client_elapsed_ms")
+            try: client_elapsed_ms = float(client_elapsed_ms) if client_elapsed_ms is not None else None
+            except (TypeError, ValueError): client_elapsed_ms = None
 
             with db() as c:
                 sess = c.execute("SELECT * FROM game_sessions WHERE id=?", (sid,)).fetchone()
@@ -744,11 +805,14 @@ class Handler(BaseHTTPRequestHandler):
                 timeout = elapsed > (TIMER_SEC + TIMER_BUFFER)
                 correct = (not timeout) and (choice == plan[cq]["a"])
 
-                # Append to answer log (forensic)
+                # Append to answer log (forensic). Mouse trail kept for later analysis.
                 answers = json.loads(sess["answers"])
                 answers.append({
                     "q_id": qid, "choice": choice, "correct": correct,
                     "timeout": timeout, "elapsed_s": elapsed, "ts": now,
+                    "client_elapsed_ms": client_elapsed_ms,
+                    "mouse_samples": len(mouse_samples),
+                    "mouse": mouse_samples,
                 })
 
                 new_q = cq + 1
@@ -781,8 +845,9 @@ class Handler(BaseHTTPRequestHandler):
                         "score_id": score_id,
                         "claim_code": (claim_code if new_score >= QUALIFY_MIN else None),
                     }
-                    # Reveal correct option text on wrong/timeout for UX
-                    if not correct:
+                    # Reveal correct option text ONLY on full-round timeouts at Q10
+                    # (prevents bots from enumerating answers by intentionally answering wrong)
+                    if not correct and cq == len(plan) - 1 and timeout:
                         response["correct_text"] = plan[cq]["opts"][plan[cq]["a"]]
                     return self._json(200, response)
                 else:

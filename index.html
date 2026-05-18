@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
   :root {
     --bg-0:#06070d; --bg-1:#0b0f1f; --bg-2:#111733;
@@ -425,7 +426,8 @@
           <label>Your name (shown on leaderboard)</label>
           <input id="playerName" type="text" placeholder="Anonymous" maxlength="24" autocomplete="off" />
         </div>
-        <button class="btn btn-primary btn-big" onclick="startGame()">Start Challenge</button>
+        <div id="turnstile-widget" style="display:flex;justify-content:center;margin:14px 0"></div>
+        <button class="btn btn-primary btn-big" id="startBtn" onclick="startGame()">Start Challenge</button>
       </div>
 
       <div id="quiz-win" class="panel" style="display:none">
@@ -658,6 +660,7 @@
 const API = ''; // same-origin
 const TIMER = 10;
 const PRIZE_USDT = 10;
+const MOUSE_SAMPLE_HZ = 4;  // 4 samples per second during a question
 const LS = {
   SEEN: 'gkq_seen_v1',
   NAME: 'gkq_name',
@@ -670,6 +673,39 @@ const LS = {
 // ============================== State ==============================
 let state = null;
 let pendingClaim = null;
+
+// Turnstile state
+let turnstileConfig = { enabled: false, site_key: '' };
+let turnstileWidgetId = null;
+let turnstileToken = null;
+
+// Mouse trail (captured during each question)
+let mouseTrail = [];
+let mouseLastSample = 0;
+let lastMouseX = 0, lastMouseY = 0;
+let mouseListenerActive = false;
+
+function startMouseCapture() {
+  mouseTrail = [];
+  mouseLastSample = 0;
+  if (mouseListenerActive) return;
+  mouseListenerActive = true;
+  document.addEventListener('mousemove', _mouseHandler, { passive: true });
+}
+function stopMouseCapture() {
+  if (!mouseListenerActive) return;
+  mouseListenerActive = false;
+  document.removeEventListener('mousemove', _mouseHandler);
+}
+function _mouseHandler(e) {
+  const now = performance.now();
+  const minInterval = 1000 / MOUSE_SAMPLE_HZ;
+  if (now - mouseLastSample < minInterval) return;
+  mouseLastSample = now;
+  lastMouseX = e.clientX; lastMouseY = e.clientY;
+  mouseTrail.push({ x: e.clientX, y: e.clientY, t: Math.round(now - state.qStartTime) });
+  if (mouseTrail.length > 60) mouseTrail.shift();
+}
 
 // ============================== Routing ==============================
 function go(view) {
@@ -807,6 +843,35 @@ function showPlayPanel() {
     document.getElementById(id).style.display = 'none');
   document.getElementById('quiz-intro').style.display = 'block';
   document.getElementById('playerName').value = localStorage.getItem(LS.NAME) || '';
+  // Render Turnstile widget if configured & not yet rendered
+  if (turnstileConfig.enabled && turnstileConfig.site_key && !turnstileWidgetId) {
+    tryRenderTurnstile();
+  }
+}
+
+function tryRenderTurnstile(attempt = 0) {
+  if (!window.turnstile) {
+    if (attempt < 20) setTimeout(() => tryRenderTurnstile(attempt + 1), 250);
+    return;
+  }
+  const container = document.getElementById('turnstile-widget');
+  if (!container || turnstileWidgetId) return;
+  try {
+    turnstileWidgetId = window.turnstile.render('#turnstile-widget', {
+      sitekey: turnstileConfig.site_key,
+      theme: 'dark',
+      callback: (token) => { turnstileToken = token; },
+      'error-callback': () => { turnstileToken = null; },
+      'expired-callback': () => { turnstileToken = null; },
+    });
+  } catch(e) { console.warn('turnstile render error', e); }
+}
+
+function resetTurnstile() {
+  if (turnstileWidgetId !== null && window.turnstile) {
+    try { window.turnstile.reset(turnstileWidgetId); } catch(e) {}
+  }
+  turnstileToken = null;
 }
 function showQuizPanel(which) {
   ['quiz-intro','quiz-active','quiz-win','quiz-lose','quiz-cheat'].forEach(id =>
@@ -820,6 +885,17 @@ const DIFF_LABEL = {1:'EASY', 2:'MEDIUM', 3:'HARD', 4:'EXPERT'};
 async function startGame() {
   const name = (document.getElementById('playerName').value || '').trim().slice(0,24) || 'Anonymous';
   localStorage.setItem(LS.NAME, name);
+
+  // Require Turnstile if it's enabled and the user hasn't completed it
+  if (turnstileConfig.enabled && !turnstileToken) {
+    const btn = document.getElementById('startBtn');
+    const orig = btn.textContent;
+    btn.textContent = 'Complete the check above ↑';
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2500);
+    return;
+  }
+
   state = {
     name, sessionId:null, currentQuestion:null,
     correct:0, startTime:Date.now(), qStartTime:0,
@@ -834,16 +910,23 @@ async function startGame() {
   try {
     const r = await fetch(API + '/api/game/start', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ name })
+      body: JSON.stringify({ name, turnstile_token: turnstileToken })
     });
-    if (!r.ok) throw new Error('http ' + r.status);
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      throw new Error(e.detail || e.error || 'http ' + r.status);
+    }
     const data = await r.json();
     state.sessionId = data.session_id;
     state.currentQuestion = data.question;
+    // Turnstile token is single-use; reset for next round
+    resetTurnstile();
+    startMouseCapture();
     renderQuestion(data.question);
   } catch(e) {
-    document.getElementById('question').textContent = 'Could not start a game. Please reload the page.';
+    document.getElementById('question').textContent = 'Could not start: ' + e.message + '. Please reload.';
     console.warn('start failed', e);
+    resetTurnstile();
   }
 }
 
@@ -900,12 +983,22 @@ async function answer(picked) {
     warn('Answered a hard question in ' + el.toFixed(2) + 's — unusually fast.');
   }
 
-  // POST answer to server, which validates and tells us correct/wrong + next/done.
+  // POST answer to server with behavioral fingerprint
+  const clientElapsedMs = Date.now() - state.qStartTime;
+  const mouseSnapshot = mouseTrail.slice();   // snapshot before reset
+  mouseTrail = [];   // reset for next question
+
   let result;
   try {
     const r = await fetch(API + '/api/game/answer', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ session_id: state.sessionId, q_id: q.q_id, choice: picked })
+      body: JSON.stringify({
+        session_id: state.sessionId,
+        q_id: q.q_id,
+        choice: picked,
+        client_elapsed_ms: clientElapsedMs,
+        mouse: mouseSnapshot,
+      })
     });
     result = await r.json();
     if (!r.ok) throw new Error(result.error || 'http ' + r.status);
@@ -936,6 +1029,7 @@ async function answer(picked) {
   }
 
   if (result.game_over) {
+    stopMouseCapture();
     handleGameOver(result, q);
   } else {
     setTimeout(() => renderQuestion(result.next_question), 850);
@@ -975,7 +1069,15 @@ function handleGameOver(result, lastQ) {
       const reason = result.timeout ? 'Time ran out.' : 'Wrong answer.';
       document.getElementById('loseReason').textContent = reason;
       document.getElementById('loseScore').textContent = result.score;
-      document.getElementById('correctAns').textContent = result.correct_text || '';
+      // Correct answer is intentionally hidden on losses (anti-enumeration)
+      const ansEl = document.getElementById('correctAns');
+      const ansLabel = ansEl.parentElement;
+      if (result.correct_text) {
+        ansEl.textContent = result.correct_text;
+        ansLabel.style.display = '';
+      } else {
+        ansLabel.style.display = 'none';
+      }
       const lcb = document.getElementById('lose-code-box');
       if (result.claim_code) {
         document.getElementById('lose-code').textContent = result.claim_code;
@@ -1279,6 +1381,14 @@ fetch(API + '/api/sponsor').then(r => r.json()).then(s => {
   if (tg && s.telegram_url) {
     tg.href = s.telegram_url; tg.style.display = 'inline';
     tg.target = '_blank'; tg.rel = 'noopener';
+  }
+}).catch(() => {});
+// load CAPTCHA config (Turnstile)
+fetch(API + '/api/config').then(r => r.json()).then(cfg => {
+  turnstileConfig = { enabled: !!cfg.turnstile_enabled, site_key: cfg.turnstile_site_key || '' };
+  // If already on the play page, render the widget now
+  if (turnstileConfig.enabled && document.getElementById('view-play').classList.contains('active')) {
+    tryRenderTurnstile();
   }
 }).catch(() => {});
 
