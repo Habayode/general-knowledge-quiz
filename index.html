@@ -669,7 +669,6 @@ const LS = {
 
 // ============================== State ==============================
 let state = null;
-let questions = [];
 let pendingClaim = null;
 
 // ============================== Routing ==============================
@@ -694,6 +693,7 @@ function endByCheat(reason) {
   if (!state || state.ended) return;
   state.ended = true;
   clearInterval(state.timerId);
+  forfeitSession(reason);   // notify server so the session can't be resumed
   document.getElementById('cheatReason').textContent = reason;
   showQuizPanel('cheat');
 }
@@ -814,40 +814,44 @@ function showQuizPanel(which) {
   document.getElementById('quiz-' + which).style.display = 'block';
 }
 
+// ============================== New server-side game flow ==============================
+const DIFF_LABEL = {1:'EASY', 2:'MEDIUM', 3:'HARD', 4:'EXPERT'};
+
 async function startGame() {
   const name = (document.getElementById('playerName').value || '').trim().slice(0,24) || 'Anonymous';
   localStorage.setItem(LS.NAME, name);
   state = {
-    name, index:0, correct:0, startTime:Date.now(), qStartTime:0,
+    name, sessionId:null, currentQuestion:null,
+    correct:0, startTime:Date.now(), qStartTime:0,
     timerId:null, answered:false, warnCount:0, fastAnswers:0,
-    totalElapsed:0, ended:false, seenThisGame:[]
+    totalElapsed:0, ended:false
   };
-  // Load questions from API, excluding seen IDs
   document.getElementById('quiz-intro').style.display = 'none';
   showQuizPanel('active');
-  document.getElementById('question').textContent = 'Loading questions…';
+  document.getElementById('question').textContent = 'Starting…';
   document.getElementById('options').innerHTML = '';
-  const seen = loadSeen();
-  let url = '/api/questions/draw';
-  if (seen.length) url += '?exclude=' + seen.join(',');
+
   try {
-    const r = await fetch(API + url);
-    questions = await r.json();
-    if (!questions || questions.length < 10) throw new Error('not enough questions');
+    const r = await fetch(API + '/api/game/start', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name })
+    });
+    if (!r.ok) throw new Error('http ' + r.status);
+    const data = await r.json();
+    state.sessionId = data.session_id;
+    state.currentQuestion = data.question;
+    renderQuestion(data.question);
   } catch(e) {
-    document.getElementById('question').textContent = 'Failed to load questions. Please reload the page.';
-    return;
+    document.getElementById('question').textContent = 'Could not start a game. Please reload the page.';
+    console.warn('start failed', e);
   }
-  // Record seen
-  saveSeen([...seen, ...questions.map(q => q.id)]);
-  render();
 }
 
-const DIFF_LABEL = {1:'EASY', 2:'MEDIUM', 3:'HARD', 4:'EXPERT'};
-function render() {
+function renderQuestion(q) {
   state.answered = false;
-  const q = questions[state.index];
-  document.getElementById('qnum').textContent = state.index + 1;
+  state.currentQuestion = q;
+  const idx = q.index;
+  document.getElementById('qnum').textContent = idx + 1;
   document.getElementById('prize').textContent = state.correct;
   document.getElementById('progress').style.width = (state.correct * 10) + '%';
   document.getElementById('cat').textContent = (q.cat || 'GENERAL').toUpperCase();
@@ -867,6 +871,7 @@ function render() {
   state.qStartTime = Date.now();
   tickTimer();
 }
+
 function tickTimer() {
   document.getElementById('time').textContent = TIMER;
   document.getElementById('timerFill').style.width = '100%';
@@ -880,102 +885,130 @@ function tickTimer() {
     if (left <= 0) { clearInterval(state.timerId); if (!state.answered) answer(-1); }
   }, 100);
 }
-function answer(picked) {
+
+async function answer(picked) {
   if (state.answered || state.ended) return;
   state.answered = true;
   clearInterval(state.timerId);
-  const q = questions[state.index];
+  const q = state.currentQuestion;
   const el = (Date.now() - state.qStartTime) / 1000;
   state.totalElapsed += el;
+
   if (picked !== -1 && q.diff >= 3 && el < 1.5) {
     state.fastAnswers++;
     if (state.fastAnswers >= 2) return endByCheat('Multiple sub-1.5s answers on hard questions.');
     warn('Answered a hard question in ' + el.toFixed(2) + 's — unusually fast.');
   }
+
+  // POST answer to server, which validates and tells us correct/wrong + next/done.
+  let result;
+  try {
+    const r = await fetch(API + '/api/game/answer', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ session_id: state.sessionId, q_id: q.q_id, choice: picked })
+    });
+    result = await r.json();
+    if (!r.ok) throw new Error(result.error || 'http ' + r.status);
+  } catch(e) {
+    console.warn('answer submit failed', e);
+    // Fallback: end the game gracefully
+    document.querySelectorAll('.opt').forEach(b => b.disabled = true);
+    setTimeout(() => {
+      document.getElementById('loseReason').textContent = 'Network issue — round cancelled. Try again.';
+      document.getElementById('loseScore').textContent = state.correct;
+      document.getElementById('correctAns').textContent = '';
+      document.getElementById('lose-code-box').style.display = 'none';
+      showQuizPanel('lose');
+    }, 400);
+    return;
+  }
+
+  // Visual feedback: highlight picked button + (if game over) reveal correct
   document.querySelectorAll('.opt').forEach((b, i) => {
     b.disabled = true;
-    if (i === q.a) b.classList.add('correct');
-    if (i === picked && picked !== q.a) b.classList.add('wrong');
+    if (i === picked && !result.correct) b.classList.add('wrong');
+    if (i === picked && result.correct) b.classList.add('correct');
   });
-  if (picked === q.a) {
-    state.correct++;
+  if (result.correct) {
+    state.correct = result.score;
     document.getElementById('prize').textContent = state.correct;
     document.getElementById('progress').style.width = (state.correct * 10) + '%';
-    setTimeout(() => {
-      state.index++;
-      if (state.index >= questions.length) winGame();
-      else render();
-    }, 850);
+  }
+
+  if (result.game_over) {
+    handleGameOver(result, q);
   } else {
-    setTimeout(async () => {
-      document.getElementById('loseReason').textContent = picked === -1 ? 'Time ran out.' : 'Wrong answer.';
-      document.getElementById('loseScore').textContent = state.correct;
-      document.getElementById('correctAns').textContent = q.opts[q.a];
-      const res = await submitScore(false);
+    setTimeout(() => renderQuestion(result.next_question), 850);
+  }
+}
+
+function handleGameOver(result, lastQ) {
+  setTimeout(() => {
+    if (result.won) {
+      // Win panel
+      const totalTime = result.total_time;
+      const avg = (totalTime / 10).toFixed(1);
+      document.getElementById('winTime').textContent = totalTime.toFixed(1);
+      document.getElementById('winAvg').textContent = avg;
+      if (result.claim_code) {
+        document.getElementById('win-code').textContent = result.claim_code;
+        document.getElementById('win-code-box').style.display = 'block';
+        saveMyCode({
+          code: result.claim_code, score_id: result.score_id,
+          name: state.name, score: result.score, won: true,
+          totalTime, date: new Date().toISOString().slice(0,10), ts: Date.now(),
+        });
+      }
+      if (result.score_id) {
+        setPending({ score_id: result.score_id, won_at: Date.now(), name: state.name });
+      }
+      // Cache locally for offline-display fallback
+      const lb = loadLocalLB();
+      lb.push({ name: state.name, score: result.score, prize: PRIZE_USDT, won: true,
+               totalTime, date: new Date().toISOString().slice(0,10) });
+      lb.sort((a,b) => b.score - a.score || a.totalTime - b.totalTime);
+      saveLocalLB(lb);
+      showQuizPanel('win');
+      loadStats();
+    } else {
+      // Lose panel
+      const reason = result.timeout ? 'Time ran out.' : 'Wrong answer.';
+      document.getElementById('loseReason').textContent = reason;
+      document.getElementById('loseScore').textContent = result.score;
+      document.getElementById('correctAns').textContent = result.correct_text || '';
       const lcb = document.getElementById('lose-code-box');
-      if (res && res.claim_code && state.correct >= 5) {
-        document.getElementById('lose-code').textContent = res.claim_code;
+      if (result.claim_code) {
+        document.getElementById('lose-code').textContent = result.claim_code;
         lcb.style.display = 'block';
+        saveMyCode({
+          code: result.claim_code, score_id: result.score_id,
+          name: state.name, score: result.score, won: false,
+          totalTime: result.total_time, date: new Date().toISOString().slice(0,10), ts: Date.now(),
+        });
       } else {
         lcb.style.display = 'none';
       }
+      // Cache locally if it's a qualifying score
+      if (result.score >= 5) {
+        const lb = loadLocalLB();
+        lb.push({ name: state.name, score: result.score, prize: 0, won: false,
+                 totalTime: result.total_time, date: new Date().toISOString().slice(0,10) });
+        lb.sort((a,b) => b.score - a.score || a.totalTime - b.totalTime);
+        saveLocalLB(lb);
+      }
       showQuizPanel('lose');
-    }, 1050);
-  }
+    }
+  }, 1000);
 }
-async function winGame() {
-  const total = ((Date.now() - state.startTime) / 1000).toFixed(1);
-  const avg = (state.totalElapsed / 10).toFixed(1);
-  document.getElementById('winTime').textContent = total;
-  document.getElementById('winAvg').textContent = avg;
-  const res = await submitScore(true);
-  if (res && res.score_id) {
-    setPending({ score_id: res.score_id, won_at: Date.now(), name: state.name });
-  }
-  // Show claim code on win panel
-  if (res && res.claim_code) {
-    document.getElementById('win-code').textContent = res.claim_code;
-    document.getElementById('win-code-box').style.display = 'block';
-  }
-  showQuizPanel('win');
-  loadStats();
-}
-async function submitScore(won) {
-  const totalTime = parseFloat(((Date.now() - state.startTime) / 1000).toFixed(1));
-  const payload = {
-    name: state.name,
-    score: state.correct,
-    prize: won ? PRIZE_USDT : 0,
-    won: won,
-    totalTime,
-  };
-  // Always save locally
-  const lb = loadLocalLB();
-  lb.push({ ...payload, date: new Date().toISOString().slice(0,10) });
-  lb.sort((a,b) => b.score - a.score || a.totalTime - b.totalTime);
-  saveLocalLB(lb);
-  let result = null;
+
+async function forfeitSession(reason) {
+  if (!state || !state.sessionId) return;
   try {
-    const r = await fetch(API + '/api/leaderboard', {
+    await fetch(API + '/api/game/forfeit', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ session_id: state.sessionId, reason })
     });
-    if (r.ok) result = await r.json();
-  } catch(e) { console.warn('score submit failed', e); }
-  // Save claim code to localStorage
-  if (result && result.claim_code) {
-    saveMyCode({
-      code: result.claim_code,
-      score_id: result.score_id,
-      name: state.name,
-      score: state.correct,
-      won: won,
-      totalTime,
-      date: new Date().toISOString().slice(0,10),
-      ts: Date.now(),
-    });
-  }
-  return result;
+  } catch(e) { /* fire-and-forget */ }
 }
 
 function loadMyCodes() {

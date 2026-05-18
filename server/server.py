@@ -37,6 +37,10 @@ PRIZE_USDT   = 10
 MONTHLY_PRIZES = [100, 75, 50]   # 1st, 2nd, 3rd place at month end (USDT TRC20)
 QUALIFY_MIN  = 5                  # minimum score to appear on any ranked leaderboard
 CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"  # Crockford-ish, no 0/O/1/I
+TIMER_SEC    = 10                 # per-question timer (client + server)
+TIMER_BUFFER = 1.5                # seconds of slack on server check (network + animation)
+SESSION_TTL  = 600                # active session expires after this many seconds idle
+GAME_COMPOSITION = [(1, 2), (2, 3), (3, 3), (4, 2)]  # (difficulty, count)
 OTDB_BATCH   = 50  # per difficulty
 TRC20_RE     = re.compile(r"^T[1-9A-HJ-NP-Za-km-z]{33}$")
 MAX_NAME     = 24
@@ -114,6 +118,22 @@ def init_db():
             UNIQUE(year_month, rank)
         );
         CREATE INDEX IF NOT EXISTS idx_mw_ym ON monthly_winners(year_month);
+
+        CREATE TABLE IF NOT EXISTS game_sessions (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            ip TEXT,
+            question_plan TEXT NOT NULL,    -- JSON: [{q_id,cat,diff,q,opts,a}, ...]
+            current_q INTEGER NOT NULL DEFAULT 0,
+            score INTEGER NOT NULL DEFAULT 0,
+            answers TEXT NOT NULL DEFAULT '[]',  -- per-answer log for forensic review
+            started_at INTEGER NOT NULL,
+            last_action_at INTEGER NOT NULL,
+            status TEXT NOT NULL DEFAULT 'active',  -- active|won|lost|forfeited|expired
+            score_id INTEGER,
+            forfeit_reason TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_sessions_active ON game_sessions(status, last_action_at);
         """)
         # Add claim_code to scores if missing
         cols = [r[1] for r in c.execute("PRAGMA table_info(scores)").fetchall()]
@@ -189,6 +209,89 @@ def bootstrap_questions():
     if question_count() < 200:
         seed_from_otdb()
     print(f"questions in db: {question_count()}")
+
+# ---- Game session helpers ----
+def _now(): return int(time.time())
+
+def _new_session_id():
+    return secrets.token_urlsafe(16)
+
+def _secrets_shuffle(arr):
+    """Crypto-secure Fisher-Yates."""
+    n = len(arr)
+    for i in range(n - 1, 0, -1):
+        j = secrets.randbelow(i + 1)
+        arr[i], arr[j] = arr[j], arr[i]
+
+def _expire_old_sessions(c):
+    cutoff = _now() - SESSION_TTL
+    c.execute("UPDATE game_sessions SET status='expired' WHERE status='active' AND last_action_at < ?", (cutoff,))
+
+def _build_question_plan(c):
+    """Pick questions per GAME_COMPOSITION, shuffle their options per session."""
+    plan = []
+    chosen_ids = set()
+    for diff, count in GAME_COMPOSITION:
+        params = (diff,) + tuple(chosen_ids) + (count,)
+        placeholder = "" if not chosen_ids else (" AND id NOT IN (" + ",".join("?" * len(chosen_ids)) + ")")
+        rows = c.execute(
+            f"SELECT id, category, difficulty, question, options, answer_index "
+            f"FROM questions WHERE difficulty=?{placeholder} ORDER BY RANDOM() LIMIT ?",
+            params
+        ).fetchall()
+        if len(rows) < count:
+            # Top up without exclusion if pool is small
+            fill = c.execute(
+                "SELECT id, category, difficulty, question, options, answer_index "
+                "FROM questions WHERE difficulty=? ORDER BY RANDOM() LIMIT ?",
+                (diff, count - len(rows))
+            ).fetchall()
+            rows = list(rows) + list(fill)
+        for r in rows:
+            opts = json.loads(r["options"])
+            correct = opts[r["answer_index"]]
+            shuffled = list(opts)
+            _secrets_shuffle(shuffled)
+            plan.append({
+                "q_id": r["id"],
+                "cat": r["category"],
+                "diff": r["difficulty"],
+                "q": r["question"],
+                "opts": shuffled,
+                "a": shuffled.index(correct),  # answer index AFTER shuffling
+            })
+            chosen_ids.add(r["id"])
+    return plan
+
+def _public_question(plan, idx):
+    """Strip the 'a' field — clients NEVER see the answer."""
+    q = plan[idx]
+    return {
+        "index": idx,
+        "q_id": q["q_id"],
+        "cat": q["cat"],
+        "diff": q["diff"],
+        "q": q["q"],
+        "opts": q["opts"],
+    }
+
+def _finalize_session_score(c, sess, plan, new_score, total_time, status, ip):
+    """Create the scores row when a game ends. Returns (score_id, claim_code)."""
+    won = (status == "won")
+    prize = PRIZE_USDT if won else 0
+    # Unique claim code
+    code = None
+    for _ in range(5):
+        candidate = gen_claim_code()
+        if not c.execute("SELECT 1 FROM scores WHERE claim_code=?", (candidate,)).fetchone():
+            code = candidate; break
+    if not code: code = gen_claim_code()
+    cur = c.execute(
+        "INSERT INTO scores(name,score,prize,won,total_time,ip,created_at,claim_code) "
+        "VALUES(?,?,?,?,?,?,?,?)",
+        (sess["name"], new_score, prize, 1 if won else 0, total_time, ip, _now(), code)
+    )
+    return cur.lastrowid, code
 
 # ---- Telegram announcer ----
 import threading
@@ -458,12 +561,8 @@ class Handler(BaseHTTPRequestHandler):
             }, cache="public, max-age=60")
 
         if p == "/api/questions/draw":
-            qs = parse_qs(u.query)
-            try:
-                exclude = [int(x) for x in (qs.get("exclude", [""])[0] or "").split(",") if x.strip().isdigit()]
-            except Exception:
-                exclude = []
-            return self._draw_questions(exclude)
+            # Deprecated. Answers used to be exposed here; now hidden behind /api/game/*.
+            return self._json(410, {"error":"deprecated", "detail":"Use /api/game/start to play. Answers are no longer exposed."})
 
         if p == "/api/leaderboard":
             # All-time: only qualifying scores (>= QUALIFY_MIN), best run per player
@@ -582,7 +681,143 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         u = urlparse(self.path); p = u.path; ip = self._client_ip()
 
+        if p == "/api/game/start":
+            if not rate_ok(ip, "game_start", window=60, maxn=8):
+                return self._json(429, {"error":"rate_limited"})
+            payload = self._body(1024) or {}
+            name = str(payload.get("name","")).strip()[:MAX_NAME] or "Anonymous"
+            with db() as c:
+                _expire_old_sessions(c)
+                try:
+                    plan = _build_question_plan(c)
+                except Exception as e:
+                    print("plan build error:", e)
+                    return self._json(500, {"error":"plan_failed"})
+                if len(plan) < 10:
+                    return self._json(503, {"error":"insufficient_questions"})
+                sid = _new_session_id()
+                now = _now()
+                c.execute(
+                    "INSERT INTO game_sessions(id,name,ip,question_plan,started_at,last_action_at) "
+                    "VALUES(?,?,?,?,?,?)",
+                    (sid, name, ip, json.dumps(plan), now, now)
+                )
+                c.commit()
+            return self._json(200, {
+                "session_id": sid,
+                "question_count": len(plan),
+                "timer_seconds": TIMER_SEC,
+                "question": _public_question(plan, 0),
+            })
+
+        if p == "/api/game/answer":
+            if not rate_ok(ip, "game_answer", window=60, maxn=200):
+                return self._json(429, {"error":"rate_limited"})
+            payload = self._body(1024)
+            if not payload: return self._json(400, {"error":"bad_json"})
+            sid = str(payload.get("session_id","")).strip()
+            try:
+                qid = int(payload.get("q_id"))
+                choice = int(payload.get("choice"))
+            except (TypeError, ValueError):
+                return self._json(400, {"error":"bad_fields"})
+            if not sid: return self._json(400, {"error":"missing_session"})
+            if not (0 <= choice <= 3): return self._json(400, {"error":"bad_choice"})
+
+            with db() as c:
+                sess = c.execute("SELECT * FROM game_sessions WHERE id=?", (sid,)).fetchone()
+                if not sess: return self._json(404, {"error":"session_not_found"})
+                if sess["status"] != "active":
+                    return self._json(410, {"error":"session_inactive", "status": sess["status"]})
+
+                plan = json.loads(sess["question_plan"])
+                cq = sess["current_q"]
+                if cq >= len(plan):
+                    return self._json(410, {"error":"session_complete"})
+
+                expected_qid = plan[cq]["q_id"]
+                if qid != expected_qid:
+                    return self._json(400, {"error":"wrong_question_id", "expected": expected_qid})
+
+                now = _now()
+                elapsed = now - sess["last_action_at"]   # seconds since last action (server clock)
+                timeout = elapsed > (TIMER_SEC + TIMER_BUFFER)
+                correct = (not timeout) and (choice == plan[cq]["a"])
+
+                # Append to answer log (forensic)
+                answers = json.loads(sess["answers"])
+                answers.append({
+                    "q_id": qid, "choice": choice, "correct": correct,
+                    "timeout": timeout, "elapsed_s": elapsed, "ts": now,
+                })
+
+                new_q = cq + 1
+                new_score = sess["score"] + (1 if correct else 0)
+
+                game_over = (not correct) or (new_q >= len(plan))
+                new_status = ("won" if (correct and new_q >= len(plan))
+                              else ("lost" if not correct else "active"))
+
+                if game_over:
+                    total_time = now - sess["started_at"]
+                    score_id, claim_code = _finalize_session_score(c, sess, plan, new_score, total_time, new_status, ip)
+                    c.execute(
+                        "UPDATE game_sessions SET current_q=?, score=?, answers=?, last_action_at=?, status=?, score_id=? WHERE id=?",
+                        (new_q, new_score, json.dumps(answers), now, new_status, score_id, sid)
+                    )
+                    c.commit()
+                    # Telegram announce 10/10
+                    if new_status == "won" and new_score == 10:
+                        tg_announce(
+                            f"🏆 *New 10/10 winner!*\n\n"
+                            f"*{sess['name']}* aced 10 questions in {total_time:.1f}s and just won *${PRIZE_USDT} USDT* on gkall.online.\n\n"
+                            f"Try your luck → https://gkall.online"
+                        )
+                    response = {
+                        "correct": correct, "timeout": timeout,
+                        "score": new_score, "q_index": cq,
+                        "game_over": True, "won": (new_status == "won"),
+                        "total_time": total_time,
+                        "score_id": score_id,
+                        "claim_code": (claim_code if new_score >= QUALIFY_MIN else None),
+                    }
+                    # Reveal correct option text on wrong/timeout for UX
+                    if not correct:
+                        response["correct_text"] = plan[cq]["opts"][plan[cq]["a"]]
+                    return self._json(200, response)
+                else:
+                    c.execute(
+                        "UPDATE game_sessions SET current_q=?, score=?, answers=?, last_action_at=? WHERE id=?",
+                        (new_q, new_score, json.dumps(answers), now, sid)
+                    )
+                    c.commit()
+                    return self._json(200, {
+                        "correct": True, "timeout": False,
+                        "score": new_score, "q_index": cq,
+                        "game_over": False,
+                        "next_question": _public_question(plan, new_q),
+                    })
+
+        if p == "/api/game/forfeit":
+            payload = self._body(1024) or {}
+            sid = str(payload.get("session_id","")).strip()
+            reason = str(payload.get("reason","unspecified"))[:200]
+            if not sid: return self._json(400, {"error":"missing_session"})
+            with db() as c:
+                sess = c.execute("SELECT id, status FROM game_sessions WHERE id=?", (sid,)).fetchone()
+                if not sess: return self._json(404, {"error":"session_not_found"})
+                if sess["status"] != "active":
+                    return self._json(200, {"ok": True, "already": sess["status"]})
+                c.execute("UPDATE game_sessions SET status='forfeited', forfeit_reason=?, last_action_at=? WHERE id=?",
+                          (reason, _now(), sid))
+                c.commit()
+            print(f"FORFEIT session={sid} ip={ip} reason={reason}", flush=True)
+            return self._json(200, {"ok": True})
+
         if p == "/api/leaderboard":
+            return self._json(410, {"error":"deprecated", "detail":"Scoring is now server-side via /api/game/*. Please refresh the page."})
+
+        if p == "/api/leaderboard_legacy":  # never used, kept for symmetry
             if not rate_ok(ip, "score"): return self._json(429, {"error":"rate_limited"})
             payload = self._body()
             if not payload: return self._json(400, {"error":"bad_json"})
