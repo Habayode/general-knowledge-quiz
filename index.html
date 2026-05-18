@@ -647,7 +647,7 @@
       <span style="font-size:0.78rem">Contact: <a href="mailto:hello@gkall.online">hello@gkall.online</a></span>
     </div>
     <div>
-      <a href="#sponsor">Sponsor</a> · <a href="#how">FAQ</a> · <a href="mailto:hello@gkall.online">Contact</a><br>
+      <a href="#sponsor">Sponsor</a> · <a href="#how">FAQ</a> · <a href="mailto:hello@gkall.online">Contact</a> · <a id="tg-link" href="#" style="display:none">📣 Telegram</a><br>
       <span style="font-size:0.78rem">Questions via Open Trivia DB (CC BY-SA), MMLU, ARC, OpenBookQA, CommonsenseQA, TruthfulQA, SciQ</span>
     </div>
   </div>
@@ -781,6 +781,13 @@ async function loadSponsor() {
     document.getElementById('sponsor-wallet').textContent = s.wallet;
     document.getElementById('sponsor-qr').src =
       'https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=8&data=' + encodeURIComponent(s.wallet);
+    const tg = document.getElementById('tg-link');
+    if (tg && s.telegram_url) {
+      tg.href = s.telegram_url;
+      tg.style.display = 'inline';
+      tg.target = '_blank';
+      tg.rel = 'noopener';
+    }
   } catch(e) { console.warn('sponsor failed', e); }
   loadStats();
 }
@@ -906,7 +913,7 @@ function answer(picked) {
       document.getElementById('correctAns').textContent = q.opts[q.a];
       const res = await submitScore(false);
       const lcb = document.getElementById('lose-code-box');
-      if (res && res.claim_code && state.correct >= 1) {
+      if (res && res.claim_code && state.correct >= 5) {
         document.getElementById('lose-code').textContent = res.claim_code;
         lcb.style.display = 'block';
       } else {
@@ -1233,6 +1240,14 @@ function escapeHtml(s) {
 document.getElementById('year').textContent = new Date().getFullYear();
 go(location.hash.slice(1) || 'home');
 loadStats();
+// populate Telegram footer link on first load (best-effort)
+fetch(API + '/api/sponsor').then(r => r.json()).then(s => {
+  const tg = document.getElementById('tg-link');
+  if (tg && s.telegram_url) {
+    tg.href = s.telegram_url; tg.style.display = 'inline';
+    tg.target = '_blank'; tg.rel = 'noopener';
+  }
+}).catch(() => {});
 
 </script>
 </body>

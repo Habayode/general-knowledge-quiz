@@ -31,6 +31,8 @@ SEED_PATH    = HERE / "questions_seed.json"
 LISTEN       = ("127.0.0.1", 8080)    # bound locally — Caddy fronts it on :443
 ADMIN_TOKEN  = os.environ.get("ADMIN_TOKEN", "change-me-admin-token")
 SPONSOR_WALLET = os.environ.get("SPONSOR_WALLET", "TMNVuGuxMfTVVFJuVcjsxswYsCkMnTZRSy")
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "")  # e.g. "7890123456:ABC..."
+TG_CHANNEL   = os.environ.get("TG_CHANNEL", "")    # e.g. "@gkall_official" or "-100123..."
 PRIZE_USDT   = 10
 MONTHLY_PRIZES = [100, 75, 50]   # 1st, 2nd, 3rd place at month end (USDT TRC20)
 QUALIFY_MIN  = 5                  # minimum score to appear on any ranked leaderboard
@@ -188,6 +190,27 @@ def bootstrap_questions():
         seed_from_otdb()
     print(f"questions in db: {question_count()}")
 
+# ---- Telegram announcer ----
+import threading
+def tg_announce(text):
+    """Fire-and-forget Telegram channel post. No-op if env vars unset."""
+    if not (TG_BOT_TOKEN and TG_CHANNEL): return
+    def _send():
+        try:
+            url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
+            data = json.dumps({
+                "chat_id": TG_CHANNEL,
+                "text": text,
+                "parse_mode": "Markdown",
+                "disable_web_page_preview": True,
+            }).encode("utf-8")
+            req = urllib.request.Request(url, data=data, headers={"Content-Type":"application/json"})
+            with urllib.request.urlopen(req, timeout=10) as r:
+                r.read()
+        except Exception as e:
+            print("tg_announce error:", e)
+    threading.Thread(target=_send, daemon=True).start()
+
 # ---- Monthly leaderboard ----
 def current_ym():
     """Current year-month in UTC, e.g. '2026-05'."""
@@ -226,6 +249,7 @@ def finalize_month(c, ym):
     top = month_leaderboard(c, ym, limit=3)
     now = int(time.time())
     inserted = 0
+    finalized_rows = []
     for i, row in enumerate(top):
         rank = i + 1
         prize = MONTHLY_PRIZES[i] if i < len(MONTHLY_PRIZES) else 0
@@ -236,9 +260,19 @@ def finalize_month(c, ym):
                 (ym, rank, row["name"], row["score"], row["total_time"], row["score_id"], prize, now)
             )
             inserted += 1
+            finalized_rows.append({**row, "rank": rank, "prize": prize})
         except sqlite3.IntegrityError:
             pass
     c.commit()
+    if finalized_rows:
+        medals = {1: "🥇", 2: "🥈", 3: "🥉"}
+        lines = [f"🎉 *{ym} Monthly Winners Announced!*\n"]
+        for r in finalized_rows:
+            obf = obfuscate_name(r["name"])
+            lines.append(f"{medals.get(r['rank'],'#'+str(r['rank']))} *{obf}* — {r['score']}/10 in {r['total_time']:.1f}s — *${r['prize']} USDT*")
+        lines.append(f"\nWinners: paste your claim code to confirm → https://gkall.online/#monthly-claim")
+        lines.append(f"New month, new chance → https://gkall.online")
+        tg_announce("\n".join(lines))
     return inserted
 
 def maybe_finalize_past_months(c):
@@ -410,12 +444,17 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(200, {"months": months})
 
         if p == "/api/sponsor":
+            tg_url = ""
+            if TG_CHANNEL:
+                ch = TG_CHANNEL.lstrip("@")
+                if not ch.startswith("-"): tg_url = f"https://t.me/{ch}"
             return self._json(200, {
                 "wallet": SPONSOR_WALLET,
                 "network": "Tron (TRC20)",
                 "asset": "USDT",
                 "prize_usdt": PRIZE_USDT,
                 "note": "Donations cover winner payouts. Manual review.",
+                "telegram_url": tg_url,
             }, cache="public, max-age=60")
 
         if p == "/api/questions/draw":
@@ -576,6 +615,13 @@ class Handler(BaseHTTPRequestHandler):
                 )
                 sid = cur.lastrowid
                 c.commit()
+            # Announce 10/10 wins on Telegram
+            if won and score == 10:
+                tg_announce(
+                    f"🏆 *New 10/10 winner!*\n\n"
+                    f"*{name}* aced 10 questions in {tt:.1f}s and just won *${PRIZE_USDT} USDT* on gkall.online.\n\n"
+                    f"Try your luck → https://gkall.online"
+                )
             return self._json(200, {"ok": True, "score_id": sid, "claim_code": code})
 
         if p == "/api/claim/monthly":
@@ -666,7 +712,7 @@ class Handler(BaseHTTPRequestHandler):
             contact = str(payload.get("contact","")).strip()[:MAX_CONTACT]
             new_status = "paid" if action == "paid" else "rejected"
             with db() as c:
-                r = c.execute("SELECT id FROM monthly_winners WHERE id=?", (mid,)).fetchone()
+                r = c.execute("SELECT id, name, rank, year_month, prize_usdt FROM monthly_winners WHERE id=?", (mid,)).fetchone()
                 if not r: return self._json(404, {"error":"not_found"})
                 c.execute("""UPDATE monthly_winners
                              SET status=?, tx_hash=COALESCE(NULLIF(?,''), tx_hash),
@@ -676,6 +722,13 @@ class Handler(BaseHTTPRequestHandler):
                              WHERE id=?""",
                           (new_status, tx, wallet, contact, new_status, mid))
                 c.commit()
+            if action == "paid":
+                medals = {1: "🥇", 2: "🥈", 3: "🥉"}
+                medal = medals.get(r["rank"], f"#{r['rank']}")
+                msg = (f"✅ *${r['prize_usdt']} USDT paid* — {medal} {obfuscate_name(r['name'])} for {r['year_month']}\n")
+                if tx:
+                    msg += f"\ntx: https://tronscan.org/#/transaction/{tx}"
+                tg_announce(msg)
             return self._json(200, {"ok": True, "id": mid, "status": new_status})
 
         # /api/admin/claims/<id>/paid
