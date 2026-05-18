@@ -33,6 +33,7 @@ ADMIN_TOKEN  = os.environ.get("ADMIN_TOKEN", "change-me-admin-token")
 SPONSOR_WALLET = os.environ.get("SPONSOR_WALLET", "TMNVuGuxMfTVVFJuVcjsxswYsCkMnTZRSy")
 PRIZE_USDT   = 10
 MONTHLY_PRIZES = [100, 75, 50]   # 1st, 2nd, 3rd place at month end (USDT TRC20)
+CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"  # Crockford-ish, no 0/O/1/I
 OTDB_BATCH   = 50  # per difficulty
 TRC20_RE     = re.compile(r"^T[1-9A-HJ-NP-Za-km-z]{33}$")
 MAX_NAME     = 24
@@ -45,6 +46,10 @@ def db():
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
     return conn
+
+def gen_claim_code():
+    parts = [''.join(secrets.choice(CODE_ALPHABET) for _ in range(4)) for _ in range(3)]
+    return '-'.join(parts)
 
 def init_db():
     with db() as c:
@@ -107,6 +112,11 @@ def init_db():
         );
         CREATE INDEX IF NOT EXISTS idx_mw_ym ON monthly_winners(year_month);
         """)
+        # Add claim_code to scores if missing
+        cols = [r[1] for r in c.execute("PRAGMA table_info(scores)").fetchall()]
+        if "claim_code" not in cols:
+            c.execute("ALTER TABLE scores ADD COLUMN claim_code TEXT")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_scores_code ON scores(claim_code)")
 
 def question_count():
     with db() as c:
@@ -246,6 +256,13 @@ def maybe_finalize_past_months(c):
             if n > 0: finalized.append({"ym": ym, "winners": n})
     return finalized
 
+def obfuscate_name(name):
+    n = (name or "").strip()
+    if not n: return "***"
+    if len(n) <= 2: return n[0] + "***"
+    if len(n) <= 4: return n[:1] + "***" + n[-1:]
+    return n[:2] + "***" + n[-2:]
+
 def month_meta(ym):
     """Returns days_remaining (0 for past months) + is_current."""
     y, m = int(ym[:4]), int(ym[5:7])
@@ -362,6 +379,9 @@ class Handler(BaseHTTPRequestHandler):
                     rows = month_leaderboard(c, ym, limit=10)
             except Exception as e:
                 return self._json(500, {"error": str(e)})
+            # Obfuscate top-3 names (the ones with prizes on the line)
+            for i, r in enumerate(rows):
+                if i < 3: r["name"] = obfuscate_name(r["name"])
             return self._json(200, {"ym": ym, "rows": rows, **month_meta(ym)})
 
         if p == "/api/winners/monthly":
@@ -378,10 +398,11 @@ class Handler(BaseHTTPRequestHandler):
                     FROM monthly_winners
                     ORDER BY year_month DESC, rank ASC
                 """).fetchall()
-            # group by ym
+            # group by ym, obfuscate names so impersonators can't latch onto them
             grouped = {}
             for r in rows:
                 d = dict(r)
+                d["name"] = obfuscate_name(d["name"])
                 grouped.setdefault(d["ym"], []).append(d)
             months = [{"ym": ym, "winners": ws} for ym, ws in list(grouped.items())[:limit]]
             return self._json(200, {"months": months})
@@ -495,15 +516,52 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(400, {"error":"won_inconsistent"})
             if score > 0 and tt / max(score, 1) < 0.3:
                 return self._json(400, {"error":"implausible_speed"})
+            # Unique claim code (retry on rare collision)
+            code = None
             with db() as c:
+                for _ in range(5):
+                    candidate = gen_claim_code()
+                    if not c.execute("SELECT 1 FROM scores WHERE claim_code=?", (candidate,)).fetchone():
+                        code = candidate; break
+                if not code: code = gen_claim_code()  # accept tiny collision risk
                 cur = c.execute(
-                    "INSERT INTO scores(name,score,prize,won,total_time,ip,created_at) "
-                    "VALUES(?,?,?,?,?,?,?)",
-                    (name, score, prize, 1 if won else 0, tt, ip, int(time.time()))
+                    "INSERT INTO scores(name,score,prize,won,total_time,ip,created_at,claim_code) "
+                    "VALUES(?,?,?,?,?,?,?,?)",
+                    (name, score, prize, 1 if won else 0, tt, ip, int(time.time()), code)
                 )
                 sid = cur.lastrowid
                 c.commit()
-            return self._json(200, {"ok": True, "score_id": sid})
+            return self._json(200, {"ok": True, "score_id": sid, "claim_code": code})
+
+        if p == "/api/claim/monthly":
+            if not rate_ok(ip, "claim_monthly", window=3600, maxn=5):
+                return self._json(429, {"error":"rate_limited"})
+            payload = self._body(2048)
+            if not payload: return self._json(400, {"error":"bad_json"})
+            code = str(payload.get("code","")).strip().upper().replace(" ","")
+            wallet = str(payload.get("wallet","")).strip()
+            contact = str(payload.get("contact","")).strip()[:MAX_CONTACT]
+            if not re.match(r"^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$", code):
+                return self._json(400, {"error":"bad_code", "detail":"Format: XXXX-XXXX-XXXX"})
+            if not TRC20_RE.match(wallet):
+                return self._json(400, {"error":"bad_wallet", "detail":"TRC20 address must start with T and be 34 chars."})
+            with db() as c:
+                # find score row by code
+                score = c.execute("SELECT id, name FROM scores WHERE claim_code=?", (code,)).fetchone()
+                if not score:
+                    return self._json(404, {"error":"code_not_found", "detail":"This claim code doesn't match any record."})
+                # find monthly_winners row that references this score_id
+                winner = c.execute("SELECT id, year_month, rank, prize_usdt, status FROM monthly_winners WHERE score_id=?", (score["id"],)).fetchone()
+                if not winner:
+                    return self._json(403, {"error":"not_a_winner", "detail":"This code belongs to a real run, but it didn't finish top 3 in its month. Keep playing!"})
+                if winner["status"] != "pending":
+                    return self._json(409, {"error":"already_processed", "detail":f"This prize was already {winner['status']}."})
+                c.execute("UPDATE monthly_winners SET wallet=?, contact=?, paid_at=NULL WHERE id=?",
+                          (wallet, contact, winner["id"]))
+                c.commit()
+            return self._json(200, {"ok": True, "rank": winner["rank"], "prize_usdt": winner["prize_usdt"],
+                                    "ym": winner["year_month"],
+                                    "message": "Verified. Your prize will be paid out manually after final review."})
 
         if p == "/api/claim":
             if not rate_ok(ip, "claim", window=3600, maxn=3):

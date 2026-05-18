@@ -157,6 +157,14 @@
   .countdown{display:inline-flex;align-items:center;gap:6px;font-size:0.85rem;color:var(--muted);padding:6px 12px;background:var(--card);border-radius:8px;border:1px solid var(--border)}
   .countdown b{color:var(--accent)}
   .prize-pool-info{padding:14px 18px;background:rgba(245,196,81,0.06);border:1px solid rgba(245,196,81,0.22);border-radius:12px;margin-bottom:18px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center}
+  .code-box{margin-top:18px;padding:18px;background:rgba(245,196,81,0.07);border:1px dashed rgba(245,196,81,0.45);border-radius:12px;text-align:center}
+  .code-label{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px}
+  .code-value{font-family:'Courier New',monospace;font-size:1.35rem;font-weight:700;color:var(--accent);letter-spacing:0.08em;user-select:all;padding:8px 14px;background:rgba(0,0,0,0.3);border-radius:8px;display:inline-block;border:1px solid var(--border)}
+  .code-hint{font-size:0.82rem;color:var(--muted);margin-top:10px;line-height:1.5}
+  .my-codes-list{display:grid;gap:8px;margin-top:12px}
+  .my-code-row{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .my-code-row .c{font-family:'Courier New',monospace;color:var(--accent);font-weight:600;user-select:all}
+  .my-code-row .meta{font-size:0.82rem;color:var(--muted)}
 
   /* ===== Stats ===== */
   .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:40px 0}
@@ -426,6 +434,11 @@
         <div class="panel-prize gold">$10 USDT</div>
         <p class="muted">10 out of 10 correct. You're eligible to claim your prize.</p>
         <div class="panel-meta">Total time: <b id="winTime"></b>s · Avg per question: <b id="winAvg"></b>s</div>
+        <div id="win-code-box" class="code-box" style="display:none">
+          <div class="code-label">Your claim code · save this</div>
+          <div class="code-value" id="win-code"></div>
+          <div class="code-hint">If you finish in the <b>monthly top 3</b>, paste this code on the Monthly Claim page to verify it was really you. Saved in your browser too.</div>
+        </div>
         <div class="panel-actions">
           <button class="btn btn-primary" onclick="go('claim')">Claim $10 USDT →</button>
           <button class="btn btn-ghost" onclick="resetAndPlay()">Play again</button>
@@ -437,6 +450,11 @@
         <p style="margin:8px 0 4px" id="loseReason">You got it wrong.</p>
         <p class="muted">You answered <b id="loseScore">0</b>/10 correctly.</p>
         <p style="margin-top:14px;color:var(--green);font-size:0.92rem">Correct answer was: <span id="correctAns"></span></p>
+        <div id="lose-code-box" class="code-box" style="display:none">
+          <div class="code-label">Your claim code · save this</div>
+          <div class="code-value" id="lose-code"></div>
+          <div class="code-hint">If this run lands you in the <b>monthly top 3</b>, paste this code on the Monthly Claim page to verify it was really you. Saved in your browser too.</div>
+        </div>
         <div class="panel-actions">
           <button class="btn btn-primary" onclick="resetAndPlay()">Try again</button>
           <button class="btn btn-ghost" onclick="go('leaderboard')">Leaderboard</button>
@@ -507,6 +525,50 @@
   </div>
 </section>
 
+<!-- ============ MONTHLY CLAIM ============ -->
+<section id="view-monthly-claim" class="view">
+  <div class="container">
+    <div class="quiz-wrap">
+      <h2>Claim Monthly Prize</h2>
+      <p class="muted">Finished in the top 3 of a completed month? Enter your claim code (from the round where you set your best score) and your Tron (TRC20) wallet. The code proves it was you — no impersonators.</p>
+
+      <div id="mc-codes-list-wrap" style="margin-top:18px"></div>
+
+      <div id="mc-err" class="form-err"></div>
+      <div id="mc-ok" class="form-ok"></div>
+
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-top:18px">
+        <div class="form-row">
+          <label>Claim Code *</label>
+          <input id="mc-code" type="text" placeholder="XXXX-XXXX-XXXX" spellcheck="false" autocomplete="off" maxlength="14" style="font-family:'Courier New',monospace;letter-spacing:0.06em;text-transform:uppercase" />
+          <div class="hint">The 12-character code shown after the round that put you in the top 3.</div>
+        </div>
+        <div class="form-row">
+          <label>USDT (TRC20) Wallet Address *</label>
+          <input id="mc-wallet" type="text" placeholder="T..." spellcheck="false" autocomplete="off" />
+          <div class="hint">Must start with T and be exactly 34 characters.</div>
+        </div>
+        <div class="form-row">
+          <label>Contact (email or Telegram) — optional</label>
+          <input id="mc-contact" type="text" maxlength="100" placeholder="@yourhandle or you@example.com" />
+          <div class="hint">So we can confirm payment.</div>
+        </div>
+        <button class="btn btn-primary btn-big" id="mc-submit" onclick="submitMonthlyClaim()">Verify &amp; Submit</button>
+      </div>
+
+      <div id="mc-success" class="panel" style="display:none;margin-top:24px">
+        <div class="panel-trophy">✅</div>
+        <h2>Code verified!</h2>
+        <p id="mc-success-msg" class="muted"></p>
+        <p class="muted" style="margin-top:10px">Your wallet is on file. Final payout happens after manual review (usually within 48h of month end).</p>
+        <div class="panel-actions">
+          <button class="btn btn-ghost" onclick="go('home')">Back home</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ============ CLAIM ============ -->
 <section id="view-claim" class="view">
   <div class="container">
@@ -565,6 +627,8 @@
       <details><summary>How does the monthly competition work?</summary><p>Each player's <b>best single run</b> in the current month is what counts (highest score, fastest time). Top 3 at the end of the month win $100 / $75 / $50 USDT respectively. Months reset on the 1st of every month at 00:00 UTC. Past winners are listed permanently on the Past Winners tab.</p></details>
       <details><summary>What if I tie with someone on score?</summary><p>Ties are broken by total time (faster wins). If still tied, the earlier submission wins. Each name only counts once per month — keep playing, and only your best run is on the board.</p></details>
       <details><summary>What if no one's played much in a month?</summary><p>Only filled positions are paid. If only 2 distinct players play, only 1st ($100) and 2nd ($75) are awarded. The unfilled prize rolls into next month's pool.</p></details>
+      <details><summary>How is impersonation prevented for monthly winners?</summary><p>After every round you get a unique <b>claim code</b> like <code>K9XF-3MN7-LP4Z</code> that only you see (and the server records). It's auto-saved in your browser. If you finish top 3, you enter that code on the <a href="#monthly-claim">Claim Monthly Prize</a> page to verify it was actually you. Names on the public Past Winners page are partially obfuscated (e.g. <code>Joh***oe</code>) so impersonators have nothing to latch onto. No code = no payout.</p></details>
+      <details><summary>I lost my claim code — what now?</summary><p>If you used the same browser/device for your winning run, the Claim Monthly Prize page lists all codes saved on this device. If you cleared your browser or switched devices, contact <a href="mailto:hello@gkall.online">hello@gkall.online</a> with the exact details of your winning run (name, score, time, day) — we can verify against the database.</p></details>
       <details><summary>How is the prize paid?</summary><p>Winners submit their Tron (TRC20) USDT wallet via the Claim page. Each claim is reviewed manually by the operator and paid from the sponsorship pool. No private keys are held on the server — payouts are not automatic, but they are real.</p></details>
       <details><summary>What counts as cheating?</summary><p>Switching tabs or applications, opening developer tools, attempting to copy/paste, right-clicking, or answering implausibly fast (under 1.5s) on hard questions. Triggering any of these forfeits the round.</p></details>
       <details><summary>Will I see the same questions twice?</summary><p>The site avoids questions you've already seen on this device. Pool currently contains 200+ items across four difficulty tiers. Once you exhaust the unseen pool, repeats may appear.</p></details>
@@ -600,6 +664,7 @@ const LS = {
   LOCAL_LB: 'gkq_local_lb',
   PENDING: 'gkq_pending_claim_v1',
   CLAIMED: 'gkq_claimed_score_ids_v1',
+  CODES: 'gkq_my_codes_v1',
 };
 
 // ============================== State ==============================
@@ -609,15 +674,16 @@ let pendingClaim = null;
 
 // ============================== Routing ==============================
 function go(view) {
-  if (!['home','play','leaderboard','sponsor','claim','how'].includes(view)) view = 'home';
+  if (!['home','play','leaderboard','sponsor','claim','monthly-claim','how'].includes(view)) view = 'home';
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + view).classList.add('active');
   document.querySelectorAll('.nav-links a').forEach(a =>
     a.classList.toggle('active', a.dataset.view === view));
-  if (view === 'leaderboard') loadLeaderboard();
-  if (view === 'play')        showPlayPanel();
-  if (view === 'sponsor')     loadSponsor();
-  if (view === 'claim')       showClaimPanel();
+  if (view === 'leaderboard')    loadLeaderboard();
+  if (view === 'play')           showPlayPanel();
+  if (view === 'sponsor')        loadSponsor();
+  if (view === 'claim')          showClaimPanel();
+  if (view === 'monthly-claim')  showMonthlyClaimPanel();
   if (location.hash.slice(1) !== view) history.replaceState(null, '', '#' + view);
   window.scrollTo({top: 0, behavior: 'instant'});
 }
@@ -834,11 +900,19 @@ function answer(picked) {
       else render();
     }, 850);
   } else {
-    setTimeout(() => {
+    setTimeout(async () => {
       document.getElementById('loseReason').textContent = picked === -1 ? 'Time ran out.' : 'Wrong answer.';
       document.getElementById('loseScore').textContent = state.correct;
       document.getElementById('correctAns').textContent = q.opts[q.a];
-      submitScore(false).finally(() => showQuizPanel('lose'));
+      const res = await submitScore(false);
+      const lcb = document.getElementById('lose-code-box');
+      if (res && res.claim_code && state.correct >= 1) {
+        document.getElementById('lose-code').textContent = res.claim_code;
+        lcb.style.display = 'block';
+      } else {
+        lcb.style.display = 'none';
+      }
+      showQuizPanel('lose');
     }, 1050);
   }
 }
@@ -850,6 +924,11 @@ async function winGame() {
   const res = await submitScore(true);
   if (res && res.score_id) {
     setPending({ score_id: res.score_id, won_at: Date.now(), name: state.name });
+  }
+  // Show claim code on win panel
+  if (res && res.claim_code) {
+    document.getElementById('win-code').textContent = res.claim_code;
+    document.getElementById('win-code-box').style.display = 'block';
   }
   showQuizPanel('win');
   loadStats();
@@ -868,14 +947,37 @@ async function submitScore(won) {
   lb.push({ ...payload, date: new Date().toISOString().slice(0,10) });
   lb.sort((a,b) => b.score - a.score || a.totalTime - b.totalTime);
   saveLocalLB(lb);
+  let result = null;
   try {
     const r = await fetch(API + '/api/leaderboard', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify(payload)
     });
-    if (r.ok) return await r.json();
+    if (r.ok) result = await r.json();
   } catch(e) { console.warn('score submit failed', e); }
-  return null;
+  // Save claim code to localStorage
+  if (result && result.claim_code) {
+    saveMyCode({
+      code: result.claim_code,
+      score_id: result.score_id,
+      name: state.name,
+      score: state.correct,
+      won: won,
+      totalTime,
+      date: new Date().toISOString().slice(0,10),
+      ts: Date.now(),
+    });
+  }
+  return result;
+}
+
+function loadMyCodes() {
+  try { return JSON.parse(localStorage.getItem(LS.CODES) || '[]'); } catch(e) { return []; }
+}
+function saveMyCode(entry) {
+  const arr = loadMyCodes();
+  arr.unshift(entry);
+  try { localStorage.setItem(LS.CODES, JSON.stringify(arr.slice(0, 100))); } catch(e) {}
 }
 function resetAndPlay() { showPlayPanel(); }
 
@@ -976,13 +1078,13 @@ async function renderPastWinners() {
     body.innerHTML = `
       <div class="lb-empty" style="text-align:left;font-style:normal;padding:20px">
         <h3 style="color:var(--accent);margin-bottom:10px;font-size:1.05rem">No monthly winners yet</h3>
-        <p>The first monthly competition is in progress. Top 3 of this month will be announced here on the 1st of next month.</p>
-        <p style="margin-top:10px;font-size:0.92rem">Winners are paid in USDT (TRC20). Contact <a href="mailto:hello@gkall.online" style="color:var(--accent)">hello@gkall.online</a> with your wallet to claim.</p>
+        <p>The first monthly competition is in progress. Top 3 of this month will be announced here on the 1st of next month — names will be partially obfuscated for anti-impersonation.</p>
+        <p style="margin-top:10px;font-size:0.92rem">If you win, claim self-serve with the <b>claim code</b> shown after each round on the <a href="#monthly-claim" style="color:var(--accent)">Claim Monthly Prize</a> page.</p>
       </div>`;
     return;
   }
   const medal = ['🥇','🥈','🥉'];
-  let html = '';
+  let html = `<div class="muted" style="font-size:0.88rem;margin-bottom:14px">Names shown partially obfuscated. Real winners verify with their claim code → <a href="#monthly-claim" style="color:var(--accent)">Claim Monthly Prize</a></div>`;
   data.months.forEach(m => {
     html += `<div class="month-card"><div class="month-card-head"><h3>${escapeHtml(m.ym)}</h3><span class="muted" style="font-size:0.85rem">Finalized ${escapeHtml(m.winners[0]?.finalized_date || '')}</span></div><div class="winner-rows">`;
     m.winners.forEach(w => {
@@ -1056,6 +1158,69 @@ async function submitClaim() {
     err.textContent = 'Network error. Try again.';
     err.className = 'form-err show';
     btn.disabled = false; btn.textContent = 'Submit claim';
+  }
+}
+
+// ============================== Monthly claim ==============================
+function showMonthlyClaimPanel() {
+  document.getElementById('mc-success').style.display = 'none';
+  document.getElementById('mc-err').className = 'form-err';
+  document.getElementById('mc-ok').className = 'form-ok';
+  document.getElementById('mc-code').value = '';
+  document.getElementById('mc-wallet').value = '';
+  document.getElementById('mc-contact').value = localStorage.getItem('gkq_contact') || '';
+  // render saved codes for convenience
+  const wrap = document.getElementById('mc-codes-list-wrap');
+  const codes = loadMyCodes();
+  if (!codes.length) { wrap.innerHTML = ''; return; }
+  let html = '<div class="muted" style="font-size:0.85rem;margin-bottom:8px">Your saved codes from this browser (click to fill):</div><div class="my-codes-list">';
+  codes.slice(0, 8).forEach(c => {
+    html += `<div class="my-code-row" onclick="document.getElementById('mc-code').value='${c.code}'">
+      <span class="c">${escapeHtml(c.code)}</span>
+      <span class="meta">${escapeHtml(c.name)} · ${c.score}/10 in ${Number(c.totalTime).toFixed(1)}s · ${escapeHtml(c.date)}${c.won?' · ⭐':''}</span>
+    </div>`;
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+async function submitMonthlyClaim() {
+  const code   = (document.getElementById('mc-code').value || '').trim().toUpperCase();
+  const wallet = (document.getElementById('mc-wallet').value || '').trim();
+  const contact= (document.getElementById('mc-contact').value || '').trim();
+  const err = document.getElementById('mc-err');
+  const ok  = document.getElementById('mc-ok');
+  err.className = 'form-err'; ok.className = 'form-ok';
+  if (!/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)) {
+    err.textContent = 'Code must be in format XXXX-XXXX-XXXX (12 characters + 2 dashes).';
+    err.className = 'form-err show'; return;
+  }
+  if (!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(wallet)) {
+    err.textContent = 'TRC20 wallet must start with T and be exactly 34 characters.';
+    err.className = 'form-err show'; return;
+  }
+  if (contact) localStorage.setItem('gkq_contact', contact);
+  const btn = document.getElementById('mc-submit');
+  btn.disabled = true; btn.textContent = 'Verifying…';
+  try {
+    const r = await fetch(API + '/api/claim/monthly', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ code, wallet, contact })
+    });
+    const j = await r.json();
+    if (!r.ok) {
+      err.textContent = j.detail || j.error || 'Submission failed.';
+      err.className = 'form-err show';
+      btn.disabled = false; btn.textContent = 'Verify & Submit'; return;
+    }
+    document.getElementById('mc-success-msg').textContent =
+      `You finished #${j.rank} in ${j.ym}. Prize: $${j.prize_usdt} USDT.`;
+    document.getElementById('mc-success').style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Verify & Submit';
+  } catch(e) {
+    err.textContent = 'Network error. Try again.';
+    err.className = 'form-err show';
+    btn.disabled = false; btn.textContent = 'Verify & Submit';
   }
 }
 
