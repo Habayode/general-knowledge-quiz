@@ -124,6 +124,19 @@ def init_db():
         );
         CREATE INDEX IF NOT EXISTS idx_mw_ym ON monthly_winners(year_month);
 
+        CREATE TABLE IF NOT EXISTS feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            contact TEXT,
+            category TEXT NOT NULL,    -- bug | suggestion | praise | other
+            rating INTEGER,            -- 1-5 optional
+            message TEXT NOT NULL,
+            ip TEXT,
+            status TEXT NOT NULL DEFAULT 'new',  -- new | reviewed | actioned | archived
+            created_at INTEGER NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_feedback_new ON feedback(status, created_at DESC);
+
         CREATE TABLE IF NOT EXISTS game_sessions (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
@@ -652,6 +665,16 @@ class Handler(BaseHTTPRequestHandler):
                 """).fetchall()
             return self._json(200, [dict(r) for r in rows])
 
+        if p == "/api/admin/feedback":
+            if not self._admin_ok(): return self._json(401, {"error":"unauthorized"})
+            with db() as c:
+                rows = c.execute(
+                    "SELECT id, name, contact, category, rating, message, status, ip, "
+                    "datetime(created_at,'unixepoch') AS created "
+                    "FROM feedback ORDER BY created_at DESC LIMIT 200"
+                ).fetchall()
+            return self._json(200, [dict(r) for r in rows])
+
         if p == "/api/admin/overview":
             if not self._admin_ok(): return self._json(401, {"error":"unauthorized"})
             with db() as c:
@@ -719,6 +742,35 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         u = urlparse(self.path); p = u.path; ip = self._client_ip()
+
+        if p == "/api/feedback":
+            if not rate_ok(ip, "feedback", window=3600, maxn=5):
+                return self._json(429, {"error":"rate_limited"})
+            payload = self._body(4096)
+            if not payload: return self._json(400, {"error":"bad_json"})
+            name     = str(payload.get("name","")).strip()[:MAX_NAME]
+            contact  = str(payload.get("contact","")).strip()[:MAX_CONTACT]
+            category = str(payload.get("category","other")).strip().lower()[:24]
+            if category not in ("bug","suggestion","praise","other"):
+                category = "other"
+            try:
+                rating = int(payload.get("rating") or 0)
+                if not (0 <= rating <= 5): rating = 0
+            except (TypeError, ValueError):
+                rating = 0
+            message  = str(payload.get("message","")).strip()[:2000]
+            if len(message) < 5:
+                return self._json(400, {"error":"too_short", "detail":"Tell us a bit more — at least 5 characters."})
+            with db() as c:
+                c.execute(
+                    "INSERT INTO feedback(name,contact,category,rating,message,ip,created_at) "
+                    "VALUES(?,?,?,?,?,?,?)",
+                    (name or None, contact or None, category, rating or None, message, ip, _now())
+                )
+                c.commit()
+            # Telegram nudge so operator knows feedback arrived
+            tg_announce(f"💬 New {category} feedback received on gkall.online.")
+            return self._json(200, {"ok": True, "message":"Thanks Pioneer — feedback received."})
 
         if p == "/api/game/start":
             # Rate limits: 5/min and 50/day per IP
