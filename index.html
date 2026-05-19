@@ -744,7 +744,15 @@
         </div>
         <div class="checkbox-row">
           <input type="checkbox" id="mc-social-attest" />
-          <label for="mc-social-attest">I have <b>joined</b> the gkall Telegram channel (<a href="https://t.me/gkallonline" target="_blank" rel="noopener">@gkallonline</a>). <b>Required for payout.</b></label>
+          <label for="mc-social-attest">I have <b>joined</b> the gkall Telegram channel (<a href="https://t.me/gkallonline" target="_blank" rel="noopener">@gkallonline</a>). <b>Required for monthly payout.</b></label>
+        </div>
+        <div class="form-row">
+          <label>Your X / Twitter handle (optional, speeds verification)</label>
+          <input id="mc-x-handle" type="text" maxlength="64" placeholder="@yourhandle on X" />
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="mc-x-attest" />
+          <label for="mc-x-attest">I <b>follow</b> <a href="https://x.com/gkallonline" target="_blank" rel="noopener">@gkallonline</a> on X <b>and</b> liked the pinned launch post. <b>Required for monthly payout.</b></label>
         </div>
         <button class="btn btn-primary btn-big" id="mc-submit" onclick="submitMonthlyClaim()" style="margin-top:14px">Verify &amp; Submit</button>
       </div>
@@ -1847,6 +1855,8 @@ async function submitMonthlyClaim() {
   const contact= (document.getElementById('mc-contact').value || '').trim();
   const socialHandle = (document.getElementById('mc-social-handle').value || '').trim();
   const socialAttested = document.getElementById('mc-social-attest').checked;
+  const xHandle = (document.getElementById('mc-x-handle').value || '').trim();
+  const xAttested = document.getElementById('mc-x-attest').checked;
   const err = document.getElementById('mc-err');
   const ok  = document.getElementById('mc-ok');
   err.className = 'form-err'; ok.className = 'form-ok';
@@ -1859,7 +1869,11 @@ async function submitMonthlyClaim() {
     err.className = 'form-err show'; return;
   }
   if (!socialAttested) {
-    err.textContent = 'Please confirm you followed all our social channels (required for payout).';
+    err.textContent = 'Please confirm you joined the gkall Telegram channel (required for monthly payout).';
+    err.className = 'form-err show'; return;
+  }
+  if (!xAttested) {
+    err.textContent = 'Please confirm you follow @gkallonline on X AND liked the pinned post (required for monthly payout).';
     err.className = 'form-err show'; return;
   }
   if (contact) localStorage.setItem('gkq_contact', contact);
@@ -1868,7 +1882,11 @@ async function submitMonthlyClaim() {
   try {
     const r = await fetch(API + '/api/claim/monthly', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ code, wallet, contact, social_attested: socialAttested, social_handle: socialHandle })
+      body: JSON.stringify({
+        code, wallet, contact,
+        social_attested: socialAttested, social_handle: socialHandle,
+        x_attested: xAttested, x_handle: xHandle
+      })
     });
     const j = await r.json();
     if (!r.ok) {
