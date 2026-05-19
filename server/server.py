@@ -1,5 +1,5 @@
 """
-gkall.online — General Knowledge Quiz backend.
+gkall.online — All-Knowledge Challenge backend.
 
 Endpoints
   GET  /api/health

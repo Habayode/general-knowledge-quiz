@@ -10,7 +10,7 @@ Customize the bracketed parts.
 
 Hey [First name],
 
-Quick one — I built a skill-based general-knowledge quiz that pays winners in USDT. Live at https://gkall.online, in prelaunch this week, full launch June 1.
+Quick one — I built a skill-based **all-knowledge challenge** that pays winners in USDT. Live at https://gkall.online, in prelaunch this week, full launch June 1.
 
 You're one of ~50 people I'm inviting personally before we go public. Two minutes of your time = a real test of whether this is fun and fair.
 

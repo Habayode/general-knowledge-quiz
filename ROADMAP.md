@@ -7,7 +7,7 @@
 
 ## Vision
 
-A skill-based, fair, USDT-paying general-knowledge quiz where Pioneers and casual players alike can earn real money for their breadth of knowledge. Sponsored by HAG_Ai (initial prize guarantor) and scaling via community sponsorship.
+A skill-based, fair, USDT-paying **all-knowledge challenge** where Pioneers and casual players alike can earn real money for their breadth of knowledge — from pop culture to academic depth. Sponsored by HAG_Ai (initial prize guarantor) and scaling via community sponsorship.
 
 ## Strategic positioning
 

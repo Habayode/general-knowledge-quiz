@@ -7,7 +7,7 @@
 
 ## Brand identity (use consistently across all channels)
 
-- **Name:** gkall (lowercase) — short for "general knowledge for all"
+- **Name:** gkall (lowercase) — short for "**all knowledge** for all"; positioned as the **All-Knowledge Challenge**
 - **Tagline:** "Win up to $51 USDT for what you know."
 - **Voice:** Confident, transparent, lightly playful. Never spammy, never crypto-bro.
 - **Visuals:**
@@ -22,7 +22,7 @@
 
 | Platform | Handle to claim | Bio (copy/paste) |
 |---|---|---|
-| **X / Twitter** | `@gkallonline` (or `@gkall_official`) | "Skill-based knowledge challenge. Win up to $51 USDT (Tron / TRC20) for general-knowledge mastery. Powered by HAG_Ai. https://gkall.online" |
+| **X / Twitter** | `@gkallonline` (or `@gkall_official`) | "The All-Knowledge Challenge. Win up to $51 USDT (Tron / TRC20) for breadth across every domain — pop culture to academic depth. Powered by HAG_Ai. https://gkall.online" |
 | **Instagram** | `@gkall.online` (or `@gkallofficial`) | "🧠 Test your knowledge. Win USDT. \| 10 Qs · 10s each · $1 instant + $85 monthly pool \| Live: gkall.online" |
 | **TikTok** | `@gkall.online` | "Quiz · 10 questions · 10 sec each · Win up to $51 USDT 🏆 \| gkall.online" |
 | **Facebook Page** | `gkall.online` | Same as X bio. |
@@ -109,7 +109,7 @@ Post in r/SideProject (Show your work), r/cryptocurrency (Discussion flair), r/T
 
 > Hey [Name],
 >
-> I'm running gkall.online — a skill-based general-knowledge quiz that pays winners in USDT (TRC20). Currently in prelaunch with 33K+ questions, anti-cheat, and an $85 monthly prize pool guaranteed by HAG_Ai for May.
+> I'm running gkall.online — a skill-based **all-knowledge challenge** that pays winners in USDT (TRC20). Currently in prelaunch with 33K+ questions spanning pop culture to academic depth, anti-cheat enforced, with an $85 monthly prize pool guaranteed by HAG_Ai for May.
 >
 > For June onward we're opening to sponsors. $50–$5,000 USDT range. Sponsorship gets you:
 > - Logo + link on the Sponsor wall (every visitor sees it)
