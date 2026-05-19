@@ -60,6 +60,66 @@ You don't need a long pitch. Try:
 
 ---
 
+## Template D — WhatsApp DM (your wording, lightly polished)
+
+> My GitHub is full! 😅 Check this out — I'm building a USDT-paying quiz, currently in prelaunch testing.
+>
+> 🧠 10 random questions from a 33k pool
+> 🏆 10/10 wins $1 USDT (TRC20)
+> 💰 $85 monthly pool for top 3 ($50 / $25 / $10)
+>
+> Would love your feedback if you have a sec → https://gkall.online
+
+Drop `pioneer-card-square.png` (on your Desktop) as the message attachment for a richer DM.
+
+## Template E — WhatsApp Status / IG Story / FB Status (text)
+
+Pair with the Pioneer Card image:
+
+> 🚀 Prelaunch live: the All-Knowledge Challenge.
+> $1 USDT per 10/10 · $85 monthly pool.
+> Be a Pioneer → gkall.online
+
+Attach `pioneer-card-portrait.png` (on your Desktop) as the status image. Auto-fits IG / FB / WhatsApp Story (1080×1920).
+
+---
+
+## Template F — 20-second video script (Status / Story / Reel)
+
+Record on your phone, edit in CapCut (free) or InShot. Simple shot list:
+
+| Sec | Visual | Voiceover / On-screen text |
+|---|---|---|
+| 0–3 | Phone showing https://gkall.online home | "I built a USDT-paying knowledge quiz." |
+| 3–7 | Scroll to "Win up to $51 USDT" + countdown banner | "10 questions. 10 seconds each. Win real money." |
+| 7–13 | Tap **Play**, answer 1–2 questions on screen | "33,000 questions. Skill only — no luck." |
+| 13–17 | Show monthly leaderboard tab + prize amounts | "Top 3 each month win $50 / $25 / $10 USDT." |
+| 17–20 | End on `pioneer-card-square.png` overlay + QR | "Be a Pioneer. gkall.online." |
+
+**Tips:**
+- Film in vertical for WhatsApp Status / IG Story / TikTok
+- Add subtitle text — most people watch muted
+- Background music: use the in-app royalty-free library (CapCut / InShot have them)
+- End screen: hold the Pioneer Card image for 3 sec so people can screenshot or scan the QR
+
+**No editing skills?** Just film yourself talking to the camera with the same script for 20 seconds, then add the QR/card as the last frame. Authenticity beats polish for prelaunch outreach.
+
+---
+
+## Template G — Pioneer Invite Card (already generated)
+
+Ready-made share assets on your Desktop:
+
+| File | Size | Best for |
+|---|---|---|
+| `pioneer-card-portrait.png` | 1080×1920 | WhatsApp Status, IG Story, FB Story, TikTok thumbnail |
+| `pioneer-card-square.png` | 1080×1080 | IG feed, FB feed, Twitter, WhatsApp DM attachment |
+| `gkall-logo-512.png` | 512×512 | Telegram channel photo, any avatar |
+
+Both Pioneer Card images contain a scannable QR → https://gkall.online plus prize breakdown and HAG_Ai credit. Drop them straight into share dialogs — no editing needed.
+
+---
+
 ## Follow-up after they play
 
 24 hours after they've played:
