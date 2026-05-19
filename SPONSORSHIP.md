@@ -24,7 +24,7 @@
 
 ### 🛡 Round Sponsor — $200–$999 USDT
 Everything in Pioneer Sponsor, plus:
-- Dedicated thank-you post pinned for 24 hours on Telegram + X
+- **Featured across all gkall social channels** (X, Instagram, TikTok, Facebook, Telegram) — one pinned 24-hour post per channel
 - Named tag on a specific month's prize: "May 2026 prize pool sponsored by [Brand]"
 - Mention in every winner announcement that month
 

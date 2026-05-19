@@ -562,7 +562,7 @@
           <div class="net-row" style="margin-top:18px;flex-direction:column;gap:6px">
             <div>Network: <b>Tron (TRC20)</b></div>
             <div>Asset: <b>USDT</b> only — other tokens will not be recovered</div>
-            <div>Minimum: any amount welcome</div>
+            <div>Minimum: <b id="sponsor-min">$50 USDT</b> (Pioneer Sponsor tier)</div>
             <div style="margin-top:6px">After sending, email <a href="mailto:hello@gkall.online">hello@gkall.online</a> with your tx hash + how you'd like to be credited.</div>
           </div>
         </div>
@@ -1028,6 +1028,10 @@ async function loadSponsor() {
     }
     renderTiers(s.tiers);
     renderSocials('sponsor-socials-row', s.socials);
+    if (s.minimum_usdt) {
+      const m = document.getElementById('sponsor-min');
+      if (m) m.textContent = '$' + s.minimum_usdt + ' USDT';
+    }
   } catch(e) { console.warn('sponsor failed', e); }
   loadStats();
 }

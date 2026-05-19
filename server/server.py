@@ -47,16 +47,18 @@ SPONSORSHIP_TIERS  = [
                "Mention in the next monthly winners announcement"]},
     {"name": "Round Sponsor",   "min": 200,  "max": 999,  "icon": "🛡",
      "perks": ["Everything in Pioneer Sponsor",
-               "Pinned 24-hour thank-you on Telegram + X",
+               "Featured across all gkall social channels (X, Instagram, TikTok, Facebook, Telegram)",
+               "Pinned 24-hour thank-you post per channel",
                "Named tag on the monthly prize: 'Sponsored by [Brand]'",
                "Mention in every winner announcement that month"]},
     {"name": "Title Sponsor",   "min": 1000, "max": None, "icon": "👑",
      "perks": ["Everything in Round Sponsor",
                "Logo at top of homepage hero for the month",
                "Branded category (e.g. '[Brand] Science Week')",
-               "Co-branded social content",
+               "Co-branded social content series",
                "Permanent recognition in the Hall of Fame"]},
 ]
+SPONSOR_MIN_USDT = 50  # smallest accepted contribution = entry to Pioneer Sponsor tier
 PRIZE_USDT   = 1
 MONTHLY_PRIZES = [50, 25, 10]    # 1st, 2nd, 3rd place at month end (USDT TRC20)
 QUALIFY_MIN  = 5                  # minimum score to appear on any ranked leaderboard
@@ -651,6 +653,7 @@ class Handler(BaseHTTPRequestHandler):
                 "telegram_url": tg_url,
                 "socials": socials,
                 "tiers": SPONSORSHIP_TIERS,
+                "minimum_usdt": SPONSOR_MIN_USDT,
                 "launch_date_utc": LAUNCH_DATE_UTC,
                 "contact_email": "hello@gkall.online",
             }, cache="public, max-age=60")
