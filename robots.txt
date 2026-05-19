@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Disallow: /api/admin/
+Disallow: /admin
+
+Sitemap: https://gkall.online/sitemap.xml
