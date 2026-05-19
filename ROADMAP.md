@@ -11,9 +11,9 @@ A skill-based, fair, USDT-paying **all-knowledge challenge** where Pioneers and 
 
 ## About HAG_Ai
 
-**HAG_Ai** is a full-fledged AI-enabled consulting firm offering:
+**HAG_Ai** — A full-fledged AI consulting firm offering:
 - **Finance Agents** — AI-driven cash-flow modeling, forecasting, scenario analysis
-- **Market & Football Predictions** — quantitative + ML pipelines for capital markets and football outcomes
+- **Market & Football Prediction Model** — quantitative + ML pipelines for capital markets and football outcomes
 - **ERP Customization** — tailored enterprise systems built around real workflows
 
 gkall.online is HAG_Ai's first public-facing product — used both as a proof-of-craft (engineering quality visible to potential clients) and as a community platform. Public success here de-risks consulting conversations later.

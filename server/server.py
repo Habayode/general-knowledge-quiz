@@ -64,8 +64,8 @@ MONTHLY_PRIZES = [50, 25, 10]    # 1st, 2nd, 3rd place at month end (USDT TRC20)
 QUALIFY_MIN  = 5                  # minimum score to appear on any ranked leaderboard
 INSTANT_WIN_CAP_PER_MONTH = 3    # max paid instant-wins per unique player per month
 ABOUT_HAG_AI = (
-    "HAG_Ai is a full-fledged AI-enabled consulting firm. "
-    "We build Finance Agents, deliver market & football predictions, and customize ERP systems. "
+    "HAG_Ai — A full-fledged AI consulting firm offering Finance Agents, "
+    "Market & Football Prediction Model, and ERP Customization. "
     "gkall.online is our community-facing skill platform — built with the same engineering rigor we bring to client work."
 )
 CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"  # Crockford-ish, no 0/O/1/I
@@ -743,7 +743,7 @@ class Handler(BaseHTTPRequestHandler):
                 "description": ABOUT_HAG_AI,
                 "services": [
                     {"name": "Finance Agents", "tagline": "AI-driven finance modeling & forecasting"},
-                    {"name": "Market & Football Predictions", "tagline": "Quant + ML for sports and capital markets"},
+                    {"name": "Market & Football Prediction Model", "tagline": "Quant + ML for sports and capital markets"},
                     {"name": "ERP Customization", "tagline": "Tailored enterprise systems built to your workflow"},
                 ],
                 "contact_email": "hello@gkall.online",
