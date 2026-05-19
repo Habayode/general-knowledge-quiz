@@ -235,7 +235,7 @@ Because subscribing to my no-effort-passive-money guides is the scam
 flavor of the year, and I think we should be honest about what we
 actually pay people for.
 
-Built by my AI consulting firm (HAG_Ai). May 2026 prize pool is
+Built by my AI-enabled consulting firm (HAG_Ai — hagai.online). May 2026 prize pool is
 guaranteed by us regardless of sponsorship. Payout is on Tron, on-chain
 verifiable.
 
