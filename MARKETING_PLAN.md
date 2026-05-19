@@ -18,7 +18,28 @@
 
 ---
 
-## Social media accounts to create (YOU do this, May 18–21)
+## About HAG_Ai (operator)
+
+**HAG_Ai** is a full-fledged AI-enabled consulting firm offering:
+- **Finance Agents** — AI-driven cash-flow modeling, forecasting, scenario analysis
+- **Market & Football Predictions** — quantitative + ML pipelines for capital markets and football outcomes
+- **ERP Customization** — tailored enterprise systems built around real workflows
+
+gkall.online is HAG_Ai's first public-facing product. Every line of code, every payout, every sponsor recognition is public — proof of craft for consulting prospects who want to see real engineering before signing an NDA.
+
+## Phase A — Telegram-first (NOW through June 1)
+
+For prelaunch, **Telegram is our only active social channel.** It's already live with bot auto-announcer. Pioneer outreach and sponsorship pitches drive players here:
+
+- Channel: https://t.me/gkallonline
+- Bot: @ALLKNWNG_BOT (auto-posts 10/10 wins, monthly winners, sponsor thanks)
+- **Daily prelaunch countdown posts run automatically** May 19–June 1 (already seeded in DB; cron hourly check)
+
+**Why Telegram first?** Crypto/Web3 audiences live there. The bot does the work autonomously. We can prove value without spreading thin across X / IG / TikTok / FB which need real-time human posting.
+
+## Phase B — Multi-channel social rollout (post June 1)
+
+Once we have early winners, sponsor proof, and Pioneer testimonials, we expand to:
 
 | Platform | Handle to claim | Bio (copy/paste) |
 |---|---|---|

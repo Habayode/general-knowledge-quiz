@@ -6,11 +6,15 @@ Most of the technical work is automated. The items below need a real human (you)
 
 ## This week (May 18–24)
 
-### Social accounts (highest priority — ~30 min)
-- [ ] **X / Twitter**: create `@gkallonline`. Use Cloudflare email for signup, your phone for verification.
-- [ ] **Instagram**: create `@gkall.online`. Same email + phone.
-- [ ] **TikTok**: create `@gkall.online`. Same email + phone.
-- [ ] **Facebook Page**: create `gkall.online`. Use your personal FB account, then create the Page.
+### Phase A is Telegram-only — no other social setup needed yet
+Telegram channel @gkallonline + bot @ALLKNWNG_BOT are already live. The daily countdown posts (May 19 → June 1) are seeded in the DB and fire automatically. **You don't need to create X / Instagram / TikTok / Facebook accounts until Phase B (post June 1).**
+
+### Defer to Phase B (post-launch, June 1+)
+When launched and seeing real Pioneer/winner traction, create:
+- [ ] **X / Twitter**: `@gkallonline`
+- [ ] **Instagram**: `@gkall.online`
+- [ ] **TikTok**: `@gkall.online`
+- [ ] **Facebook Page**: `gkall.online`
 
 For each, use:
 - **PFP**: I'll generate the gold "G" mark on request — say "build me the logo PNG"
