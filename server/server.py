@@ -19,7 +19,7 @@ Static files in ./public. Storage: SQLite at ./quizdb.sqlite.
 On first run, the questions table is seeded from questions_seed.json AND
 optionally extended with ~150 questions fetched from Open Trivia DB.
 """
-import json, os, sqlite3, time, urllib.request, urllib.parse, html, secrets, re
+import json, os, sqlite3, time, urllib.request, urllib.parse, html, secrets, re, hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
@@ -192,6 +192,18 @@ def init_db():
             created_at INTEGER NOT NULL
         );
         CREATE INDEX IF NOT EXISTS idx_feedback_new ON feedback(status, created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS page_views (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ts_utc INTEGER NOT NULL,
+            path TEXT NOT NULL,
+            referer TEXT,
+            ip_hash TEXT,
+            ua_short TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_pv_ts ON page_views(ts_utc);
+        CREATE INDEX IF NOT EXISTS idx_pv_path ON page_views(path);
+        CREATE INDEX IF NOT EXISTS idx_pv_iph ON page_views(ip_hash, ts_utc);
 
         CREATE TABLE IF NOT EXISTS game_sessions (
             id TEXT PRIMARY KEY,
@@ -857,6 +869,42 @@ class Handler(BaseHTTPRequestHandler):
                 ).fetchall()
             return self._json(200, [dict(r) for r in rows])
 
+        if p == "/api/admin/stats/traffic":
+            if not self._admin_ok(): return self._json(401, {"error":"unauthorized"})
+            qs = parse_qs(u.query or "")
+            try: days = max(1, min(90, int((qs.get("days") or ["7"])[0])))
+            except (TypeError, ValueError): days = 7
+            cutoff = _now() - days * 86400
+            with db() as c:
+                total = c.execute("SELECT COUNT(*) FROM page_views WHERE ts_utc >= ?", (cutoff,)).fetchone()[0]
+                uniques = c.execute("SELECT COUNT(DISTINCT ip_hash) FROM page_views WHERE ts_utc >= ?", (cutoff,)).fetchone()[0]
+                top_paths = c.execute(
+                    "SELECT path, COUNT(*) AS n FROM page_views WHERE ts_utc >= ? "
+                    "GROUP BY path ORDER BY n DESC LIMIT 20", (cutoff,)
+                ).fetchall()
+                top_refs = c.execute(
+                    "SELECT COALESCE(referer,'(direct)') AS r, COUNT(*) AS n FROM page_views "
+                    "WHERE ts_utc >= ? GROUP BY r ORDER BY n DESC LIMIT 20", (cutoff,)
+                ).fetchall()
+                by_day = c.execute(
+                    "SELECT strftime('%Y-%m-%d', ts_utc, 'unixepoch') AS d, "
+                    "COUNT(*) AS views, COUNT(DISTINCT ip_hash) AS uniques "
+                    "FROM page_views WHERE ts_utc >= ? GROUP BY d ORDER BY d", (cutoff,)
+                ).fetchall()
+                by_ua = c.execute(
+                    "SELECT ua_short, COUNT(*) AS n FROM page_views WHERE ts_utc >= ? "
+                    "GROUP BY ua_short ORDER BY n DESC", (cutoff,)
+                ).fetchall()
+            return self._json(200, {
+                "days": days,
+                "total_views": total,
+                "unique_visitors": uniques,
+                "by_day": [dict(r) for r in by_day],
+                "top_paths": [dict(r) for r in top_paths],
+                "top_referers": [dict(r) for r in top_refs],
+                "by_ua_class": [dict(r) for r in by_ua],
+            })
+
         if p == "/api/admin/overview":
             if not self._admin_ok(): return self._json(401, {"error":"unauthorized"})
             with db() as c:
@@ -924,6 +972,32 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         u = urlparse(self.path); p = u.path; ip = self._client_ip()
+
+        if p == "/api/track":
+            # Self-hosted page-view tracking. Tiny, no third-party calls.
+            # Rate-limited per IP to prevent abuse.
+            if not rate_ok(ip, "track", window=60, maxn=60):
+                return self._json(429, {"ok": False})
+            payload = self._body(2048) or {}
+            path_str = str(payload.get("path", "/")).strip()[:200]
+            if not path_str.startswith("/"):
+                path_str = "/" + path_str
+            ref = str(payload.get("referer", "")).strip()[:300] or None
+            ua_full = (self.headers.get("User-Agent") or "")[:300]
+            # Coarse UA tag (keep it short; full UA isn't useful for traffic)
+            ua_tag = "bot" if ("bot" in ua_full.lower() or "spider" in ua_full.lower() or "crawl" in ua_full.lower()) \
+                else ("mobile" if "mobi" in ua_full.lower() else "desktop")
+            ip_h = hashlib.sha256((ip + "|gkall_pv_salt").encode("utf-8")).hexdigest()[:16] if ip else None
+            try:
+                with db() as c:
+                    c.execute(
+                        "INSERT INTO page_views(ts_utc,path,referer,ip_hash,ua_short) VALUES (?,?,?,?,?)",
+                        (_now(), path_str, ref, ip_h, ua_tag)
+                    )
+                    c.commit()
+            except Exception:
+                pass
+            return self._json(200, {"ok": True})
 
         if p == "/api/feedback":
             if not rate_ok(ip, "feedback", window=3600, maxn=5):
