@@ -644,8 +644,11 @@ class Handler(BaseHTTPRequestHandler):
         mime = {
             ".html":"text/html; charset=utf-8", ".css":"text/css; charset=utf-8",
             ".js":"application/javascript; charset=utf-8", ".json":"application/json",
-            ".png":"image/png", ".jpg":"image/jpeg", ".svg":"image/svg+xml",
-            ".ico":"image/x-icon", ".webp":"image/webp", ".txt":"text/plain; charset=utf-8",
+            ".png":"image/png", ".jpg":"image/jpeg", ".jpeg":"image/jpeg",
+            ".svg":"image/svg+xml", ".ico":"image/x-icon", ".webp":"image/webp",
+            ".gif":"image/gif", ".mp4":"video/mp4", ".webm":"video/webm",
+            ".mp3":"audio/mpeg", ".wav":"audio/wav",
+            ".txt":"text/plain; charset=utf-8", ".xml":"application/xml; charset=utf-8",
         }.get(path.suffix.lower(), "application/octet-stream")
         data = path.read_bytes()
         self.send_response(200)
