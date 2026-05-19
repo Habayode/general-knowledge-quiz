@@ -636,6 +636,14 @@
         <div class="card"><div class="step">❤️</div><h3>Loved a moment?</h3><p>What hooked you? Share it — we'll lean into what works.</p></div>
       </div>
 
+      <div id="fb-tg-banner" style="display:none;margin-top:18px;padding:16px 20px;background:rgba(34,170,255,0.08);border:1px solid rgba(34,170,255,0.3);border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+        <div>
+          <div style="font-weight:600;color:#7ec8ff">📣 Join our Telegram channel</div>
+          <div class="muted" style="font-size:0.88rem;margin-top:4px">Live winner announcements, prelaunch news, new features. Optional but recommended for Pioneers.</div>
+        </div>
+        <a id="fb-tg-link" class="btn btn-ghost" href="#" target="_blank" rel="noopener" style="margin:0">Join channel</a>
+      </div>
+
       <div id="fb-err" class="form-err"></div>
       <div id="fb-ok" class="form-ok"></div>
 
@@ -670,6 +678,7 @@
         <div class="panel-trophy">🙏</div>
         <h2>Thanks, Pioneer</h2>
         <p class="muted">Your feedback is in the queue. Every Pioneer report is read by a human at HAG_Ai.</p>
+        <p id="fb-success-tg" class="muted" style="margin-top:14px;display:none">Stay in the loop — <a id="fb-success-tg-link" href="#" target="_blank" rel="noopener" style="color:var(--accent)">join our Telegram channel</a> for live winner announcements and Pioneer updates.</p>
         <div class="panel-actions">
           <button class="btn btn-primary" onclick="go('play')">Play another round</button>
           <button class="btn btn-ghost" onclick="resetFeedback()">Send another note</button>
@@ -1442,6 +1451,17 @@ function resetFeedback() {
   document.getElementById('fb-name').value = localStorage.getItem(LS.NAME) || '';
   document.getElementById('fb-contact').value = localStorage.getItem('gkq_contact') || '';
   document.getElementById('fb-category').value = 'suggestion';
+  // Show TG banner if channel configured
+  fetch(API + '/api/sponsor').then(r => r.json()).then(s => {
+    if (s.telegram_url) {
+      const b = document.getElementById('fb-tg-banner');
+      b.style.display = 'flex';
+      document.getElementById('fb-tg-link').href = s.telegram_url;
+      const sl = document.getElementById('fb-success-tg-link');
+      if (sl) sl.href = s.telegram_url;
+      document.getElementById('fb-success-tg').style.display = 'block';
+    }
+  }).catch(() => {});
 }
 
 async function submitFeedback() {
