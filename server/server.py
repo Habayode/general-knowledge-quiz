@@ -237,6 +237,12 @@ def init_db():
                 c.execute(f"ALTER TABLE {tbl} ADD COLUMN social_attested INTEGER NOT NULL DEFAULT 0")
             if "social_handle" not in cols:
                 c.execute(f"ALTER TABLE {tbl} ADD COLUMN social_handle TEXT")
+        # Monthly winners (top-3, $50/$25/$10) must also attest X follow + like pinned post
+        cols = [r[1] for r in c.execute("PRAGMA table_info(monthly_winners)").fetchall()]
+        if "x_attested" not in cols:
+            c.execute("ALTER TABLE monthly_winners ADD COLUMN x_attested INTEGER NOT NULL DEFAULT 0")
+        if "x_handle" not in cols:
+            c.execute("ALTER TABLE monthly_winners ADD COLUMN x_handle TEXT")
 
         # Re-tag graduate-level MMLU subjects to Expert (difficulty=4)
         c.execute("""
@@ -858,6 +864,8 @@ class Handler(BaseHTTPRequestHandler):
                 rows = c.execute("""
                     SELECT id, year_month AS ym, rank, name, score, total_time,
                            score_id, prize_usdt, status, wallet, contact, tx_hash,
+                           social_attested, social_handle,
+                           x_attested, x_handle,
                            datetime(finalized_at,'unixepoch') AS finalized,
                            datetime(paid_at,'unixepoch') AS paid_at
                     FROM monthly_winners
@@ -1308,12 +1316,16 @@ class Handler(BaseHTTPRequestHandler):
             contact = str(payload.get("contact","")).strip()[:MAX_CONTACT]
             social_attested = bool(payload.get("social_attested", False))
             social_handle = str(payload.get("social_handle","")).strip()[:64]
+            x_attested = bool(payload.get("x_attested", False))
+            x_handle = str(payload.get("x_handle","")).strip()[:64]
             if not re.match(r"^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$", code):
                 return self._json(400, {"error":"bad_code", "detail":"Format: XXXX-XXXX-XXXX"})
             if not TRC20_RE.match(wallet):
                 return self._json(400, {"error":"bad_wallet", "detail":"TRC20 address must start with T and be 34 chars."})
             if not social_attested:
                 return self._json(400, {"error":"social_required", "detail":"Please confirm you've joined our Telegram channel — required for payout (https://t.me/gkallonline)."})
+            if not x_attested:
+                return self._json(400, {"error":"x_required", "detail":"Please confirm you follow @gkallonline on X AND liked the pinned launch post — required for monthly payout (https://x.com/gkallonline)."})
             with db() as c:
                 score = c.execute("SELECT id, name FROM scores WHERE claim_code=?", (code,)).fetchone()
                 if not score:
@@ -1323,12 +1335,17 @@ class Handler(BaseHTTPRequestHandler):
                     return self._json(403, {"error":"not_a_winner", "detail":"This code belongs to a real run, but it didn't finish top 3 in its month. Keep playing!"})
                 if winner["status"] != "pending":
                     return self._json(409, {"error":"already_processed", "detail":f"This prize was already {winner['status']}."})
-                c.execute("UPDATE monthly_winners SET wallet=?, contact=?, social_attested=1, social_handle=?, paid_at=NULL WHERE id=?",
-                          (wallet, contact, social_handle, winner["id"]))
+                c.execute(
+                    "UPDATE monthly_winners SET wallet=?, contact=?, "
+                    "social_attested=1, social_handle=?, "
+                    "x_attested=1, x_handle=?, "
+                    "paid_at=NULL WHERE id=?",
+                    (wallet, contact, social_handle, x_handle, winner["id"])
+                )
                 c.commit()
             return self._json(200, {"ok": True, "rank": winner["rank"], "prize_usdt": winner["prize_usdt"],
                                     "ym": winner["year_month"],
-                                    "message": "Verified. Your prize will be paid after we verify your social follows."})
+                                    "message": "Verified. Your prize will be paid after we verify your Telegram + X follows."})
 
         if p == "/api/claim":
             if not rate_ok(ip, "claim", window=3600, maxn=3):
