@@ -730,13 +730,14 @@ const API = ''; // same-origin
 const TIMER = 10;
 const PRIZE_USDT = 10;
 const MOUSE_SAMPLE_HZ = 4;  // 4 samples per second during a question
+// Prelaunch v2: keys bumped so all pre-launch cached test data is orphaned.
 const LS = {
-  SEEN: 'gkq_seen_v1',
+  SEEN: 'gkq_seen_v2',
   NAME: 'gkq_name',
-  LOCAL_LB: 'gkq_local_lb',
-  PENDING: 'gkq_pending_claim_v1',
-  CLAIMED: 'gkq_claimed_score_ids_v1',
-  CODES: 'gkq_my_codes_v1',
+  LOCAL_LB: 'gkq_local_lb_v2',
+  PENDING: 'gkq_pending_claim_v2',
+  CLAIMED: 'gkq_claimed_score_ids_v2',
+  CODES: 'gkq_my_codes_v2',
 };
 
 // ============================== State ==============================
@@ -1257,15 +1258,21 @@ async function renderAllTime() {
   const body = document.getElementById('lb-content');
   const mode = document.getElementById('lb-mode');
   body.innerHTML = '<div class="lb-empty">Loading…</div>';
-  let list = null, isGlobal = false;
+  let list = null, isGlobal = false, serverReachable = false;
   try {
     const r = await fetch(API + '/api/leaderboard');
-    if (r.ok) { list = await r.json(); isGlobal = true; }
+    if (r.ok) { list = await r.json(); serverReachable = true; }
   } catch(e) {}
-  if (!list || !list.length) list = loadLocalLB();
+  if (serverReachable) {
+    // Trust the global result (even if empty) when server is reachable.
+    isGlobal = true;
+  } else {
+    // Truly offline → fall back to local cache
+    list = loadLocalLB();
+  }
   mode.className = 'mode-badge ' + (isGlobal ? 'online' : 'offline');
-  mode.innerHTML = '<span class="dot"></span> ' + (isGlobal ? 'Global · All-time' : 'Local fallback');
-  if (!list.length) { body.innerHTML = '<div class="lb-empty">No scores yet.</div>'; return; }
+  mode.innerHTML = '<span class="dot"></span> ' + (isGlobal ? 'Global · All-time' : 'Local fallback (offline)');
+  if (!list || !list.length) { body.innerHTML = '<div class="lb-empty">No scores yet — be the first.</div>'; return; }
   let html = '<table class="lb-table"><thead><tr><th>#</th><th>Name</th><th>Score</th><th>Prize</th><th>Time</th><th>Date</th></tr></thead><tbody>';
   list.slice(0, 50).forEach((e, i) => {
     const rc = i < 3 ? 'lb-row-' + (i+1) : '';
