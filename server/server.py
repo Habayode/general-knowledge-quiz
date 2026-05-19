@@ -35,6 +35,28 @@ TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "")  # e.g. "7890123456:ABC..."
 TG_CHANNEL   = os.environ.get("TG_CHANNEL", "")    # e.g. "@gkall_official" or "-100123..."
 TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")   # public; ok to send to client
 TURNSTILE_SECRET   = os.environ.get("TURNSTILE_SECRET", "")     # private; server-side only
+SOCIAL_TWITTER     = os.environ.get("SOCIAL_TWITTER", "")
+SOCIAL_INSTAGRAM   = os.environ.get("SOCIAL_INSTAGRAM", "")
+SOCIAL_TIKTOK      = os.environ.get("SOCIAL_TIKTOK", "")
+SOCIAL_FACEBOOK    = os.environ.get("SOCIAL_FACEBOOK", "")
+LAUNCH_DATE_UTC    = os.environ.get("LAUNCH_DATE_UTC", "2026-06-01T00:00:00Z")  # full launch
+SPONSORSHIP_TIERS  = [
+    {"name": "Pioneer Sponsor", "min": 50,   "max": 199,  "icon": "🌱",
+     "perks": ["Logo or text on the public Sponsor wall",
+               "Thank-you post on Telegram + X",
+               "Mention in the next monthly winners announcement"]},
+    {"name": "Round Sponsor",   "min": 200,  "max": 999,  "icon": "🛡",
+     "perks": ["Everything in Pioneer Sponsor",
+               "Pinned 24-hour thank-you on Telegram + X",
+               "Named tag on the monthly prize: 'Sponsored by [Brand]'",
+               "Mention in every winner announcement that month"]},
+    {"name": "Title Sponsor",   "min": 1000, "max": None, "icon": "👑",
+     "perks": ["Everything in Round Sponsor",
+               "Logo at top of homepage hero for the month",
+               "Branded category (e.g. '[Brand] Science Week')",
+               "Co-branded social content",
+               "Permanent recognition in the Hall of Fame"]},
+]
 PRIZE_USDT   = 10
 MONTHLY_PRIZES = [100, 75, 50]   # 1st, 2nd, 3rd place at month end (USDT TRC20)
 QUALIFY_MIN  = 5                  # minimum score to appear on any ranked leaderboard
@@ -101,6 +123,8 @@ def init_db():
             status TEXT NOT NULL DEFAULT 'pending',  -- pending|paid|rejected
             tx_hash TEXT,
             ip TEXT,
+            social_attested INTEGER NOT NULL DEFAULT 0,
+            social_handle TEXT,
             created_at INTEGER NOT NULL,
             updated_at INTEGER NOT NULL
         );
@@ -158,6 +182,13 @@ def init_db():
         if "claim_code" not in cols:
             c.execute("ALTER TABLE scores ADD COLUMN claim_code TEXT")
             c.execute("CREATE INDEX IF NOT EXISTS idx_scores_code ON scores(claim_code)")
+        # Add social attestation columns if missing
+        for tbl in ("claims", "monthly_winners"):
+            cols = [r[1] for r in c.execute(f"PRAGMA table_info({tbl})").fetchall()]
+            if "social_attested" not in cols:
+                c.execute(f"ALTER TABLE {tbl} ADD COLUMN social_attested INTEGER NOT NULL DEFAULT 0")
+            if "social_handle" not in cols:
+                c.execute(f"ALTER TABLE {tbl} ADD COLUMN social_handle TEXT")
 
 def question_count():
     with db() as c:
@@ -603,13 +634,24 @@ class Handler(BaseHTTPRequestHandler):
             if TG_CHANNEL:
                 ch = TG_CHANNEL.lstrip("@")
                 if not ch.startswith("-"): tg_url = f"https://t.me/{ch}"
+            socials = {}
+            if SOCIAL_TWITTER:   socials["twitter"]   = SOCIAL_TWITTER
+            if SOCIAL_INSTAGRAM: socials["instagram"] = SOCIAL_INSTAGRAM
+            if SOCIAL_TIKTOK:    socials["tiktok"]    = SOCIAL_TIKTOK
+            if SOCIAL_FACEBOOK:  socials["facebook"]  = SOCIAL_FACEBOOK
+            if tg_url:           socials["telegram"]  = tg_url
             return self._json(200, {
                 "wallet": SPONSOR_WALLET,
                 "network": "Tron (TRC20)",
                 "asset": "USDT",
                 "prize_usdt": PRIZE_USDT,
+                "monthly_prizes": MONTHLY_PRIZES,
                 "note": "Donations cover winner payouts. Manual review.",
                 "telegram_url": tg_url,
+                "socials": socials,
+                "tiers": SPONSORSHIP_TIERS,
+                "launch_date_utc": LAUNCH_DATE_UTC,
+                "contact_email": "hello@gkall.online",
             }, cache="public, max-age=60")
 
         if p == "/api/questions/draw":
@@ -991,27 +1033,29 @@ class Handler(BaseHTTPRequestHandler):
             code = str(payload.get("code","")).strip().upper().replace(" ","")
             wallet = str(payload.get("wallet","")).strip()
             contact = str(payload.get("contact","")).strip()[:MAX_CONTACT]
+            social_attested = bool(payload.get("social_attested", False))
+            social_handle = str(payload.get("social_handle","")).strip()[:64]
             if not re.match(r"^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$", code):
                 return self._json(400, {"error":"bad_code", "detail":"Format: XXXX-XXXX-XXXX"})
             if not TRC20_RE.match(wallet):
                 return self._json(400, {"error":"bad_wallet", "detail":"TRC20 address must start with T and be 34 chars."})
+            if not social_attested:
+                return self._json(400, {"error":"social_required", "detail":"Please confirm you've followed and liked the latest post on all our social channels — required for payout."})
             with db() as c:
-                # find score row by code
                 score = c.execute("SELECT id, name FROM scores WHERE claim_code=?", (code,)).fetchone()
                 if not score:
                     return self._json(404, {"error":"code_not_found", "detail":"This claim code doesn't match any record."})
-                # find monthly_winners row that references this score_id
                 winner = c.execute("SELECT id, year_month, rank, prize_usdt, status FROM monthly_winners WHERE score_id=?", (score["id"],)).fetchone()
                 if not winner:
                     return self._json(403, {"error":"not_a_winner", "detail":"This code belongs to a real run, but it didn't finish top 3 in its month. Keep playing!"})
                 if winner["status"] != "pending":
                     return self._json(409, {"error":"already_processed", "detail":f"This prize was already {winner['status']}."})
-                c.execute("UPDATE monthly_winners SET wallet=?, contact=?, paid_at=NULL WHERE id=?",
-                          (wallet, contact, winner["id"]))
+                c.execute("UPDATE monthly_winners SET wallet=?, contact=?, social_attested=1, social_handle=?, paid_at=NULL WHERE id=?",
+                          (wallet, contact, social_handle, winner["id"]))
                 c.commit()
             return self._json(200, {"ok": True, "rank": winner["rank"], "prize_usdt": winner["prize_usdt"],
                                     "ym": winner["year_month"],
-                                    "message": "Verified. Your prize will be paid out manually after final review."})
+                                    "message": "Verified. Your prize will be paid after we verify your social follows."})
 
         if p == "/api/claim":
             if not rate_ok(ip, "claim", window=3600, maxn=3):
@@ -1022,26 +1066,28 @@ class Handler(BaseHTTPRequestHandler):
             wallet  = str(payload.get("wallet","")).strip()
             contact = str(payload.get("contact","")).strip()[:MAX_CONTACT]
             score_id = payload.get("score_id")
+            social_attested = bool(payload.get("social_attested", False))
+            social_handle = str(payload.get("social_handle","")).strip()[:64]
             if not TRC20_RE.match(wallet):
                 return self._json(400, {"error":"bad_wallet", "detail":"Tron TRC20 address must start with T and be 34 chars."})
+            if not social_attested:
+                return self._json(400, {"error":"social_required", "detail":"Please confirm you've followed and liked the latest post on all our social channels — required for payout."})
             try:
                 score_id = int(score_id) if score_id is not None else None
             except (TypeError, ValueError):
                 score_id = None
-            # verify score exists and is a winner
             with db() as c:
                 row = c.execute("SELECT id, won, prize FROM scores WHERE id=?", (score_id,)).fetchone() if score_id else None
                 if not row or not row["won"] or row["prize"] != PRIZE_USDT:
                     return self._json(400, {"error":"no_winning_score", "detail":"This score is not eligible. Win the quiz first."})
-                # don't allow duplicate claims for the same score
                 dup = c.execute("SELECT id FROM claims WHERE score_id=?", (score_id,)).fetchone()
                 if dup:
                     return self._json(409, {"error":"already_claimed", "claim_id": dup["id"]})
                 now = int(time.time())
                 cur = c.execute(
-                    "INSERT INTO claims(name,wallet,contact,amount_usdt,score_id,status,ip,created_at,updated_at) "
-                    "VALUES(?,?,?,?,?,?,?,?,?)",
-                    (name, wallet, contact, PRIZE_USDT, score_id, "pending", ip, now, now)
+                    "INSERT INTO claims(name,wallet,contact,amount_usdt,score_id,status,ip,social_attested,social_handle,created_at,updated_at) "
+                    "VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                    (name, wallet, contact, PRIZE_USDT, score_id, "pending", ip, 1, social_handle, now, now)
                 )
                 cid = cur.lastrowid
                 c.commit()

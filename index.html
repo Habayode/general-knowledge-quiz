@@ -305,6 +305,36 @@
   footer{border-top:1px solid var(--border);margin-top:40px;padding:30px 0;color:var(--muted);font-size:0.85rem}
   .foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px}
   .foot a:hover{color:var(--accent)}
+  .socials{display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap}
+  .social-ico{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);transition:all 0.15s;font-size:1rem;text-decoration:none}
+  .social-ico:hover{background:var(--card-2);color:var(--accent);border-color:var(--accent);transform:translateY(-2px)}
+
+  /* ===== Countdown banner ===== */
+  .countdown-banner{background:linear-gradient(90deg,rgba(245,196,81,0.12),rgba(245,196,81,0.04));border:1px solid rgba(245,196,81,0.3);border-radius:14px;padding:14px 22px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+  .countdown-banner.hidden{display:none}
+  .cb-text{font-size:0.92rem}
+  .cb-text b{color:var(--accent)}
+  .cb-time{font-family:'Space Grotesk';font-weight:700;font-size:1.5rem;color:var(--accent);display:flex;gap:14px;align-items:center}
+  .cb-time .unit{display:flex;flex-direction:column;align-items:center;min-width:44px}
+  .cb-time .unit .v{line-height:1}
+  .cb-time .unit .l{font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-top:4px;font-weight:500;font-family:'Inter'}
+
+  /* ===== Tier cards (sponsorship) ===== */
+  .tier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}
+  @media (max-width:900px){.tier-grid{grid-template-columns:1fr}}
+  .tier-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;transition:all 0.2s}
+  .tier-card:hover{transform:translateY(-2px);border-color:var(--accent)}
+  .tier-card.title-tier{background:linear-gradient(160deg,rgba(245,196,81,0.08),rgba(255,255,255,0.02));border-color:rgba(245,196,81,0.4)}
+  .tier-icon{font-size:2rem;line-height:1}
+  .tier-name{font-family:'Space Grotesk';font-weight:700;font-size:1.05rem}
+  .tier-range{font-family:'Space Grotesk';font-weight:700;color:var(--accent);font-size:1.45rem;line-height:1}
+  .tier-perks{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+  .tier-perks li{font-size:0.88rem;color:var(--muted);padding-left:18px;position:relative;line-height:1.5}
+  .tier-perks li::before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:bold}
+  .checkbox-row{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:rgba(245,196,81,0.05);border:1px solid rgba(245,196,81,0.2);border-radius:10px;margin-top:10px}
+  .checkbox-row input{margin-top:3px;accent-color:var(--accent);width:18px;height:18px;cursor:pointer;flex-shrink:0}
+  .checkbox-row label{cursor:pointer;font-size:0.88rem;line-height:1.5;color:var(--text)}
+  .checkbox-row a{color:var(--accent);text-decoration:underline}
 </style>
 </head>
 <body>
@@ -328,6 +358,18 @@
 
 <!-- ============ HOME ============ -->
 <section id="view-home" class="view active">
+  <div class="container" style="padding-top:24px">
+    <div id="countdown-banner" class="countdown-banner hidden">
+      <div class="cb-text">
+        🚀 <b>Full launch:</b> June 1, 2026 · You're a <b>Pioneer</b> right now.
+      </div>
+      <div class="cb-time" id="cb-time">
+        <div class="unit"><span class="v" id="cb-d">—</span><span class="l">days</span></div>
+        <div class="unit"><span class="v" id="cb-h">—</span><span class="l">hrs</span></div>
+        <div class="unit"><span class="v" id="cb-m">—</span><span class="l">min</span></div>
+      </div>
+    </div>
+  </div>
   <div class="container hero">
     <div class="hero-grid">
       <div>
@@ -500,10 +542,16 @@
 <!-- ============ SPONSOR ============ -->
 <section id="view-sponsor" class="view">
   <div class="container">
-    <h2>Sponsor a winner</h2>
-    <p class="muted" style="max-width:680px">Donations fund the $10 USDT prize pool. Every cent goes to winners — no operating fees, no skim. Send USDT on the Tron (TRC20) network to the wallet below. Thank you for keeping the lights on.</p>
-    <p class="muted" style="font-size:0.88rem;margin-top:6px">Sponsor inquiries, partnership, or proof-of-payment confirmation: <a href="mailto:hello@gkall.online">hello@gkall.online</a></p>
-    <div class="sponsor-grid" style="margin-top:30px">
+    <span class="pill" style="background:rgba(245,196,81,0.12);color:var(--accent);border-color:rgba(245,196,81,0.3)">🚀 Sponsorship open · launching June 1</span>
+    <h2 style="margin-top:18px">Sponsor a winner</h2>
+    <p class="muted" style="max-width:680px">Every USDT you donate becomes a real prize for a real person. No fees, no skim, all on-chain. The May 2026 pool is guaranteed by HAG_Ai — sponsorship covers June onward and lets us grow the prize pool.</p>
+    <p class="muted" style="font-size:0.88rem;margin-top:8px">Inquiries · partnership · proof of payment: <a href="mailto:hello@gkall.online">hello@gkall.online</a></p>
+
+    <h3 style="margin-top:32px;font-size:1.1rem">Sponsorship tiers</h3>
+    <div id="tier-grid" class="tier-grid"></div>
+
+    <h3 style="margin-top:36px;font-size:1.1rem">Send your contribution</h3>
+    <div class="sponsor-grid" style="margin-top:14px">
       <div>
         <div class="wallet-box">
           <div class="wallet-label">USDT — Tron (TRC20)</div>
@@ -515,11 +563,13 @@
             <div>Network: <b>Tron (TRC20)</b></div>
             <div>Asset: <b>USDT</b> only — other tokens will not be recovered</div>
             <div>Minimum: any amount welcome</div>
+            <div style="margin-top:6px">After sending, email <a href="mailto:hello@gkall.online">hello@gkall.online</a> with your tx hash + how you'd like to be credited.</div>
           </div>
         </div>
         <div class="net-row" style="margin-top:20px">
           <p style="font-size:0.88rem">Pending claims: <b id="st-pending">—</b> · Paid out: <b>$<span id="st-paid-2">—</span></b></p>
         </div>
+        <div id="sponsor-socials-row" class="socials" style="margin-top:16px"></div>
       </div>
       <div class="qr-card">
         <img id="sponsor-qr" alt="USDT TRC20 wallet QR code" />
@@ -557,7 +607,15 @@
           <input id="mc-contact" type="text" maxlength="100" placeholder="@yourhandle or you@example.com" />
           <div class="hint">So we can confirm payment.</div>
         </div>
-        <button class="btn btn-primary btn-big" id="mc-submit" onclick="submitMonthlyClaim()">Verify &amp; Submit</button>
+        <div class="form-row">
+          <label>Your @ handle on our socials (optional but speeds verification)</label>
+          <input id="mc-social-handle" type="text" maxlength="64" placeholder="@yourhandle on X / Instagram / etc." />
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="mc-social-attest" />
+          <label for="mc-social-attest">I have <b>followed</b> all gkall social channels and <b>liked</b> the latest pinned post on each. <b>Required for payout.</b> <a href="#sponsor">See our channels</a></label>
+        </div>
+        <button class="btn btn-primary btn-big" id="mc-submit" onclick="submitMonthlyClaim()" style="margin-top:14px">Verify &amp; Submit</button>
       </div>
 
       <div id="mc-success" class="panel" style="display:none;margin-top:24px">
@@ -597,7 +655,16 @@
             <input id="claim-contact" type="text" maxlength="100" placeholder="@yourhandle or you@example.com" />
             <div class="hint">So we can notify you when the payout is processed.</div>
           </div>
-          <button class="btn btn-primary btn-big" id="claim-submit" onclick="submitClaim()">Submit claim</button>
+          <div class="form-row">
+            <label>Your @ handle on our socials (optional but speeds verification)</label>
+            <input id="claim-social-handle" type="text" maxlength="64" placeholder="@yourhandle on X / Instagram / etc." />
+            <div class="hint">Tells us which handle you used to follow us.</div>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="claim-social-attest" />
+            <label for="claim-social-attest">I have <b>followed</b> all gkall social channels and <b>liked</b> the latest pinned post on each. <b>Required for payout</b> — we verify before USDT is sent. <a href="#sponsor">See our channels</a></label>
+          </div>
+          <button class="btn btn-primary btn-big" id="claim-submit" onclick="submitClaim()" style="margin-top:14px">Submit claim</button>
         </div>
       </div>
 
@@ -716,10 +783,11 @@
     <div>
       © <span id="year"></span> <b>gkall.online</b> · Powered &amp; owned by <b style="color:var(--accent)">HAG_Ai</b><br>
       <span style="font-size:0.78rem">Contact: <a href="mailto:hello@gkall.online">hello@gkall.online</a></span>
+      <div id="footer-socials" class="socials"></div>
     </div>
     <div>
-      <a href="#sponsor">Sponsor</a> · <a href="#how">FAQ</a> · <a href="mailto:hello@gkall.online">Contact</a> · <a id="tg-link" href="#" style="display:none">📣 Telegram</a><br>
-      <span style="font-size:0.78rem">Questions via Open Trivia DB (CC BY-SA), MMLU, ARC, OpenBookQA, CommonsenseQA, TruthfulQA, SciQ</span>
+      <a href="#sponsor">Sponsor</a> · <a href="#feedback">Feedback</a> · <a href="#how">FAQ</a> · <a href="mailto:hello@gkall.online">Email</a><br>
+      <span style="font-size:0.78rem">Questions via Open Trivia DB (CC BY-SA), MMLU, ARC, OpenBookQA, CommonsenseQA, TruthfulQA, SciQ, QASC</span>
     </div>
   </div>
 </footer>
@@ -882,6 +950,69 @@ async function loadStats() {
     if (tb && s.days_remaining != null) tb.textContent = s.days_remaining + 'd left';
   } catch(e) { console.warn('stats failed', e); }
 }
+const SOCIAL_ICONS = {
+  twitter: { label: 'X', emoji: '𝕏' },
+  instagram: { label: 'Instagram', emoji: '📷' },
+  tiktok: { label: 'TikTok', emoji: '🎵' },
+  facebook: { label: 'Facebook', emoji: 'f' },
+  telegram: { label: 'Telegram', emoji: '✈' },
+};
+
+function renderSocials(containerId, socials) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  Object.entries(socials || {}).forEach(([k, url]) => {
+    const meta = SOCIAL_ICONS[k] || { label: k, emoji: '🔗' };
+    const a = document.createElement('a');
+    a.className = 'social-ico';
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.title = meta.label;
+    a.textContent = meta.emoji;
+    el.appendChild(a);
+  });
+}
+
+function renderTiers(tiers) {
+  const el = document.getElementById('tier-grid');
+  if (!el || !tiers) return;
+  el.innerHTML = '';
+  tiers.forEach((t, i) => {
+    const range = t.max == null ? '$' + t.min + '+ USDT' : '$' + t.min + '–$' + t.max + ' USDT';
+    const card = document.createElement('div');
+    card.className = 'tier-card' + (i === tiers.length - 1 ? ' title-tier' : '');
+    card.innerHTML =
+      '<div class="tier-icon">' + escapeHtml(t.icon || '') + '</div>' +
+      '<div><div class="tier-name">' + escapeHtml(t.name) + '</div>' +
+      '<div class="tier-range">' + escapeHtml(range) + '</div></div>' +
+      '<ul class="tier-perks">' + t.perks.map(p => '<li>' + escapeHtml(p) + '</li>').join('') + '</ul>';
+    el.appendChild(card);
+  });
+}
+
+function renderCountdown(launchIso) {
+  if (!launchIso) return;
+  const target = new Date(launchIso).getTime();
+  const banner = document.getElementById('countdown-banner');
+  if (!banner) return;
+  const tick = () => {
+    const now = Date.now();
+    const diff = target - now;
+    if (diff <= 0) { banner.classList.add('hidden'); return; }
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    document.getElementById('cb-d').textContent = d;
+    document.getElementById('cb-h').textContent = h;
+    document.getElementById('cb-m').textContent = m;
+    banner.classList.remove('hidden');
+  };
+  tick();
+  setInterval(tick, 30 * 1000);
+}
+
 async function loadSponsor() {
   try {
     const r = await fetch(API + '/api/sponsor'); const s = await r.json();
@@ -895,6 +1026,8 @@ async function loadSponsor() {
       tg.target = '_blank';
       tg.rel = 'noopener';
     }
+    renderTiers(s.tiers);
+    renderSocials('sponsor-socials-row', s.socials);
   } catch(e) { console.warn('sponsor failed', e); }
   loadStats();
 }
@@ -1351,11 +1484,17 @@ async function submitClaim() {
   const wallet = document.getElementById('claim-wallet').value.trim();
   const name   = document.getElementById('claim-name').value.trim();
   const contact= document.getElementById('claim-contact').value.trim();
+  const socialHandle = document.getElementById('claim-social-handle').value.trim();
+  const socialAttested = document.getElementById('claim-social-attest').checked;
   const err = document.getElementById('claim-err');
   const ok  = document.getElementById('claim-ok');
   err.className = 'form-err'; ok.className = 'form-ok';
   if (!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(wallet)) {
     err.textContent = 'Invalid TRC20 address. Must start with T and be exactly 34 characters.';
+    err.className = 'form-err show'; return;
+  }
+  if (!socialAttested) {
+    err.textContent = 'Please confirm you followed all our social channels (required for payout).';
     err.className = 'form-err show'; return;
   }
   if (!pendingClaim) { err.textContent = 'No active claim found.'; err.className = 'form-err show'; return; }
@@ -1364,7 +1503,8 @@ async function submitClaim() {
   try {
     const r = await fetch(API + '/api/claim', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ name, wallet, contact, score_id: pendingClaim.score_id })
+      body: JSON.stringify({ name, wallet, contact, score_id: pendingClaim.score_id,
+                             social_attested: socialAttested, social_handle: socialHandle })
     });
     const j = await r.json();
     if (!r.ok) {
@@ -1412,6 +1552,8 @@ async function submitMonthlyClaim() {
   const code   = (document.getElementById('mc-code').value || '').trim().toUpperCase();
   const wallet = (document.getElementById('mc-wallet').value || '').trim();
   const contact= (document.getElementById('mc-contact').value || '').trim();
+  const socialHandle = (document.getElementById('mc-social-handle').value || '').trim();
+  const socialAttested = document.getElementById('mc-social-attest').checked;
   const err = document.getElementById('mc-err');
   const ok  = document.getElementById('mc-ok');
   err.className = 'form-err'; ok.className = 'form-ok';
@@ -1423,13 +1565,17 @@ async function submitMonthlyClaim() {
     err.textContent = 'TRC20 wallet must start with T and be exactly 34 characters.';
     err.className = 'form-err show'; return;
   }
+  if (!socialAttested) {
+    err.textContent = 'Please confirm you followed all our social channels (required for payout).';
+    err.className = 'form-err show'; return;
+  }
   if (contact) localStorage.setItem('gkq_contact', contact);
   const btn = document.getElementById('mc-submit');
   btn.disabled = true; btn.textContent = 'Verifying…';
   try {
     const r = await fetch(API + '/api/claim/monthly', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ code, wallet, contact })
+      body: JSON.stringify({ code, wallet, contact, social_attested: socialAttested, social_handle: socialHandle })
     });
     const j = await r.json();
     if (!r.ok) {
@@ -1515,13 +1661,15 @@ function escapeHtml(s) {
 document.getElementById('year').textContent = new Date().getFullYear();
 go(location.hash.slice(1) || 'home');
 loadStats();
-// populate Telegram footer link on first load (best-effort)
+// Populate footer socials, countdown, and Telegram link on first load
 fetch(API + '/api/sponsor').then(r => r.json()).then(s => {
   const tg = document.getElementById('tg-link');
   if (tg && s.telegram_url) {
     tg.href = s.telegram_url; tg.style.display = 'inline';
     tg.target = '_blank'; tg.rel = 'noopener';
   }
+  renderSocials('footer-socials', s.socials);
+  if (s.launch_date_utc) renderCountdown(s.launch_date_utc);
 }).catch(() => {});
 // load CAPTCHA config (Turnstile)
 fetch(API + '/api/config').then(r => r.json()).then(cfg => {
