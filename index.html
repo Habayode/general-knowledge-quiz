@@ -259,6 +259,11 @@
   .lb-row-3 td{background:rgba(96,165,250,0.04)}
   .lb-winner{color:var(--green);font-weight:600}
   .lb-empty{text-align:center;color:var(--dim);padding:50px 20px;font-style:italic}
+  /* End-of-round feedback CTA — visible on win/lose/cheat panels */
+  .end-fb{margin:20px auto 4px;max-width:520px;padding:14px 18px;background:linear-gradient(90deg,rgba(96,165,250,0.07),rgba(245,196,81,0.07));border:1px solid rgba(96,165,250,0.25);border-radius:12px;text-align:center;font-size:0.93rem;line-height:1.5}
+  .end-fb b{color:var(--text)}
+  .end-fb a{display:inline-block;margin-top:6px;color:var(--accent);font-family:'Courier New',monospace;font-weight:700;text-decoration:none;letter-spacing:0.02em;font-size:0.98rem}
+  .end-fb a:hover{text-decoration:underline}
   .mode-badge{display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--muted);margin-bottom:12px;
     padding:4px 10px;border-radius:6px;background:var(--card);border:1px solid var(--border)}
   .mode-badge.online .dot{background:var(--green)}
@@ -502,6 +507,10 @@
           <div class="code-value" id="win-code"></div>
           <div class="code-hint">If you finish in the <b>monthly top 3</b>, paste this code on the Monthly Claim page to verify it was really you. Saved in your browser too.</div>
         </div>
+        <div class="end-fb">
+          💬 <b>What hooked you? Help shape gkall</b><br>
+          <a href="#feedback">gkall.online/#feedback</a>
+        </div>
         <div class="panel-actions">
           <button class="btn btn-primary" onclick="go('claim')">Claim $1 USDT →</button>
           <button class="btn btn-ghost" onclick="resetAndPlay()">Play again</button>
@@ -521,6 +530,10 @@
           <div class="code-value" id="lose-code"></div>
           <div class="code-hint">If this run lands you in the <b>monthly top 3</b>, paste this code on the Monthly Claim page to verify it was really you. Saved in your browser too.</div>
         </div>
+        <div class="end-fb">
+          💬 <b>What threw you? 30-second feedback shapes question quality</b><br>
+          <a href="#feedback">gkall.online/#feedback</a>
+        </div>
         <div class="panel-actions">
           <button class="btn btn-primary" onclick="resetAndPlay()">Try again</button>
           <button class="btn btn-ghost" onclick="go('leaderboard')">Leaderboard</button>
@@ -532,6 +545,10 @@
         <p class="muted" style="margin:14px 0">Suspicious activity detected.</p>
         <div style="background:rgba(0,0,0,0.4);padding:14px;border-radius:10px;font-family:monospace;font-size:0.85rem;color:#fca5a5;margin:12px 0" id="cheatReason"></div>
         <p class="muted" style="font-size:0.85rem">Tab switching, devtools, clipboard activity, and implausibly fast answers are blocked. Replay fairly to be eligible.</p>
+        <div class="end-fb">
+          💬 <b>Triggered unfairly? Tell us — we tune the detectors</b><br>
+          <a href="#feedback">gkall.online/#feedback</a>
+        </div>
         <div class="panel-actions">
           <button class="btn btn-ghost" onclick="resetAndPlay()">Restart</button>
         </div>
