@@ -15,8 +15,8 @@ Quick one — I built a skill-based general-knowledge quiz that pays winners in 
 You're one of ~50 people I'm inviting personally before we go public. Two minutes of your time = a real test of whether this is fun and fair.
 
 - 10 questions, 10 seconds each, 33,000+ in the pool
-- $10 USDT for any 10/10
-- Top 3 of May win an additional $100 / $75 / $50 USDT
+- $1 USDT for any 10/10
+- Top 3 of May win an additional $50 / $25 / $10 USDT
 - May prize pool is guaranteed by HAG_Ai
 
 Would mean a lot if you:
@@ -33,13 +33,13 @@ P.S. Channel for announcements: https://t.me/gkallonline
 
 ## Template B — Crypto Twitter / Telegram cold contact
 
-**Subject:** Pioneer for a skill-based USDT quiz (no signup, you might win $10)
+**Subject:** Pioneer for a skill-based USDT quiz (no signup, you might win $1)
 
 Hey [Handle],
 
 Stumbled across your stuff — figured you'd appreciate this.
 
-I'm in prelaunch with gkall.online — a skill-based knowledge quiz paying in USDT (TRC20). 10 questions, 10 seconds each, anti-cheat verified. Hit 10/10 → instant $10. Top 3 of the month → +$100/$75/$50.
+I'm in prelaunch with gkall.online — a skill-based knowledge quiz paying in USDT (TRC20). 10 questions, 10 seconds each, anti-cheat verified. Hit 10/10 → instant $1. Top 3 of the month → +$50/$25/$10.
 
 Looking for Pioneers before June 1 launch. No signup needed. Wanted to invite you personally.
 
@@ -56,7 +56,7 @@ If you have 2 minutes to play one round and tell me what felt off — that'd be 
 
 You don't need a long pitch. Try:
 
-> Hey — I'm building a USDT-paying quiz, currently in prelaunch testing. 10 random questions from a 33k pool, 10/10 wins $10 USDT, plus a $225 monthly pool for top 3. Would love your feedback if you have a sec. https://gkall.online
+> Hey — I'm building a USDT-paying quiz, currently in prelaunch testing. 10 random questions from a 33k pool, 10/10 wins $1 USDT, plus an $85 monthly pool for top 3. Would love your feedback if you have a sec. https://gkall.online
 
 ---
 
@@ -72,7 +72,7 @@ You played gkall yesterday. Did anything feel off? Bugs, slow loading, weird que
 
 If you have 30 seconds, drop a note on https://gkall.online/#feedback — even one-liners are gold.
 
-If you hit 10/10 and you're still owed the $10 — sorry, claims need a wallet + social follow. Details on the Claim page. Reach out if anything's blocking you.
+If you hit 10/10 and you're still owed the $1 — sorry, claims need a wallet + social follow. Details on the Claim page. Reach out if anything's blocking you.
 
 — [Your name]
 

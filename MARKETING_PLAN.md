@@ -8,7 +8,7 @@
 ## Brand identity (use consistently across all channels)
 
 - **Name:** gkall (lowercase) — short for "general knowledge for all"
-- **Tagline:** "Win up to $110 USDT for what you know."
+- **Tagline:** "Win up to $51 USDT for what you know."
 - **Voice:** Confident, transparent, lightly playful. Never spammy, never crypto-bro.
 - **Visuals:**
   - Primary color: gold (`#f5c451` → `#ffae3a` gradient)
@@ -22,16 +22,16 @@
 
 | Platform | Handle to claim | Bio (copy/paste) |
 |---|---|---|
-| **X / Twitter** | `@gkallonline` (or `@gkall_official`) | "Skill-based knowledge challenge. Win up to $110 USDT (Tron / TRC20) for general-knowledge mastery. Powered by HAG_Ai. https://gkall.online" |
-| **Instagram** | `@gkall.online` (or `@gkallofficial`) | "🧠 Test your knowledge. Win USDT. \| 10 Qs · 10s each · $10 instant + $225 monthly pool \| Live: gkall.online" |
-| **TikTok** | `@gkall.online` | "Quiz · 10 questions · 10 sec each · Win $110 USDT 🏆 \| gkall.online" |
+| **X / Twitter** | `@gkallonline` (or `@gkall_official`) | "Skill-based knowledge challenge. Win up to $51 USDT (Tron / TRC20) for general-knowledge mastery. Powered by HAG_Ai. https://gkall.online" |
+| **Instagram** | `@gkall.online` (or `@gkallofficial`) | "🧠 Test your knowledge. Win USDT. \| 10 Qs · 10s each · $1 instant + $85 monthly pool \| Live: gkall.online" |
+| **TikTok** | `@gkall.online` | "Quiz · 10 questions · 10 sec each · Win up to $51 USDT 🏆 \| gkall.online" |
 | **Facebook Page** | `gkall.online` | Same as X bio. |
 | **Reddit** | `u/gkall_official` (personal account, post in trivia/crypto subs) | "Founder of gkall.online — skill-based USDT quiz." |
 | **YouTube** | `@gkallonline` (for short-form, future) | Same as X bio. |
 
 ### Profile picture / banner
 - **PFP:** the gold "G" mark (same as site brand-mark)
-- **Banner:** "Win up to $110 USDT for what you know · gkall.online · Powered by HAG_Ai" on the navy-to-gold gradient
+- **Banner:** "Win up to $51 USDT for what you know · gkall.online · Powered by HAG_Ai" on the navy-to-gold gradient
 
 I can generate these images on request — say "build me the brand assets" and I'll produce PNG/SVG.
 
@@ -60,8 +60,8 @@ Once these env vars exist, the site footer + Sponsor + Feedback page show the so
 
 | Day | Theme | Post idea (X, paraphrase for IG / TikTok) |
 |---|---|---|
-| May 18 (Sun) | **Launch declaration** | "We're live in prelaunch. 33,000+ questions. $10 USDT for every 10/10. $225 monthly pool for top 3. May guaranteed by HAG_Ai. → gkall.online 🚀" |
-| May 19 (Mon) | **The first $10 winner** (or honor of trying) | "Day 2 of prelaunch. First Pioneer completed a round — feedback already shaping v1.1. Want in? gkall.online" |
+| May 18 (Sun) | **Launch declaration** | "We're live in prelaunch. 33,000+ questions. $1 USDT for every 10/10. $85 monthly pool for top 3. May guaranteed by HAG_Ai. → gkall.online 🚀" |
+| May 19 (Mon) | **The first $1 winner** (or honor of trying) | "Day 2 of prelaunch. First Pioneer completed a round — feedback already shaping v1.1. Want in? gkall.online" |
 | May 20 (Tue) | **Behind the build** | "Why our quiz can't be cheated by AI extensions: 1) Server-side scoring 2) Cloudflare Turnstile 3) Per-session option shuffling. Knowledge wins, scrapers lose. 🔒" |
 | May 21 (Wed) | **Sponsorship call** | "Sponsors wanted. $50–$5,000 USDT, your brand on the winners post, public sponsor wall. DM or hello@gkall.online" |
 | May 22 (Thu) | **Question sample** | "Today's hardest question on gkall (yesterday's hardest tier): 'Which Dutch post-Impressionist famously cut off part of his own ear?' Think you know? Play → gkall.online" |
@@ -73,7 +73,7 @@ Once these env vars exist, the site footer + Sponsor + Feedback page show the so
 | May 28 (Wed) | **Telegram channel push** | "Join our channel for live winner announcements + drops. https://t.me/gkallonline" |
 | May 29 (Thu) | **Knowledge domains** | "Categories on gkall: Sport · Science · History · Religion · Music · Art · Movies · Literature · Geography · Food · Animals · Lifestyle · MMLU's 57 academic subjects. If it's known, it's in here." |
 | May 30 (Fri) | **Final 24 hr countdown** | "T-24 hours to public launch. June 1 = first Top 3 announced. May Pioneers locked in. Last call to join the leaderboard before everyone sees it. ⏰" |
-| May 31 (Sat) | **Launch eve** | "Tomorrow we go fully public. May 2026 winners decided at midnight UTC. $100/$75/$50 USDT. Pioneers, this is your last chance to climb." |
+| May 31 (Sat) | **Launch eve** | "Tomorrow we go fully public. May 2026 winners decided at midnight UTC. $50/$25/$10 USDT. Pioneers, this is your last chance to climb." |
 
 ---
 
@@ -82,7 +82,7 @@ Once these env vars exist, the site footer + Sponsor + Feedback page show the so
 ### 09:00 UTC — "Public launch" post (all platforms, simultaneous)
 > 🚀 gkall is officially LIVE.
 >
-> Win $10 USDT for every 10/10 round + a $225 monthly prize pool for the top 3. Skill only. Anti-cheat verified. Paid on Tron (TRC20).
+> Win $1 USDT for every 10/10 round + an $85 monthly prize pool for the top 3. Skill only. Anti-cheat verified. Paid on Tron (TRC20).
 >
 > May 2026 winners announced today.
 >
@@ -103,13 +103,13 @@ Post in r/SideProject (Show your work), r/cryptocurrency (Discussion flair), r/T
 
 ## Sponsorship outreach script (for cold DMs / emails)
 
-**Subject:** Brief - sponsor a skill-based USDT quiz, ~$100/mo for top-3 placement
+**Subject:** Brief - sponsor a skill-based USDT quiz, ~$50/mo for top-3 placement
 
 **Body:**
 
 > Hey [Name],
 >
-> I'm running gkall.online — a skill-based general-knowledge quiz that pays winners in USDT (TRC20). Currently in prelaunch with 30k+ questions, anti-cheat, and a $225 monthly prize pool guaranteed by HAG_Ai for May.
+> I'm running gkall.online — a skill-based general-knowledge quiz that pays winners in USDT (TRC20). Currently in prelaunch with 33K+ questions, anti-cheat, and an $85 monthly prize pool guaranteed by HAG_Ai for May.
 >
 > For June onward we're opening to sponsors. $50–$5,000 USDT range. Sponsorship gets you:
 > - Logo + link on the Sponsor wall (every visitor sees it)
@@ -130,7 +130,7 @@ Send to 20–30 contacts. Aim for 3–5 replies, 1–2 closes by end of May.
 
 This is enforced in the **claim flow**, not the play flow. We want everyone to be able to play, but require social engagement to *get paid*.
 
-On the claim form for both **$10 instant** and **$100/$75/$50 monthly**, the winner must:
+On the claim form for both **$1 instant** and **$50/$25/$10 monthly**, the winner must:
 - Tick a checkbox attesting they have **followed all linked gkall social accounts**
 - Tick a checkbox attesting they have **liked the latest pinned post on each**
 

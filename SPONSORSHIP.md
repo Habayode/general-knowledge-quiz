@@ -115,16 +115,17 @@ Public page: https://gkall.online/#sponsor
 
 ## Long-term sponsorship sustainability
 
-The math:
-- $225/month base prize pool
-- We need ~$300/month in sponsorship to cover prizes + buffer
-- At Pioneer Sponsor tier ($100 avg), that's 3 Pioneer Sponsors per month
-- At Title Sponsor tier ($1,500 avg), that's 1 Title Sponsor every 5 months — funds the whole pool for 5 months
-- **Realistic mix:** 2 Round + 1 Pioneer per month = stable
+The math (post-prelaunch reset to right-sized prizes):
+- $85/month base prize pool + ~$1 × 10–30 winners/month ≈ $100–115/month
+- We need ~$150/month in sponsorship to cover prizes + buffer
+- At Pioneer Sponsor tier ($100 avg), that's 1–2 Pioneer Sponsors per month — entirely sustainable
+- At Title Sponsor tier ($1,500 avg), that's 1 Title Sponsor every ~10 months — funds the whole pool for 10 months
+- **Realistic mix:** 1 Round + 1 Pioneer per month = sustainable headroom
 
-When sponsorship exceeds $500/month, we can:
-- Increase monthly prize pool to $500 (top 3: $250/$150/$100)
+When sponsorship exceeds $500/month, we scale up:
+- Restore monthly prize pool to $225 (top 3: $100/$75/$50) like our original launch plan
 - Add a $5 weekly prize (top 3 of the week)
+- Increase instant prize from $1 → $5 per 10/10
 - Fund question-pool growth via paid content licensing
 
 ---

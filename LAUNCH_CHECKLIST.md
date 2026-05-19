@@ -58,7 +58,7 @@ Site footer + claim form + sponsor page will auto-update.
 ### Final launch prep (May 28–31)
 - [ ] Pin the prelaunch-completion post on Telegram (I can draft on May 28)
 - [ ] Draft launch-day social posts and schedule them
-- [ ] Verify sponsorship wallet has enough USDT for May payouts (HAG_Ai-guaranteed: ~$225 + winner $10s)
+- [ ] Verify sponsorship wallet has enough USDT for May payouts (HAG_Ai-guaranteed: ~$85 + winner $1s)
 - [ ] Brief any pioneer contacts: "Public launch June 1. Be ready to share."
 
 ---
@@ -83,14 +83,14 @@ Site footer + claim form + sponsor page will auto-update.
 
 ## When a winner emerges
 
-### $10 instant win
+### $1 instant win
 - [ ] They submit a claim with wallet + attest to "I follow all gkall socials"
 - [ ] Open /admin → check Pending claims → find their entry
 - [ ] **Verify follow** — open each social profile, search for their handle in followers
 - [ ] If they're following, send USDT from wallet, paste tx hash in /admin → mark paid
 - [ ] If NOT following, reply to their contact: "Please follow + retry claim"
 
-### Monthly $100/$75/$50
+### Monthly $50/$25/$10
 - Same flow, but tier checked accordingly.
 - Telegram channel auto-announces the payment with Tronscan link.
 

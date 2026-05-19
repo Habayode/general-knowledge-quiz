@@ -27,7 +27,7 @@ A skill-based, fair, USDT-paying general-knowledge quiz where Pioneers and casua
 ### Done
 - Site live with full anti-cheat stack (server-side scoring, Cloudflare Turnstile, claim codes, mouse-trail logging)
 - 33,186-question pool from 8 free datasets
-- $10 instant + $100/$75/$50 monthly prize structure (May guaranteed by HAG_Ai)
+- $1 instant + $50/$25/$10 monthly prize structure (May guaranteed by HAG_Ai)
 - Telegram channel + auto-announcer bot
 - Pioneer feedback form
 - Email: hello@gkall.online
@@ -132,5 +132,6 @@ A skill-based, fair, USDT-paying general-knowledge quiz where Pioneers and casua
 ## Decision log
 
 - 2026-05-18: Prelaunch with HAG_Ai guarantee. Full launch June 1.
-- 2026-05-18: $10 instant + $100/$75/$50 monthly structure locked in for the first 3 months. Re-evaluate August.
+- 2026-05-18: Prize structure right-sized for prelaunch: $1 instant + $50/$25/$10 monthly. Sustainable on HAG_Ai's solo guarantee (~$85/month base + $1 per 10/10).
+- 2026-05-18: Scale-up trigger: when monthly sponsorship hits $500+, restore to original $10 instant + $100/$75/$50 monthly. See SPONSORSHIP.md.
 - 2026-05-18: Social media expansion BEFORE sponsor outreach (sponsors want to see audience).
