@@ -244,6 +244,24 @@ def init_db():
         if "x_handle" not in cols:
             c.execute("ALTER TABLE monthly_winners ADD COLUMN x_handle TEXT")
 
+        # Country + referral tracking on scores (Phase 1 growth instrumentation)
+        cols = [r[1] for r in c.execute("PRAGMA table_info(scores)").fetchall()]
+        if "country" not in cols:
+            c.execute("ALTER TABLE scores ADD COLUMN country TEXT")  # ISO 3166-1 alpha-2, e.g. NG, IN
+            c.execute("CREATE INDEX IF NOT EXISTS idx_scores_country ON scores(country, score DESC, total_time ASC)")
+        if "referral_code" not in cols:
+            c.execute("ALTER TABLE scores ADD COLUMN referral_code TEXT")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_scores_refcode ON scores(referral_code)")
+        if "referred_by" not in cols:
+            c.execute("ALTER TABLE scores ADD COLUMN referred_by TEXT")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_scores_refby ON scores(referred_by)")
+        # Persist country + referred_by on the live game session too so it survives the round
+        cols = [r[1] for r in c.execute("PRAGMA table_info(game_sessions)").fetchall()]
+        if "country" not in cols:
+            c.execute("ALTER TABLE game_sessions ADD COLUMN country TEXT")
+        if "referred_by" not in cols:
+            c.execute("ALTER TABLE game_sessions ADD COLUMN referred_by TEXT")
+
         # Re-tag graduate-level MMLU subjects to Expert (difficulty=4)
         c.execute("""
             UPDATE questions SET difficulty = 4
@@ -375,6 +393,59 @@ def verify_turnstile(token, ip):
 # ---- Game session helpers ----
 def _now(): return int(time.time())
 
+# ---- IP -> country (in-memory cache; ip-api.com free tier) ----
+_country_cache = {}  # ip -> (cc, ts)
+_COUNTRY_TTL = 86400  # cache for 24h
+
+def country_for_ip(ip):
+    """Return ISO-3166-1 alpha-2 country code (e.g. 'NG') or '' on failure."""
+    if not ip or ip in ("127.0.0.1", "::1"):
+        return ""
+    now = _now()
+    cached = _country_cache.get(ip)
+    if cached and (now - cached[1]) < _COUNTRY_TTL:
+        return cached[0]
+    try:
+        url = f"http://ip-api.com/json/{ip}?fields=status,countryCode"
+        with urllib.request.urlopen(url, timeout=3) as r:
+            body = json.loads(r.read())
+        cc = body.get("countryCode","") if body.get("status") == "success" else ""
+    except Exception:
+        cc = ""
+    _country_cache[ip] = (cc, now)
+    return cc
+
+# ---- Referral codes ----
+_REF_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"  # 32 chars, Crockford-ish
+
+def _new_referral_code():
+    """8-char Crockford-style code (40 bits entropy, ample for our scale)."""
+    return "".join(secrets.choice(_REF_ALPHABET) for _ in range(8))
+
+def referral_code_for_name(c, name):
+    """Get-or-create a stable referral code for this player name (case-insensitive).
+    Convention: the code on the OLDEST score for this name is the canonical owner.
+    Returns the canonical code (string) or generates a new one if no row has one yet.
+    """
+    if not name: return ""
+    row = c.execute(
+        "SELECT referral_code FROM scores "
+        "WHERE LOWER(name)=LOWER(?) AND referral_code IS NOT NULL AND referral_code != '' "
+        "ORDER BY created_at ASC LIMIT 1",
+        (name,)
+    ).fetchone()
+    if row and row["referral_code"]:
+        return row["referral_code"]
+    # Generate a new unique code
+    for _ in range(8):
+        code = _new_referral_code()
+        clash = c.execute("SELECT 1 FROM scores WHERE referral_code=?", (code,)).fetchone()
+        if not clash:
+            return code
+    # Vanishingly unlikely fallback
+    return _new_referral_code()
+
+
 def _new_session_id():
     return secrets.token_urlsafe(16)
 
@@ -454,10 +525,16 @@ def _finalize_session_score(c, sess, plan, new_score, total_time, status, ip):
         if not c.execute("SELECT 1 FROM scores WHERE claim_code=?", (candidate,)).fetchone():
             code = candidate; break
     if not code: code = gen_claim_code()
+    # Persist country + referral attribution from the session
+    country = (sess["country"] if "country" in sess.keys() else None) if hasattr(sess, "keys") else None
+    referred_by = (sess["referred_by"] if "referred_by" in sess.keys() else None) if hasattr(sess, "keys") else None
+    # Stable referral code for this player (case-insensitive name)
+    ref_code = referral_code_for_name(c, sess["name"]) or None
     cur = c.execute(
-        "INSERT INTO scores(name,score,prize,won,total_time,ip,created_at,claim_code) "
-        "VALUES(?,?,?,?,?,?,?,?)",
-        (sess["name"], new_score, prize, 1 if won else 0, total_time, ip, _now(), code)
+        "INSERT INTO scores(name,score,prize,won,total_time,ip,created_at,claim_code,country,referral_code,referred_by) "
+        "VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+        (sess["name"], new_score, prize, 1 if won else 0, total_time, ip, _now(), code,
+         country, ref_code, referred_by)
     )
     return cur.lastrowid, code, cap_reached
 
@@ -824,25 +901,110 @@ class Handler(BaseHTTPRequestHandler):
 
         if p == "/api/leaderboard":
             # All-time: only qualifying scores (>= QUALIFY_MIN), best run per player
+            qs = parse_qs(u.query or "")
+            country_filter = (qs.get("country") or [""])[0].strip().upper()[:2] or None
+            params = [QUALIFY_MIN]
+            cf_clause = ""
+            if country_filter:
+                cf_clause = " AND country = ?"
+                params.append(country_filter)
+            params.append(MAX_LIMIT)
             with db() as c:
-                rows = c.execute("""
+                rows = c.execute(f"""
                     WITH ranked AS (
-                        SELECT id, name, score, prize, won, total_time, created_at,
+                        SELECT id, name, score, prize, won, total_time, created_at, country,
                                ROW_NUMBER() OVER (PARTITION BY LOWER(name)
                                                   ORDER BY score DESC, total_time ASC, created_at ASC) AS rn
                         FROM scores
-                        WHERE score >= ?
+                        WHERE score >= ?{cf_clause}
                     )
-                    SELECT id, name, score, prize, won, total_time AS totalTime,
+                    SELECT id, name, score, prize, won, total_time AS totalTime, country,
                            strftime('%Y-%m-%d', created_at, 'unixepoch') AS date
                     FROM ranked WHERE rn=1
                     ORDER BY score DESC, total_time ASC, created_at ASC
                     LIMIT ?
-                """, (QUALIFY_MIN, MAX_LIMIT)).fetchall()
+                """, params).fetchall()
             out = []
             for r in rows:
                 d = dict(r); d["won"] = bool(d["won"]); out.append(d)
             return self._json(200, out)
+
+        if p == "/api/stats/countries":
+            # Aggregate plays + distinct players per country (for the country toggle UI)
+            with db() as c:
+                rows = c.execute("""
+                    SELECT country, COUNT(*) AS plays, COUNT(DISTINCT LOWER(name)) AS players
+                    FROM scores
+                    WHERE country IS NOT NULL AND country != ''
+                    GROUP BY country
+                    ORDER BY plays DESC
+                    LIMIT 50
+                """).fetchall()
+                total_players = c.execute(
+                    "SELECT COUNT(DISTINCT LOWER(name)) FROM scores WHERE score >= ?",
+                    (QUALIFY_MIN,)
+                ).fetchone()[0]
+            return self._json(200, {
+                "countries": [dict(r) for r in rows],
+                "all_players": total_players,
+            })
+
+        if p == "/api/referral/me":
+            # Look up referral code + counts for a player name
+            qs = parse_qs(u.query or "")
+            name = (qs.get("name") or [""])[0].strip()[:MAX_NAME]
+            if not name:
+                return self._json(400, {"error":"name_required"})
+            cur_ym = current_ym()
+            with db() as c:
+                code_row = c.execute(
+                    "SELECT referral_code FROM scores "
+                    "WHERE LOWER(name)=LOWER(?) AND referral_code IS NOT NULL "
+                    "ORDER BY created_at ASC LIMIT 1", (name,)
+                ).fetchone()
+                if not code_row:
+                    return self._json(404, {"error":"no_plays_yet", "detail":"Play one round to get your referral code."})
+                code = code_row["referral_code"]
+                total = c.execute(
+                    "SELECT COUNT(DISTINCT LOWER(name)) FROM scores "
+                    "WHERE referred_by=? AND score >= ?", (code, QUALIFY_MIN)
+                ).fetchone()[0]
+                this_month = c.execute(
+                    "SELECT COUNT(DISTINCT LOWER(name)) FROM scores "
+                    "WHERE referred_by=? AND score >= ? "
+                    "AND strftime('%Y-%m', created_at, 'unixepoch') = ?",
+                    (code, QUALIFY_MIN, cur_ym)
+                ).fetchone()[0]
+            return self._json(200, {
+                "code": code,
+                "share_url": f"https://gkall.online/?ref={code}",
+                "total_referrals": total,
+                "month_referrals": this_month,
+                "current_month": cur_ym,
+            })
+
+        if p == "/api/referral/leaderboard":
+            # Top referrers this month
+            cur_ym = current_ym()
+            with db() as c:
+                rows = c.execute("""
+                    SELECT r.referred_by AS code,
+                           o.name AS referrer_name,
+                           COUNT(DISTINCT LOWER(r.name)) AS month_referrals
+                    FROM scores r
+                    LEFT JOIN scores o ON o.referral_code = r.referred_by
+                                       AND o.id = (SELECT MIN(id) FROM scores WHERE referral_code = r.referred_by)
+                    WHERE r.referred_by IS NOT NULL
+                      AND r.score >= ?
+                      AND strftime('%Y-%m', r.created_at, 'unixepoch') = ?
+                    GROUP BY r.referred_by
+                    ORDER BY month_referrals DESC, r.referred_by
+                    LIMIT 20
+                """, (QUALIFY_MIN, cur_ym)).fetchall()
+            return self._json(200, {
+                "month": cur_ym,
+                "top": [{"code": r["code"], "referrer": obfuscate_name(r["referrer_name"] or ""), "referrals": r["month_referrals"]} for r in rows]
+            })
 
         if p == "/api/admin/claims":
             if not self._admin_ok(): return self._json(401, {"error":"unauthorized"})
@@ -1104,6 +1266,9 @@ class Handler(BaseHTTPRequestHandler):
             payload = self._body(8192) or {}
             name = str(payload.get("name","")).strip()[:MAX_NAME] or "Anonymous"
             turnstile_token = str(payload.get("turnstile_token","")).strip()
+            # Referral: 8-char Crockford-base32; ignore anything malformed
+            referred_by_raw = str(payload.get("referred_by","")).strip().upper()
+            referred_by = referred_by_raw if re.match(r"^[A-Z0-9]{8}$", referred_by_raw) else ""
             if TURNSTILE_SECRET and not turnstile_token:
                 print(f"WARN /api/game/start no token in body (size={self.headers.get('Content-Length')})")
 
@@ -1111,8 +1276,17 @@ class Handler(BaseHTTPRequestHandler):
             if TURNSTILE_SECRET and not verify_turnstile(turnstile_token, ip):
                 return self._json(403, {"error":"captcha_failed", "detail":"Please complete the human-verification check."})
 
+            # Country geo-lookup (best-effort, never blocks)
+            country = country_for_ip(ip)
+
             with db() as c:
                 _expire_old_sessions(c)
+
+                # Make sure the referral code points to a real player (no self-referral, no bogus codes)
+                if referred_by:
+                    valid = c.execute("SELECT LOWER(name) AS lname FROM scores WHERE referral_code=? LIMIT 1", (referred_by,)).fetchone()
+                    if not valid or valid["lname"] == name.lower():
+                        referred_by = ""
 
                 # Single active session per IP — kill any existing
                 c.execute(
@@ -1131,9 +1305,9 @@ class Handler(BaseHTTPRequestHandler):
                 sid = _new_session_id()
                 now = _now()
                 c.execute(
-                    "INSERT INTO game_sessions(id,name,ip,question_plan,started_at,last_action_at) "
-                    "VALUES(?,?,?,?,?,?)",
-                    (sid, name, ip, json.dumps(plan), now, now)
+                    "INSERT INTO game_sessions(id,name,ip,question_plan,started_at,last_action_at,country,referred_by) "
+                    "VALUES(?,?,?,?,?,?,?,?)",
+                    (sid, name, ip, json.dumps(plan), now, now, country or None, referred_by or None)
                 )
                 c.commit()
             return self._json(200, {

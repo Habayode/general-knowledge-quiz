@@ -276,6 +276,12 @@
   .end-fb b{color:var(--text)}
   .end-fb a{display:inline-block;margin-top:6px;color:var(--accent);font-family:'Courier New',monospace;font-weight:700;text-decoration:none;letter-spacing:0.02em;font-size:0.98rem}
   .end-fb a:hover{text-decoration:underline}
+  .ref-box{margin:14px auto 4px;max-width:520px;padding:14px 18px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.30);border-radius:12px;text-align:center}
+  .ref-label{font-size:0.82rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.10em;font-weight:600;margin-bottom:6px}
+  .ref-url{font-family:'Courier New',monospace;font-weight:700;font-size:1.04rem;color:var(--green);word-break:break-all;padding:8px 12px;background:rgba(0,0,0,0.25);border-radius:8px;display:inline-block}
+  .ref-hint{font-size:0.82rem;color:var(--muted);margin-top:8px;line-height:1.45}
+  .ref-hint b{color:var(--accent)}
+  .btn-small{padding:6px 14px;font-size:0.85rem}
   .mode-badge{display:inline-flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--muted);margin-bottom:12px;
     padding:4px 10px;border-radius:6px;background:var(--card);border:1px solid var(--border)}
   .mode-badge.online .dot{background:var(--green)}
@@ -600,6 +606,12 @@
           💬 <b>What hooked you? Help shape gkall</b><br>
           <a href="#feedback">gkall.online/#feedback</a>
         </div>
+        <div class="ref-box" id="win-ref-box" style="display:none">
+          <div class="ref-label">🤝 Your invite link · share with smart friends</div>
+          <div class="ref-url" id="win-ref-url"></div>
+          <div class="ref-hint">Top 3 referrers each month win a <b>$3 USDT bonus</b>. Referred friends count when they hit 5/10 or higher.</div>
+          <button class="btn btn-ghost btn-small" id="win-ref-copy" onclick="copyRefUrl('win-ref-url','win-ref-copy')" style="margin-top:8px">Copy link</button>
+        </div>
         <div class="panel-actions">
           <button class="btn btn-primary" onclick="go('claim')">Claim $1 USDT →</button>
           <button class="btn btn-ghost" onclick="resetAndPlay()">Play again</button>
@@ -622,6 +634,12 @@
         <div class="end-fb">
           💬 <b>What threw you? 30-second feedback shapes question quality</b><br>
           <a href="#feedback">gkall.online/#feedback</a>
+        </div>
+        <div class="ref-box" id="lose-ref-box" style="display:none">
+          <div class="ref-label">🤝 Your invite link · share with smart friends</div>
+          <div class="ref-url" id="lose-ref-url"></div>
+          <div class="ref-hint">Top 3 referrers each month win a <b>$3 USDT bonus</b>. Referred friends count when they hit 5/10 or higher.</div>
+          <button class="btn btn-ghost btn-small" id="lose-ref-copy" onclick="copyRefUrl('lose-ref-url','lose-ref-copy')" style="margin-top:8px">Copy link</button>
         </div>
         <div class="panel-actions">
           <button class="btn btn-primary" onclick="resetAndPlay()">Try again</button>
@@ -1027,7 +1045,26 @@ const LS = {
   CLAIMED: 'gkq_claimed_score_ids_v2',
   CODES: 'gkq_my_codes_v2',
   ACTIVE_SESSION: 'gkq_active_session_v2',
+  REF_BY: 'gkq_ref_by_v2',   // referral code stored from ?ref= URL param
 };
+
+// Capture ?ref=XXXXXXXX into localStorage on page load (persists across navigations)
+(function () {
+  try {
+    const params = new URLSearchParams(location.search);
+    const ref = (params.get('ref') || '').trim().toUpperCase();
+    if (/^[A-Z0-9]{8}$/.test(ref)) {
+      localStorage.setItem(LS.REF_BY, ref);
+    }
+  } catch (e) {}
+})();
+
+// ISO 3166-1 alpha-2 -> regional indicator emoji (e.g. 'NG' -> 🇳🇬)
+function ccToFlag(cc) {
+  if (!cc || cc.length !== 2) return '';
+  const A = 0x1F1E6, code = cc.toUpperCase();
+  return String.fromCodePoint(A + code.charCodeAt(0) - 65, A + code.charCodeAt(1) - 65);
+}
 
 // ============================== State ==============================
 let state = null;
@@ -1373,9 +1410,10 @@ async function startGame() {
   document.getElementById('time').textContent = '—';
 
   try {
+    const refBy = (localStorage.getItem(LS.REF_BY) || '').trim();
     const r = await fetch(API + '/api/game/start', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ name, turnstile_token: turnstileToken })
+      body: JSON.stringify({ name, turnstile_token: turnstileToken, referred_by: refBy })
     });
     if (!r.ok) {
       const e = await r.json().catch(() => ({}));
@@ -1548,6 +1586,7 @@ function handleGameOver(result, lastQ) {
       lb.sort((a,b) => b.score - a.score || a.totalTime - b.totalTime);
       saveLocalLB(lb);
       showQuizPanel('win');
+      populateReferralBox('win-ref-box', 'win-ref-url', state.name);
       loadStats();
     } else {
       // Lose panel
@@ -1609,8 +1648,37 @@ function handleGameOver(result, lastQ) {
         saveLocalLB(lb);
       }
       showQuizPanel('lose');
+      if (result.score >= 5) {
+        populateReferralBox('lose-ref-box', 'lose-ref-url', state.name);
+      }
     }
   }, 1000);
+}
+
+// Fetch + display referral code in the win/lose ref-box
+async function populateReferralBox(boxId, urlId, name) {
+  if (!name) return;
+  try {
+    const r = await fetch(API + '/api/referral/me?name=' + encodeURIComponent(name));
+    if (!r.ok) return;
+    const j = await r.json();
+    if (!j.share_url) return;
+    document.getElementById(urlId).textContent = j.share_url;
+    document.getElementById(boxId).style.display = 'block';
+  } catch (e) {}
+}
+
+function copyRefUrl(urlElId, btnId) {
+  const url = (document.getElementById(urlElId) || {}).textContent || '';
+  if (!url) return;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById(btnId);
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = 'Copied ✓';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    }
+  }).catch(() => {});
 }
 
 async function forfeitSession(reason) {
@@ -1678,8 +1746,9 @@ async function renderMonthly() {
   rows.forEach((e, i) => {
     const rc = i < 3 ? 'lb-row-' + (i+1) : '';
     const prize = i < 3 ? '<b style="color:var(--accent)">$' + MONTHLY_PRIZES[i] + '</b>' : '<span class="muted">—</span>';
+    const flag = ccToFlag(e.country || '');
     html += '<tr class="' + rc + '"><td class="lb-rank">' + (i+1) + '</td>'
-      + '<td class="' + (e.won ? 'lb-winner' : '') + '">' + escapeHtml(e.name) + (e.won ? ' ⭐' : '') + '</td>'
+      + '<td class="' + (e.won ? 'lb-winner' : '') + '">' + (flag ? flag + ' ' : '') + escapeHtml(e.name) + (e.won ? ' ⭐' : '') + '</td>'
       + '<td>' + e.score + '/10</td>'
       + '<td>' + Number(e.total_time).toFixed(1) + 's</td>'
       + '<td>' + prize + '</td></tr>';
@@ -1710,8 +1779,9 @@ async function renderAllTime() {
   let html = '<table class="lb-table"><thead><tr><th>#</th><th>Name</th><th>Score</th><th>Prize</th><th>Time</th><th>Date</th></tr></thead><tbody>';
   list.slice(0, 50).forEach((e, i) => {
     const rc = i < 3 ? 'lb-row-' + (i+1) : '';
+    const flag = ccToFlag(e.country || '');
     html += '<tr class="' + rc + '"><td class="lb-rank">' + (i+1) + '</td>'
-      + '<td class="' + (e.won ? 'lb-winner' : '') + '">' + escapeHtml(e.name) + (e.won ? ' ⭐' : '') + '</td>'
+      + '<td class="' + (e.won ? 'lb-winner' : '') + '">' + (flag ? flag + ' ' : '') + escapeHtml(e.name) + (e.won ? ' ⭐' : '') + '</td>'
       + '<td>' + e.score + '/10</td>'
       + '<td>$' + e.prize + '</td>'
       + '<td>' + Number(e.totalTime || e.total_time || 0).toFixed(1) + 's</td>'
