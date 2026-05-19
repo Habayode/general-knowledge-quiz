@@ -11,10 +11,22 @@ A skill-based, fair, USDT-paying **all-knowledge challenge** where Pioneers and 
 
 ## About HAG_Ai
 
-**HAG_Ai** — A full-fledged AI consulting firm offering:
-- **Finance Agents** — AI-driven cash-flow modeling, forecasting, scenario analysis
-- **Market & Football Prediction Model** — quantitative + ML pipelines for capital markets and football outcomes
-- **ERP Customization** — tailored enterprise systems built around real workflows
+**HAG_Ai** — A full-fledged **AI-enabled consulting firm**. We build **AI agents for finance functions that move a number**. Eight service lines:
+
+- **Revenue Assurance** — leakage detection · pricing audit · recovery
+- **Prediction Service** — Markets · Football · Outcomes (calibrated probabilities, locked logs)
+- **Customize ERP** — end-to-end ERP (SAP · NetSuite · Dynamics · Odoo · Sage · custom)
+- **Close & Reconciliation** — month-end close · GL recs · financial reporting
+- **FP&A and Variance** — forecasting · driver analysis · commentary
+- **AP/AR Automation** — invoice capture · 3-way match · collections
+- **Internal Control & Audit** — controls design · testing · workpapers
+- **Board Packs** — narrative + numbers, ready to ship
+
+Motto: *"The edge is no longer the tool. It is how effectively tools become outcomes."*
+
+- Firm site: **https://hagai.online**
+- Consulting inquiries: **hello@hagai.online**
+- WhatsApp: **+234 704 491 8728**
 
 gkall.online is HAG_Ai's first public-facing product — used both as a proof-of-craft (engineering quality visible to potential clients) and as a community platform. Public success here de-risks consulting conversations later.
 

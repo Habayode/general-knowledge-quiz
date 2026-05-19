@@ -20,10 +20,11 @@
 
 ## About HAG_Ai (operator)
 
-**HAG_Ai** — A full-fledged AI consulting firm offering:
-- **Finance Agents** — AI-driven cash-flow modeling, forecasting, scenario analysis
-- **Market & Football Prediction Model** — quantitative + ML pipelines for capital markets and football outcomes
-- **ERP Customization** — tailored enterprise systems built around real workflows
+**HAG_Ai** — A full-fledged **AI-enabled consulting firm**. AI agents for finance functions that move a number. Eight service lines: Revenue Assurance · Prediction Service (Markets · Football · Outcomes) · Customize ERP · Close & Reconciliation · FP&A & Variance · AP/AR Automation · Internal Control & Audit · Board Packs.
+
+- Firm site: https://hagai.online
+- Consulting: hello@hagai.online
+- Motto: *"The edge is no longer the tool. It is how effectively tools become outcomes."*
 
 gkall.online is HAG_Ai's first public-facing product. Every line of code, every payout, every sponsor recognition is public — proof of craft for consulting prospects who want to see real engineering before signing an NDA.
 

@@ -283,7 +283,7 @@ $50/$25/$10 monthly top-3.
 Angles that might interest you:
 - It's the rare "earn crypto" site that's NOT a presale / referral
   pyramid / staking gimmick
-- Built by an AI consulting firm (HAG_Ai) as proof-of-craft for
+- Built by an AI-enabled consulting firm (HAG_Ai — hagai.online) as proof-of-craft for
   client engagements — every line of anti-cheat code is publicly
   inspectable
 - All payouts on-chain verifiable; sponsor wallet is public; manual

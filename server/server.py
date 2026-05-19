@@ -64,9 +64,13 @@ MONTHLY_PRIZES = [50, 25, 10]    # 1st, 2nd, 3rd place at month end (USDT TRC20)
 QUALIFY_MIN  = 5                  # minimum score to appear on any ranked leaderboard
 INSTANT_WIN_CAP_PER_MONTH = 3    # max paid instant-wins per unique player per month
 ABOUT_HAG_AI = (
-    "HAG_Ai — A full-fledged AI consulting firm offering Finance Agents, "
-    "Market & Football Prediction Model, and ERP Customization. "
-    "gkall.online is our community-facing skill platform — built with the same engineering rigor we bring to client work."
+    "HAG_Ai — A full-fledged AI-enabled consulting firm. "
+    "AI agents for finance functions that move a number — "
+    "Revenue Assurance, Prediction Service (Markets · Football · Outcomes), "
+    "Customize ERP, Close & Reconciliation, FP&A & Variance, AP/AR Automation, "
+    "Internal Control & Audit, Board Packs. "
+    "Full firm context: https://hagai.online · Consulting inquiries: hello@hagai.online. "
+    "gkall.online is our first public product — same engineering rigor we bring to client work, made public so people can win real USDT for what they know."
 )
 CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"  # Crockford-ish, no 0/O/1/I
 TIMER_SEC    = 10                 # per-question timer (client + server)
@@ -260,7 +264,7 @@ def init_db():
             ("2026-05-29", "categories",     "📚 *Categories on gkall:*\nSport • Science • History • Religion • Music • Art • Movies • Literature • Geography • Food • Animals • Lifestyle • plus MMLU's 57 academic subjects. If it's known, it's in here."),
             ("2026-05-30", "24-hr",          "🚀 *T-24 hours to public launch.*\nJune 1: first Top 3 monthly announced. May Pioneers locked in.\nLast chance to climb before everyone sees the board.\n\nhttps://gkall.online"),
             ("2026-05-31", "launch-eve",     "🎯 *Tomorrow we go fully public.*\nMay 2026 winners decided at midnight UTC. $50 / $25 / $10 USDT for top 3.\nPioneers — this is your last day. Push it.\n\nhttps://gkall.online"),
-            ("2026-06-01", "launch",         "🚀 *gkall is officially LIVE.*\n\nThe All-Knowledge Challenge. 33,000+ questions. $1 USDT for every 10/10 round + $50/$25/$10 monthly top 3.\n\nPowered by HAG_Ai — a full-fledged AI consulting firm building Finance Agents, market & football predictions, and ERP customization.\n\nMay 2026 winners announced today.\n\nTry your knowledge → https://gkall.online"),
+            ("2026-06-01", "launch",         "🚀 *gkall is officially LIVE.*\n\nThe All-Knowledge Challenge. 33,000+ questions. $1 USDT for every 10/10 round + $50/$25/$10 monthly top 3.\n\nPowered by HAG_Ai — a full-fledged AI-enabled consulting firm building AI agents for finance functions. Full context: https://hagai.online\n\nMay 2026 winners announced today.\n\nTry your knowledge → https://gkall.online"),
         ]
         for (d, t, m) in countdown_seed:
             c.execute("INSERT OR IGNORE INTO countdown_posts(post_date, theme, message) VALUES(?,?,?)", (d, t, m))
@@ -755,13 +759,22 @@ class Handler(BaseHTTPRequestHandler):
         if p == "/api/about":
             return self._json(200, {
                 "operator": "HAG_Ai",
+                "operator_url": "https://hagai.online",
                 "description": ABOUT_HAG_AI,
+                "tagline": "AI agents for finance functions that move a number.",
+                "motto": "The edge is no longer the tool. It is how effectively tools become outcomes.",
                 "services": [
-                    {"name": "Finance Agents", "tagline": "AI-driven finance modeling & forecasting"},
-                    {"name": "Market & Football Prediction Model", "tagline": "Quant + ML for sports and capital markets"},
-                    {"name": "ERP Customization", "tagline": "Tailored enterprise systems built to your workflow"},
+                    {"name": "Revenue Assurance",        "tagline": "Leakage detection · pricing audit · recovery"},
+                    {"name": "Prediction Service",       "tagline": "Markets · Football · Outcomes — calibrated probabilities, locked logs"},
+                    {"name": "Customize ERP",            "tagline": "End-to-end ERP — SAP · NetSuite · Dynamics · Odoo · Sage · custom"},
+                    {"name": "Close & Reconciliation",   "tagline": "Month-end close · GL recs · financial reporting"},
+                    {"name": "FP&A and Variance",        "tagline": "Forecasting · driver analysis · commentary"},
+                    {"name": "AP/AR Automation",         "tagline": "Invoice capture · 3-way match · collections"},
+                    {"name": "Internal Control & Audit", "tagline": "Controls design · testing · workpapers"},
+                    {"name": "Board Packs",              "tagline": "Narrative + numbers, ready to ship"},
                 ],
                 "contact_email": "hello@gkall.online",
+                "consulting_email": "hello@hagai.online",
             }, cache="public, max-age=300")
 
         if p == "/api/sponsors":
