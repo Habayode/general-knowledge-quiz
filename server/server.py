@@ -976,6 +976,47 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         u = urlparse(self.path); p = u.path; ip = self._client_ip()
 
+        if p == "/api/admin/tg/announce":
+            if not self._admin_ok(): return self._json(401, {"error":"unauthorized"})
+            if not (TG_BOT_TOKEN and TG_CHANNEL):
+                return self._json(503, {"error":"tg_not_configured"})
+            payload = self._body(8192) or {}
+            text = str(payload.get("text","")).strip()
+            if not text or len(text) > 4000:
+                return self._json(400, {"error":"bad_text", "detail":"1-4000 chars required"})
+            try:
+                url_ = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
+                data = json.dumps({
+                    "chat_id": TG_CHANNEL, "text": text,
+                    "parse_mode": "Markdown", "disable_web_page_preview": False,
+                }).encode("utf-8")
+                req = urllib.request.Request(url_, data=data,
+                    headers={"Content-Type":"application/json"})
+                with urllib.request.urlopen(req, timeout=15) as r:
+                    body = json.loads(r.read())
+                return self._json(200, {"ok": bool(body.get("ok")), "tg_response": body})
+            except Exception as e:
+                return self._json(502, {"error":"tg_send_failed", "detail": str(e)})
+
+        if p == "/api/admin/tg/set_description":
+            if not self._admin_ok(): return self._json(401, {"error":"unauthorized"})
+            if not (TG_BOT_TOKEN and TG_CHANNEL):
+                return self._json(503, {"error":"tg_not_configured"})
+            payload = self._body(8192) or {}
+            description = str(payload.get("description","")).strip()
+            if len(description) > 255:
+                return self._json(400, {"error":"too_long", "detail":"Telegram caps description at 255 chars"})
+            try:
+                url_ = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/setChatDescription"
+                data = json.dumps({"chat_id": TG_CHANNEL, "description": description}).encode("utf-8")
+                req = urllib.request.Request(url_, data=data,
+                    headers={"Content-Type":"application/json"})
+                with urllib.request.urlopen(req, timeout=15) as r:
+                    body = json.loads(r.read())
+                return self._json(200, {"ok": bool(body.get("ok")), "tg_response": body})
+            except Exception as e:
+                return self._json(502, {"error":"tg_set_description_failed", "detail": str(e)})
+
         if p == "/api/track":
             # Self-hosted page-view tracking. Tiny, no third-party calls.
             # Rate-limited per IP to prevent abuse.
