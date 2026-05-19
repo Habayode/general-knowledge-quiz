@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>gkall — Win up to $110 USDT · monthly $225 prize pool · powered by HAG_Ai</title>
-<meta name="description" content="A general-knowledge skill challenge by HAG_Ai. Get $10 USDT for every 10/10 round + a monthly $225 prize pool ($100/$75/$50 for top 3). Anti-cheat verified, transparent leaderboard, paid in USDT (TRC20). Contact: hello@gkall.online" />
+<title>gkall — Win up to $51 USDT · monthly $85 prize pool · powered by HAG_Ai</title>
+<meta name="description" content="A general-knowledge skill challenge by HAG_Ai. Get $1 USDT for every 10/10 round + a monthly $85 prize pool ($50/$25/$10 for top 3). Anti-cheat verified, transparent leaderboard, paid in USDT (TRC20). Contact: hello@gkall.online" />
 <meta name="author" content="HAG_Ai" />
-<meta property="og:title" content="gkall — Win $10 USDT · powered by HAG_Ai" />
-<meta property="og:description" content="Answer 10 questions correctly under a 10-second timer per question and win $10 USDT." />
+<meta property="og:title" content="gkall — Win up to $51 USDT · powered by HAG_Ai" />
+<meta property="og:description" content="Answer 10 questions correctly under a 10-second timer per question and win $1 USDT." />
 <meta property="og:url" content="https://gkall.online" />
 <meta property="og:type" content="website" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -374,8 +374,8 @@
     <div class="hero-grid">
       <div>
         <span class="pill"><span class="dot"></span> 🚀 Prelaunch · Powered by HAG_Ai</span>
-        <h1 style="margin-top:20px">Test your knowledge.<br><span class="gold">Win up to $110 USDT.</span></h1>
-        <p class="lede">$10 USDT for every 10/10 round, plus a $225 monthly prize pool for the top 3 — $100, $75, $50. Skill-based. 33,000+ questions across every domain of human knowledge. Paid on Tron (TRC20). No accounts.</p>
+        <h1 style="margin-top:20px">Test your knowledge.<br><span class="gold">Win up to $51 USDT.</span></h1>
+        <p class="lede">$1 USDT for every 10/10 round, plus an $85 monthly prize pool for the top 3 — $50, $25, $10. Skill-based. 33,000+ questions across every domain of human knowledge. Paid on Tron (TRC20). No accounts.</p>
         <p class="lede" style="font-size:0.95rem;color:var(--accent);margin-top:-10px">⭐ <b>May 2026 prize pool guaranteed by HAG_Ai.</b> Be a Pioneer — your feedback shapes what we build next.</p>
         <div class="hero-cta">
           <button class="btn btn-primary btn-big" onclick="go('play')">Start Challenge →</button>
@@ -389,7 +389,7 @@
       </div>
       <div class="hero-card">
         <div class="prize-label">Per round · Instant</div>
-        <div class="prize-amount gold">$10</div>
+        <div class="prize-amount gold">$1</div>
         <div class="prize-row">
           <span class="chip">USDT · TRC20</span>
           <span class="muted" style="font-size:0.9rem">Awarded for every 10/10</span>
@@ -397,9 +397,9 @@
         <div class="monthly-pool">
           <div class="mp-label">Monthly Top 3 · Awarded at month end</div>
           <div class="mp-row">
-            <div class="mp-pos"><span class="mp-rank">🥇</span><span class="mp-amt">$100</span></div>
-            <div class="mp-pos"><span class="mp-rank">🥈</span><span class="mp-amt">$75</span></div>
-            <div class="mp-pos"><span class="mp-rank">🥉</span><span class="mp-amt">$50</span></div>
+            <div class="mp-pos"><span class="mp-rank">🥇</span><span class="mp-amt">$50</span></div>
+            <div class="mp-pos"><span class="mp-rank">🥈</span><span class="mp-amt">$25</span></div>
+            <div class="mp-pos"><span class="mp-rank">🥉</span><span class="mp-amt">$10</span></div>
           </div>
           <div class="mp-sub muted" id="mp-countdown">Loading…</div>
         </div>
@@ -434,8 +434,8 @@
       </div>
       <div class="card">
         <div class="step">3</div>
-        <h3>Claim $10 + monthly bonus</h3>
-        <p>10/10 = instant $10 USDT to your Tron (TRC20) wallet. Top 3 on the monthly leaderboard get an extra <b style="color:var(--accent)">$100 / $75 / $50</b> at month end. Both stack.</p>
+        <h3>Claim $1 + monthly bonus</h3>
+        <p>10/10 = instant $1 USDT to your Tron (TRC20) wallet. Top 3 on the monthly leaderboard get an extra <b style="color:var(--accent)">$50 / $25 / $10</b> at month end. Both stack.</p>
       </div>
     </div>
   </div>
@@ -477,7 +477,7 @@
       <div id="quiz-win" class="panel" style="display:none">
         <div class="panel-trophy">🏆</div>
         <h2>You won!</h2>
-        <div class="panel-prize gold">$10 USDT</div>
+        <div class="panel-prize gold">$1 USDT</div>
         <p class="muted">10 out of 10 correct. You're eligible to claim your prize.</p>
         <div class="panel-meta">Total time: <b id="winTime"></b>s · Avg per question: <b id="winAvg"></b>s</div>
         <div id="win-code-box" class="code-box" style="display:none">
@@ -486,7 +486,7 @@
           <div class="code-hint">If you finish in the <b>monthly top 3</b>, paste this code on the Monthly Claim page to verify it was really you. Saved in your browser too.</div>
         </div>
         <div class="panel-actions">
-          <button class="btn btn-primary" onclick="go('claim')">Claim $10 USDT →</button>
+          <button class="btn btn-primary" onclick="go('claim')">Claim $1 USDT →</button>
           <button class="btn btn-ghost" onclick="resetAndPlay()">Play again</button>
         </div>
       </div>
@@ -636,7 +636,7 @@
   <div class="container">
     <div class="quiz-wrap">
       <div id="claim-eligible" style="display:none">
-        <h2>Claim your $10 USDT</h2>
+        <h2>Claim your $1 USDT</h2>
         <p class="muted">Enter your Tron (TRC20) USDT wallet. Claims are reviewed manually and paid from the sponsorship pool.</p>
         <div id="claim-err" class="form-err"></div>
         <div id="claim-ok" class="form-ok"></div>
@@ -670,7 +670,7 @@
 
       <div id="claim-not-eligible" class="panel">
         <h2>No active prize claim</h2>
-        <p class="muted">You need to complete a round with 10/10 to be eligible for the $10 USDT prize.</p>
+        <p class="muted">You need to complete a round with 10/10 to be eligible for the $1 USDT instant prize.</p>
         <div class="panel-actions">
           <button class="btn btn-primary" onclick="go('play')">Play now</button>
         </div>
@@ -695,7 +695,7 @@
     <div class="quiz-wrap">
       <span class="pill" style="background:rgba(245,196,81,0.12);color:var(--accent);border-color:rgba(245,196,81,0.3)">🚀 Pioneer Program · Prelaunch</span>
       <h2 style="margin-top:18px">Help shape gkall</h2>
-      <p class="muted" style="max-width:660px">You're playing during prelaunch. Your bug reports, ideas, and reactions directly steer what gets built, polished, or scrapped. The <b style="color:var(--accent)">May 2026 prize pool ($225) is guaranteed</b>, sponsored by HAG_Ai — even if the public sponsorship wallet is empty.</p>
+      <p class="muted" style="max-width:660px">You're playing during prelaunch. Your bug reports, ideas, and reactions directly steer what gets built, polished, or scrapped. The <b style="color:var(--accent)">May 2026 prize pool ($85) is guaranteed</b>, sponsored by HAG_Ai — even if the public sponsorship wallet is empty.</p>
 
       <div class="cards" style="margin-top:24px;grid-template-columns:repeat(3,1fr)">
         <div class="card"><div class="step">🐛</div><h3>Find a bug?</h3><p>Tell us what broke, where, and what you expected. Screenshots help if you can paste them in a link.</p></div>
@@ -761,10 +761,10 @@
     <h2 class="center">FAQ &amp; Rules</h2>
     <div class="faq" style="margin-top:30px">
       <details><summary>What is the Prelaunch / Pioneer Program?</summary><p>gkall is in <b>prelaunch</b> — we're live but not yet promoted. Anyone playing right now is a <b>Pioneer</b>: an early tester whose feedback (via the <a href="#feedback">Feedback page</a>) directly shapes what we build, polish, and prioritize. The <b>May 2026 monthly prize pool ($225) is guaranteed by HAG_Ai</b> regardless of public sponsorship — so the competition is real, even on day one.</p></details>
-      <details><summary>How do I win?</summary><p>Two ways: (1) Hit 10/10 in any single round — you instantly get $10 USDT. (2) Finish in the top 3 of the monthly leaderboard for an additional $100 / $75 / $50 USDT at month end. Both can stack: top monthly champ with even a single 10/10 can walk away with $110.</p></details>
-      <details><summary>How does the monthly competition work?</summary><p>Each player's <b>best single run</b> in the current month is what counts (highest score, fastest time). Only runs scoring <b>5/10 or higher</b> qualify for the leaderboard. Top 3 at month end win $100 / $75 / $50 USDT respectively. Months reset on the 1st of every month at 00:00 UTC. Past winners are listed permanently on the Past Winners tab.</p></details>
+      <details><summary>How do I win?</summary><p>Two ways: (1) Hit 10/10 in any single round — you instantly get $1 USDT. (2) Finish in the top 3 of the monthly leaderboard for an additional $50 / $25 / $10 USDT at month end. Both can stack: top monthly champ with even a single 10/10 can walk away with $51.</p></details>
+      <details><summary>How does the monthly competition work?</summary><p>Each player's <b>best single run</b> in the current month is what counts (highest score, fastest time). Only runs scoring <b>5/10 or higher</b> qualify for the leaderboard. Top 3 at month end win $50 / $25 / $10 USDT respectively. Months reset on the 1st of every month at 00:00 UTC. Past winners are listed permanently on the Past Winners tab.</p></details>
       <details><summary>What if I tie with someone on score?</summary><p>Ties are broken by total time (faster wins). If still tied, the earlier submission wins. Each name only counts once per month — keep playing, and only your best run is on the board.</p></details>
-      <details><summary>What if no one's played much in a month?</summary><p>Only filled positions are paid. If only 2 distinct players play, only 1st ($100) and 2nd ($75) are awarded. The unfilled prize rolls into next month's pool.</p></details>
+      <details><summary>What if no one's played much in a month?</summary><p>Only filled positions are paid. If only 2 distinct players play, only 1st ($50) and 2nd ($25) are awarded. The unfilled prize rolls into next month's pool.</p></details>
       <details><summary>How is impersonation prevented for monthly winners?</summary><p>After every round you get a unique <b>claim code</b> like <code>K9XF-3MN7-LP4Z</code> that only you see (and the server records). It's auto-saved in your browser. If you finish top 3, you enter that code on the <a href="#monthly-claim">Claim Monthly Prize</a> page to verify it was actually you. Names on the public Past Winners page are partially obfuscated (e.g. <code>Joh***oe</code>) so impersonators have nothing to latch onto. No code = no payout.</p></details>
       <details><summary>I lost my claim code — what now?</summary><p>If you used the same browser/device for your winning run, the Claim Monthly Prize page lists all codes saved on this device. If you cleared your browser or switched devices, contact <a href="mailto:hello@gkall.online">hello@gkall.online</a> with the exact details of your winning run (name, score, time, day) — we can verify against the database.</p></details>
       <details><summary>How is the prize paid?</summary><p>Winners submit their Tron (TRC20) USDT wallet via the Claim page. Each claim is reviewed manually by the operator and paid from the sponsorship pool. No private keys are held on the server — payouts are not automatic, but they are real.</p></details>
@@ -796,7 +796,7 @@
 // ============================== Constants ==============================
 const API = ''; // same-origin
 const TIMER = 10;
-const PRIZE_USDT = 10;
+const PRIZE_USDT = 1;
 const MOUSE_SAMPLE_HZ = 4;  // 4 samples per second during a question
 // Prelaunch v2: keys bumped so all pre-launch cached test data is orphaned.
 const LS = {
@@ -1334,7 +1334,7 @@ function resetAndPlay() { showPlayPanel(); }
 
 // ============================== Leaderboard ==============================
 let currentTab = 'month';
-const MONTHLY_PRIZES = [100, 75, 50];
+const MONTHLY_PRIZES = [50, 25, 10];
 
 function switchTab(tab) {
   currentTab = tab;
@@ -1365,7 +1365,7 @@ async function renderMonthly() {
     <div class="prize-pool-info">
       <div>
         <div class="muted" style="font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase">Current month · ${escapeHtml(data.ym)}</div>
-        <div style="margin-top:4px"><b>$225 prize pool</b> · 🥇 $100 · 🥈 $75 · 🥉 $50</div>
+        <div style="margin-top:4px"><b>$85 prize pool</b> · 🥇 $50 · 🥈 $25 · 🥉 $10</div>
       </div>
       <div class="countdown">⏳ <b>${data.days_remaining}</b> day${data.days_remaining===1?'':'s'} remaining</div>
     </div>`;
@@ -1435,7 +1435,7 @@ async function renderPastWinners() {
     body.innerHTML = `
       <div class="lb-empty" style="text-align:left;font-style:normal;padding:20px">
         <h3 style="color:var(--accent);margin-bottom:10px;font-size:1.05rem">No monthly winners yet</h3>
-        <p>The first monthly competition is in progress. Top 3 of this month will be announced here on the 1st of next month — names will be partially obfuscated for anti-impersonation.</p>
+        <p>The first monthly competition is in progress. Top 3 of this month will be announced here on the 1st of next month — names will be partially obfuscated for anti-impersonation. May 2026 prize pool ($85) is guaranteed by HAG_Ai.</p>
         <p style="margin-top:10px;font-size:0.92rem">If you win, claim self-serve with the <b>claim code</b> shown after each round on the <a href="#monthly-claim" style="color:var(--accent)">Claim Monthly Prize</a> page.</p>
       </div>`;
     return;

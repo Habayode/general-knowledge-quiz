@@ -57,8 +57,8 @@ SPONSORSHIP_TIERS  = [
                "Co-branded social content",
                "Permanent recognition in the Hall of Fame"]},
 ]
-PRIZE_USDT   = 10
-MONTHLY_PRIZES = [100, 75, 50]   # 1st, 2nd, 3rd place at month end (USDT TRC20)
+PRIZE_USDT   = 1
+MONTHLY_PRIZES = [50, 25, 10]    # 1st, 2nd, 3rd place at month end (USDT TRC20)
 QUALIFY_MIN  = 5                  # minimum score to appear on any ranked leaderboard
 CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"  # Crockford-ish, no 0/O/1/I
 TIMER_SEC    = 10                 # per-question timer (client + server)
@@ -580,7 +580,8 @@ class Handler(BaseHTTPRequestHandler):
                 month_players = c.execute("""
                     SELECT COUNT(DISTINCT LOWER(name)) FROM scores
                     WHERE strftime('%Y-%m', created_at, 'unixepoch') = ?
-                """, (cur_ym,)).fetchone()[0]
+                      AND score >= ?
+                """, (cur_ym, QUALIFY_MIN)).fetchone()[0]
             meta = month_meta(cur_ym)
             return self._json(200, {
                 "plays": total_plays, "winners": winners,
