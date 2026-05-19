@@ -11,7 +11,7 @@ Telegram channel @gkallonline + bot @ALLKNWNG_BOT are already live. The daily co
 
 ### Defer to Phase B (post-launch, June 1+)
 When launched and seeing real Pioneer/winner traction, create:
-- [ ] **X / Twitter**: `@gkallonline`
+- [x] **X / Twitter**: `@gkallonline` ✅ live (May 19, 2026)
 - [ ] **Instagram**: `@gkall.online`
 - [ ] **TikTok**: `@gkall.online`
 - [ ] **Facebook Page**: `gkall.online`
