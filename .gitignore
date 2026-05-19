@@ -1,0 +1,16 @@
+# Microsoft Word / Office lock files
+~$*
+
+# Editor swap / temp
+*.swp
+*~
+
+# Local server data (do not commit DB or runtime logs)
+server/quizdb.sqlite
+server/quizdb.sqlite-*
+server/*.log
+server/_*.py
+admin_token.txt
+caddy/caddy.log
+caddy/caddy.out
+caddy/caddy.err
