@@ -115,6 +115,7 @@ Site footer + claim form + sponsor page will auto-update.
 - Monday: Look at /admin overview → are there pending things? Pay them out.
 - Wednesday: Read all Pioneer feedback → reply to anyone who left contact info.
 - Friday: Tweet/post a behind-the-scenes update. Even if nothing big happened, mention what's growing.
+- **Any day**: Quick DNS sanity check — visit https://gkall.online. If it shows a Hostinger 404 page, the A record has been reset by an automated Hostinger migration. Fix: hPanel → Domains → gkall.online → DNS Zone → edit `A @` back to `185.126.227.211` and delete any `AAAA @` record. Propagation ~15 min.
 
 ---
 
