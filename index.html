@@ -102,6 +102,7 @@
   .view{display:none;padding:40px 0 80px}
   .view.active{display:block;animation:fadeIn 0.3s}
   @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes pulse{from{opacity:0.4}to{opacity:0.8}}
 
   /* ===== Hero ===== */
   .hero{padding:60px 0 40px}
@@ -335,6 +336,15 @@
   .checkbox-row input{margin-top:3px;accent-color:var(--accent);width:18px;height:18px;cursor:pointer;flex-shrink:0}
   .checkbox-row label{cursor:pointer;font-size:0.88rem;line-height:1.5;color:var(--text)}
   .checkbox-row a{color:var(--accent);text-decoration:underline}
+
+  /* Sponsor wall */
+  .sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:14px}
+  .sw-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+  .sw-card.title{background:linear-gradient(160deg,rgba(245,196,81,0.08),transparent);border-color:rgba(245,196,81,0.35)}
+  .sw-tier{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);font-weight:600}
+  .sw-name{font-weight:700;font-size:1.05rem}
+  .sw-amt{color:var(--accent);font-family:'Space Grotesk';font-weight:600;font-size:0.95rem}
+  .sw-month{font-size:0.78rem;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -351,6 +361,8 @@
       <a href="#leaderboard" data-view="leaderboard"><span class="lbl">Leaderboard</span></a>
       <a href="#feedback" data-view="feedback"><span class="lbl">Feedback</span></a>
       <a href="#sponsor" data-view="sponsor"><span class="lbl">Sponsor</span></a>
+      <a href="#mywins" data-view="mywins"><span class="lbl">My Wins</span></a>
+      <a href="#about" data-view="about"><span class="lbl">About</span></a>
       <a href="#how" data-view="how"><span class="lbl">FAQ</span></a>
     </nav>
   </div>
@@ -408,9 +420,9 @@
     </div>
 
     <div class="stats">
+      <div class="stat"><div class="v" id="st-pioneers">—</div><div class="l">Pioneers this month</div></div>
       <div class="stat"><div class="v" id="st-plays">—</div><div class="l">Total plays</div></div>
-      <div class="stat"><div class="v" id="st-winners">—</div><div class="l">Winners</div></div>
-      <div class="stat"><div class="v" id="st-paid">$<span id="st-paid-n">—</span></div><div class="l">Paid out (USDT)</div></div>
+      <div class="stat"><div class="v" id="st-winners">—</div><div class="l">10/10 winners</div></div>
       <div class="stat"><div class="v" id="st-questions">—</div><div class="l">Questions in pool</div></div>
     </div>
   </div>
@@ -478,8 +490,12 @@
       <div id="quiz-win" class="panel" style="display:none">
         <div class="panel-trophy">🏆</div>
         <h2>You won!</h2>
-        <div class="panel-prize gold">$1 USDT</div>
-        <p class="muted">10 out of 10 correct. You're eligible to claim your prize.</p>
+        <div class="panel-prize gold" id="win-prize-label">$1 USDT</div>
+        <p class="muted" id="win-subtitle">10 out of 10 correct. You're eligible to claim your prize.</p>
+        <div id="win-cap-msg" style="display:none;background:rgba(245,196,81,0.08);border:1px solid rgba(245,196,81,0.35);border-radius:12px;padding:14px 18px;margin:12px auto;max-width:480px">
+          <b style="color:var(--accent)">Monthly instant-cap reached.</b><br>
+          <span class="muted" style="font-size:0.9rem">You've already claimed the maximum $1 instant wins for this month (cap: 3 per player). This round still <b>counts toward your monthly leaderboard rank</b> — keep climbing for the $50/$25/$10 top-3 prize.</span>
+        </div>
         <div class="panel-meta">Total time: <b id="winTime"></b>s · Avg per question: <b id="winAvg"></b>s</div>
         <div id="win-code-box" class="code-box" style="display:none">
           <div class="code-label">Your claim code · save this</div>
@@ -497,6 +513,9 @@
         <p style="margin:8px 0 4px" id="loseReason">You got it wrong.</p>
         <p class="muted">You answered <b id="loseScore">0</b>/10 correctly.</p>
         <p style="margin-top:14px;color:var(--green);font-size:0.92rem">Correct answer was: <span id="correctAns"></span></p>
+        <p style="font-size:0.82rem;color:var(--muted);margin-top:8px">
+          Think the question was unfair? <a href="#" id="reportQ" style="color:var(--accent)">🚩 Report it →</a>
+        </p>
         <div id="lose-code-box" class="code-box" style="display:none">
           <div class="code-label">Your claim code · save this</div>
           <div class="code-value" id="lose-code"></div>
@@ -547,6 +566,11 @@
     <h2 style="margin-top:18px">Sponsor a winner</h2>
     <p class="muted" style="max-width:680px">Every USDT you donate becomes a real prize for a real person. No fees, no skim, all on-chain. The May 2026 pool is guaranteed by HAG_Ai — sponsorship covers June onward and lets us grow the prize pool.</p>
     <p class="muted" style="font-size:0.88rem;margin-top:8px">Inquiries · partnership · proof of payment: <a href="mailto:hello@gkall.online">hello@gkall.online</a></p>
+
+    <div id="sponsor-wall-section" style="margin-top:32px;display:none">
+      <h3 style="font-size:1.1rem">Sponsor wall · thank you</h3>
+      <div id="sponsor-wall-grid"></div>
+    </div>
 
     <h3 style="margin-top:32px;font-size:1.1rem">Sponsorship tiers</h3>
     <div id="tier-grid" class="tier-grid"></div>
@@ -609,12 +633,12 @@
           <div class="hint">So we can confirm payment.</div>
         </div>
         <div class="form-row">
-          <label>Your @ handle on our socials (optional but speeds verification)</label>
-          <input id="mc-social-handle" type="text" maxlength="64" placeholder="@yourhandle on X / Instagram / etc." />
+          <label>Your Telegram handle (optional, speeds verification)</label>
+          <input id="mc-social-handle" type="text" maxlength="64" placeholder="@yourhandle on Telegram" />
         </div>
         <div class="checkbox-row">
           <input type="checkbox" id="mc-social-attest" />
-          <label for="mc-social-attest">I have <b>followed</b> all gkall social channels and <b>liked</b> the latest pinned post on each. <b>Required for payout.</b> <a href="#sponsor">See our channels</a></label>
+          <label for="mc-social-attest">I have <b>joined</b> the gkall Telegram channel (<a href="https://t.me/gkallonline" target="_blank" rel="noopener">@gkallonline</a>). <b>Required for payout.</b></label>
         </div>
         <button class="btn btn-primary btn-big" id="mc-submit" onclick="submitMonthlyClaim()" style="margin-top:14px">Verify &amp; Submit</button>
       </div>
@@ -657,13 +681,13 @@
             <div class="hint">So we can notify you when the payout is processed.</div>
           </div>
           <div class="form-row">
-            <label>Your @ handle on our socials (optional but speeds verification)</label>
-            <input id="claim-social-handle" type="text" maxlength="64" placeholder="@yourhandle on X / Instagram / etc." />
-            <div class="hint">Tells us which handle you used to follow us.</div>
+            <label>Your Telegram handle (optional, speeds verification)</label>
+            <input id="claim-social-handle" type="text" maxlength="64" placeholder="@yourhandle on Telegram" />
+            <div class="hint">Tells us which handle to look for in the channel member list.</div>
           </div>
           <div class="checkbox-row">
             <input type="checkbox" id="claim-social-attest" />
-            <label for="claim-social-attest">I have <b>followed</b> all gkall social channels and <b>liked</b> the latest pinned post on each. <b>Required for payout</b> — we verify before USDT is sent. <a href="#sponsor">See our channels</a></label>
+            <label for="claim-social-attest">I have <b>joined</b> the gkall Telegram channel (<a href="https://t.me/gkallonline" target="_blank" rel="noopener">@gkallonline</a>). <b>Required for payout</b> — we verify before USDT is sent. More social channels launching after June 1; the same attestation will extend to them then.</label>
           </div>
           <button class="btn btn-primary btn-big" id="claim-submit" onclick="submitClaim()" style="margin-top:14px">Submit claim</button>
         </div>
@@ -686,6 +710,56 @@
           <button class="btn btn-ghost" onclick="go('home')">Back home</button>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MY WINS ============ -->
+<section id="view-mywins" class="view">
+  <div class="container">
+    <h2>My Wins · This Device</h2>
+    <p class="muted">All your claim codes from this browser. Save these — they prove a winning run was actually you.</p>
+    <div id="mw-content" style="margin-top:18px"></div>
+  </div>
+</section>
+
+<!-- ============ ABOUT ============ -->
+<section id="view-about" class="view">
+  <div class="container">
+    <span class="pill" style="background:rgba(245,196,81,0.12);color:var(--accent);border-color:rgba(245,196,81,0.3)">⭐ About the operator</span>
+    <h2 style="margin-top:18px">HAG_Ai</h2>
+    <p class="lede" style="max-width:720px;color:var(--text);font-size:1.1rem">
+      <b>HAG_Ai is a full-fledged AI-enabled consulting firm.</b><br>
+      We build Finance Agents, deliver market &amp; football predictions, and customize ERP systems for clients who want production AI without the buzzword theatre. <b>gkall.online</b> is our community-facing skill platform — same engineering rigor we bring to client work, made public so people can win actual money for what they know.
+    </p>
+
+    <h3 style="margin-top:30px;font-size:1.1rem">What we build</h3>
+    <div class="cards" style="margin-top:18px">
+      <div class="card">
+        <div class="step">💰</div>
+        <h3>Finance Agents</h3>
+        <p>AI-driven cash-flow modeling, forecasting, scenario analysis. Plug into your books, get answers that hold up under audit.</p>
+      </div>
+      <div class="card">
+        <div class="step">📈</div>
+        <h3>Market &amp; Football Predictions</h3>
+        <p>Quantitative + machine-learning pipelines for capital markets and football outcomes. Real models, real backtests, real shipped products.</p>
+      </div>
+      <div class="card">
+        <div class="step">🛠</div>
+        <h3>ERP Customization</h3>
+        <p>Tailored enterprise systems built around how your team actually works — not how the vendor's manual says you should.</p>
+      </div>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-top:30px">
+      <h3 style="font-size:1.05rem;margin-bottom:10px">Why gkall is HAG_Ai's first public product</h3>
+      <p class="muted" style="font-size:0.95rem;line-height:1.7">
+        Consulting work is gated behind NDAs. gkall lets us prove our craft publicly — a skill-based USDT-paying platform where every line of anti-cheat code, every Telegram bot integration, and every prize payout is on-chain verifiable. If we ship rigorously here, you can trust we'll do the same on a client engagement.
+      </p>
+      <p class="muted" style="font-size:0.95rem;margin-top:14px">
+        Want to talk consulting? <a href="mailto:hello@gkall.online" style="color:var(--accent)">hello@gkall.online</a>
+      </p>
     </div>
   </div>
 </section>
@@ -762,7 +836,8 @@
     <h2 class="center">FAQ &amp; Rules</h2>
     <div class="faq" style="margin-top:30px">
       <details><summary>What is the Prelaunch / Pioneer Program?</summary><p>gkall is in <b>prelaunch</b> — we're live but not yet promoted. Anyone playing right now is a <b>Pioneer</b>: an early tester whose feedback (via the <a href="#feedback">Feedback page</a>) directly shapes what we build, polish, and prioritize. The <b>May 2026 monthly prize pool ($225) is guaranteed by HAG_Ai</b> regardless of public sponsorship — so the competition is real, even on day one.</p></details>
-      <details><summary>How do I win?</summary><p>Two ways: (1) Hit 10/10 in any single round — you instantly get $1 USDT. (2) Finish in the top 3 of the monthly leaderboard for an additional $50 / $25 / $10 USDT at month end. Both can stack: top monthly champ with even a single 10/10 can walk away with $51.</p></details>
+      <details><summary>Who runs gkall.online?</summary><p><b>HAG_Ai</b> — a full-fledged AI-enabled consulting firm offering Finance Agents, market &amp; football predictions, and ERP customization. gkall is HAG_Ai's first public product, used to prove our engineering rigor in the open. More on the <a href="#about">About page</a>.</p></details>
+      <details><summary>How do I win?</summary><p>Two ways: (1) Hit 10/10 in any single round — you instantly get $1 USDT (up to <b>3 paid instant wins per player per month</b>; beyond that, your 10/10 still counts on the leaderboard but doesn't pay out). (2) Finish in the top 3 of the monthly leaderboard for an additional $50 / $25 / $10 USDT at month end. Both stack.</p></details>
       <details><summary>How does the monthly competition work?</summary><p>Each player's <b>best single run</b> in the current month is what counts (highest score, fastest time). Only runs scoring <b>5/10 or higher</b> qualify for the leaderboard. Top 3 at month end win $50 / $25 / $10 USDT respectively. Months reset on the 1st of every month at 00:00 UTC. Past winners are listed permanently on the Past Winners tab.</p></details>
       <details><summary>What if I tie with someone on score?</summary><p>Ties are broken by total time (faster wins). If still tied, the earlier submission wins. Each name only counts once per month — keep playing, and only your best run is on the board.</p></details>
       <details><summary>What if no one's played much in a month?</summary><p>Only filled positions are paid. If only 2 distinct players play, only 1st ($50) and 2nd ($25) are awarded. The unfilled prize rolls into next month's pool.</p></details>
@@ -807,6 +882,7 @@ const LS = {
   PENDING: 'gkq_pending_claim_v2',
   CLAIMED: 'gkq_claimed_score_ids_v2',
   CODES: 'gkq_my_codes_v2',
+  ACTIVE_SESSION: 'gkq_active_session_v2',
 };
 
 // ============================== State ==============================
@@ -848,7 +924,7 @@ function _mouseHandler(e) {
 
 // ============================== Routing ==============================
 function go(view) {
-  if (!['home','play','leaderboard','feedback','sponsor','claim','monthly-claim','how'].includes(view)) view = 'home';
+  if (!['home','play','leaderboard','feedback','sponsor','about','mywins','claim','monthly-claim','how'].includes(view)) view = 'home';
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + view).classList.add('active');
   document.querySelectorAll('.nav-links a').forEach(a =>
@@ -859,6 +935,7 @@ function go(view) {
   if (view === 'claim')          showClaimPanel();
   if (view === 'monthly-claim')  showMonthlyClaimPanel();
   if (view === 'feedback')       resetFeedback();
+  if (view === 'mywins')         renderMyWins();
   if (location.hash.slice(1) !== view) history.replaceState(null, '', '#' + view);
   window.scrollTo({top: 0, behavior: 'instant'});
 }
@@ -937,12 +1014,15 @@ function markClaimed(scoreId) {
 async function loadStats() {
   try {
     const r = await fetch(API + '/api/stats'); const s = await r.json();
+    const pioneers = document.getElementById('st-pioneers');
+    if (pioneers) pioneers.textContent = (s.month_players || 0).toLocaleString();
     document.getElementById('st-plays').textContent      = s.plays.toLocaleString();
     document.getElementById('st-winners').textContent    = s.winners.toLocaleString();
-    document.getElementById('st-paid-n').textContent     = s.paid_usdt.toLocaleString();
     document.getElementById('st-questions').textContent  = s.questions.toLocaleString();
-    document.getElementById('st-pending').textContent    = s.pending_claims;
-    document.getElementById('st-paid-2').textContent     = s.paid_usdt;
+    const stPending = document.getElementById('st-pending');
+    if (stPending) stPending.textContent = s.pending_claims;
+    const stPaid2 = document.getElementById('st-paid-2');
+    if (stPaid2) stPaid2.textContent = s.paid_usdt;
     const cd = document.getElementById('mp-countdown');
     if (cd && s.days_remaining != null) {
       cd.innerHTML = `<b style="color:var(--accent)">${s.days_remaining}</b> day${s.days_remaining===1?'':'s'} left this month · <b>${s.month_players||0}</b> player${(s.month_players||0)===1?'':'s'} ranked`;
@@ -1014,7 +1094,34 @@ function renderCountdown(launchIso) {
   setInterval(tick, 30 * 1000);
 }
 
+async function loadSponsorWall() {
+  try {
+    const r = await fetch(API + '/api/sponsors');
+    if (!r.ok) return;
+    const list = await r.json();
+    const sec = document.getElementById('sponsor-wall-section');
+    const grid = document.getElementById('sponsor-wall-grid');
+    if (!list.length) { sec.style.display = 'none'; return; }
+    sec.style.display = 'block';
+    grid.className = 'sw-grid';
+    const tierLabel = {pioneer:'🌱 Pioneer', round:'🛡 Round', title:'👑 Title'};
+    grid.innerHTML = list.map(s => {
+      const link = s.link_url
+        ? `<a href="${escapeHtml(s.link_url)}" target="_blank" rel="noopener" style="color:var(--accent)">${escapeHtml(s.name)}</a>`
+        : escapeHtml(s.name);
+      return `<div class="sw-card${s.tier==='title'?' title':''}">
+        <div class="sw-tier">${tierLabel[s.tier] || s.tier}</div>
+        <div class="sw-name">${link}</div>
+        <div class="sw-amt">$${s.amount_usdt} USDT</div>
+        ${s.month?`<div class="sw-month">${escapeHtml(s.month)}</div>`:''}
+        ${s.note?`<div class="sw-month" style="color:var(--text);font-style:italic">"${escapeHtml(s.note)}"</div>`:''}
+      </div>`;
+    }).join('');
+  } catch(e) { console.warn('sponsor wall failed', e); }
+}
+
 async function loadSponsor() {
+  loadSponsorWall();
   try {
     const r = await fetch(API + '/api/sponsor'); const s = await r.json();
     document.getElementById('sponsor-wallet').textContent = s.wallet;
@@ -1113,8 +1220,13 @@ async function startGame() {
   };
   document.getElementById('quiz-intro').style.display = 'none';
   showQuizPanel('active');
-  document.getElementById('question').textContent = 'Starting…';
-  document.getElementById('options').innerHTML = '';
+  // Loading skeleton
+  document.getElementById('question').innerHTML = '<span style="opacity:0.6">⏳ Verifying you\'re human + building question plan...</span>';
+  document.getElementById('options').innerHTML =
+    '<div style="height:54px;background:rgba(255,255,255,0.05);border-radius:12px;animation:pulse 1.2s ease-in-out infinite alternate"></div>'.repeat(4);
+  document.getElementById('cat').textContent = '— —';
+  document.getElementById('diff').textContent = '...';
+  document.getElementById('time').textContent = '—';
 
   try {
     const r = await fetch(API + '/api/game/start', {
@@ -1258,6 +1370,21 @@ function handleGameOver(result, lastQ) {
       const avg = (totalTime / 10).toFixed(1);
       document.getElementById('winTime').textContent = totalTime.toFixed(1);
       document.getElementById('winAvg').textContent = avg;
+      // Cap-reached UI
+      const capBox = document.getElementById('win-cap-msg');
+      const prizeLabel = document.getElementById('win-prize-label');
+      const subtitle = document.getElementById('win-subtitle');
+      if (result.cap_reached) {
+        capBox.style.display = 'block';
+        prizeLabel.textContent = '10/10 — Monthly cap reached';
+        prizeLabel.classList.remove('gold');
+        subtitle.textContent = 'Round counts on the monthly leaderboard, but instant cap (' + (result.monthly_cap || 3) + '/month) is already filled.';
+      } else {
+        capBox.style.display = 'none';
+        prizeLabel.textContent = '$1 USDT';
+        if (!prizeLabel.classList.contains('gold')) prizeLabel.classList.add('gold');
+        subtitle.textContent = '10 out of 10 correct. You\'re eligible to claim your prize.';
+      }
       if (result.claim_code) {
         document.getElementById('win-code').textContent = result.claim_code;
         document.getElementById('win-code-box').style.display = 'block';
@@ -1283,6 +1410,31 @@ function handleGameOver(result, lastQ) {
       const reason = result.timeout ? 'Time ran out.' : 'Wrong answer.';
       document.getElementById('loseReason').textContent = reason;
       document.getElementById('loseScore').textContent = result.score;
+      // Wire the "report question" link with this question's context
+      const reportLink = document.getElementById('reportQ');
+      if (reportLink && lastQ) {
+        reportLink.onclick = (ev) => {
+          ev.preventDefault();
+          try {
+            localStorage.setItem('gkq_report_draft', JSON.stringify({
+              q_id: lastQ.q_id, q: lastQ.q, cat: lastQ.cat, diff: lastQ.diff,
+              opts: lastQ.opts
+            }));
+          } catch(e) {}
+          go('feedback');
+          setTimeout(() => {
+            try {
+              const fc = document.getElementById('fb-category');
+              const fm = document.getElementById('fb-message');
+              if (fc) fc.value = 'bug';
+              const d = JSON.parse(localStorage.getItem('gkq_report_draft') || '{}');
+              if (fm && d.q) {
+                fm.value = 'Reporting question #' + d.q_id + ' (' + (d.cat || 'general') + ', difficulty ' + (d.diff || '?') + '):\n\nQ: ' + d.q + '\n\nOptions: ' + (d.opts || []).join(' | ') + '\n\nIssue: [please describe what was wrong — wrong answer marked correct? ambiguous? off topic? typo?]';
+              }
+            } catch(e) {}
+          }, 100);
+        };
+      }
       // Correct answer is intentionally hidden on losses (anti-enumeration)
       const ansEl = document.getElementById('correctAns');
       const ansLabel = ansEl.parentElement;
@@ -1597,6 +1749,41 @@ async function submitMonthlyClaim() {
     err.className = 'form-err show';
     btn.disabled = false; btn.textContent = 'Verify & Submit';
   }
+}
+
+// ============================== My Wins ==============================
+function renderMyWins() {
+  const codes = loadMyCodes();
+  const el = document.getElementById('mw-content');
+  if (!codes.length) {
+    el.innerHTML = `<div class="lb-empty" style="text-align:left;font-style:normal;padding:24px">
+      <p>No rounds played on this browser yet — or you cleared cookies.</p>
+      <p style="margin-top:12px"><a href="#play" style="color:var(--accent)">Play a round →</a></p>
+    </div>`;
+    return;
+  }
+  let won = codes.filter(c => c.won).length;
+  let qualifying = codes.filter(c => c.score >= 5).length;
+  let html = `<div class="prize-pool-info">
+    <div>
+      <div class="muted" style="font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase">Your record on this device</div>
+      <div style="margin-top:4px"><b>${codes.length}</b> rounds · <b style="color:var(--green)">${won}</b> 10/10 wins · <b style="color:var(--accent)">${qualifying}</b> qualifying (5+)</div>
+    </div>
+  </div>`;
+  html += '<table class="lb-table"><thead><tr><th>Code</th><th>Name</th><th>Score</th><th>Time</th><th>Date</th><th></th></tr></thead><tbody>';
+  codes.forEach(c => {
+    const trophy = c.won ? ' 🏆' : '';
+    html += `<tr>
+      <td style="font-family:'Courier New',monospace;color:var(--accent);font-weight:600;user-select:all">${escapeHtml(c.code)}</td>
+      <td>${escapeHtml(c.name)}${trophy}</td>
+      <td>${c.score}/10</td>
+      <td>${Number(c.totalTime).toFixed(1)}s</td>
+      <td>${escapeHtml(c.date)}</td>
+      <td><a href="#monthly-claim" style="color:var(--accent);font-size:0.85rem">Claim →</a></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
 }
 
 // ============================== Pioneer feedback ==============================

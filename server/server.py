@@ -42,26 +42,32 @@ SOCIAL_FACEBOOK    = os.environ.get("SOCIAL_FACEBOOK", "")
 LAUNCH_DATE_UTC    = os.environ.get("LAUNCH_DATE_UTC", "2026-06-01T00:00:00Z")  # full launch
 SPONSORSHIP_TIERS  = [
     {"name": "Pioneer Sponsor", "min": 50,   "max": 199,  "icon": "🌱",
-     "perks": ["Logo or text on the public Sponsor wall",
-               "Thank-you post on Telegram + X",
+     "perks": ["Logo or text on the public Sponsor wall (every visitor sees it)",
+               "Thank-you post on our Telegram channel",
                "Mention in the next monthly winners announcement"]},
     {"name": "Round Sponsor",   "min": 200,  "max": 999,  "icon": "🛡",
      "perks": ["Everything in Pioneer Sponsor",
-               "Featured across all gkall social channels (X, Instagram, TikTok, Facebook, Telegram)",
-               "Pinned 24-hour thank-you post per channel",
+               "Featured & pinned for 24 hours on our Telegram channel",
+               "Auto-featured on X / Instagram / TikTok / Facebook as those launch",
                "Named tag on the monthly prize: 'Sponsored by [Brand]'",
                "Mention in every winner announcement that month"]},
     {"name": "Title Sponsor",   "min": 1000, "max": None, "icon": "👑",
      "perks": ["Everything in Round Sponsor",
                "Logo at top of homepage hero for the month",
                "Branded category (e.g. '[Brand] Science Week')",
-               "Co-branded social content series",
+               "Co-branded social content series across all channels",
                "Permanent recognition in the Hall of Fame"]},
 ]
 SPONSOR_MIN_USDT = 50  # smallest accepted contribution = entry to Pioneer Sponsor tier
 PRIZE_USDT   = 1
 MONTHLY_PRIZES = [50, 25, 10]    # 1st, 2nd, 3rd place at month end (USDT TRC20)
 QUALIFY_MIN  = 5                  # minimum score to appear on any ranked leaderboard
+INSTANT_WIN_CAP_PER_MONTH = 3    # max paid instant-wins per unique player per month
+ABOUT_HAG_AI = (
+    "HAG_Ai is a full-fledged AI-enabled consulting firm. "
+    "We build Finance Agents, deliver market & football predictions, and customize ERP systems. "
+    "gkall.online is our community-facing skill platform — built with the same engineering rigor we bring to client work."
+)
 CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"  # Crockford-ish, no 0/O/1/I
 TIMER_SEC    = 10                 # per-question timer (client + server)
 TIMER_BUFFER = 1.5                # seconds of slack on server check (network + animation)
@@ -150,6 +156,30 @@ def init_db():
         );
         CREATE INDEX IF NOT EXISTS idx_mw_ym ON monthly_winners(year_month);
 
+        CREATE TABLE IF NOT EXISTS sponsors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            tier TEXT NOT NULL,                 -- pioneer | round | title
+            amount_usdt INTEGER NOT NULL,
+            month TEXT,                          -- YYYY-MM the sponsorship covers (optional)
+            tx_hash TEXT,
+            link_url TEXT,
+            note TEXT,
+            display_order INTEGER NOT NULL DEFAULT 0,
+            status TEXT NOT NULL DEFAULT 'active', -- active | hidden
+            created_at INTEGER NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_sponsors_active ON sponsors(status, display_order);
+
+        CREATE TABLE IF NOT EXISTS countdown_posts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            post_date TEXT NOT NULL,             -- YYYY-MM-DD when this should fire
+            theme TEXT,
+            message TEXT NOT NULL,
+            posted_at INTEGER,
+            UNIQUE(post_date)
+        );
+
         CREATE TABLE IF NOT EXISTS feedback (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
@@ -191,6 +221,37 @@ def init_db():
                 c.execute(f"ALTER TABLE {tbl} ADD COLUMN social_attested INTEGER NOT NULL DEFAULT 0")
             if "social_handle" not in cols:
                 c.execute(f"ALTER TABLE {tbl} ADD COLUMN social_handle TEXT")
+
+        # Re-tag graduate-level MMLU subjects to Expert (difficulty=4)
+        c.execute("""
+            UPDATE questions SET difficulty = 4
+            WHERE source = 'mmlu' AND difficulty = 3 AND (
+              category LIKE 'College %' OR
+              category LIKE 'Professional %' OR
+              category LIKE 'Abstract %' OR
+              category IN ('Formal Logic','Machine Learning','Medical Genetics','Econometrics','Philosophy','Anatomy','Clinical Knowledge')
+            )
+        """)
+
+        # Seed prelaunch countdown posts (May 19 - May 31) — idempotent via UNIQUE(post_date)
+        countdown_seed = [
+            ("2026-05-19", "first-pioneer",  "🎯 *Day 2 of prelaunch.*\nFirst Pioneer completed a round — feedback already shaping v1.1. Want in?\n\nhttps://gkall.online"),
+            ("2026-05-20", "anti-cheat",     "🛡 *Why our quiz can't be cheated by AI extensions:*\n• Server-side scoring (browser never sees the answer)\n• Cloudflare Turnstile gate\n• Per-session option shuffling\n\nKnowledge wins. Scrapers lose.\nhttps://gkall.online"),
+            ("2026-05-21", "sponsors-call",  "🌱 *Sponsors wanted.*\nFrom $50 (Pioneer Sponsor) to $1,000+ (Title Sponsor). Your brand on every winner announcement. Public sponsor wall.\n\nDM @ALLKNWNG_BOT or email hello@gkall.online"),
+            ("2026-05-22", "question-sample","🧠 *Today's sample (hard tier):*\nWhich Dutch post-Impressionist famously cut off part of his own ear?\n\nA. Rembrandt  B. Vermeer  C. Van Gogh  D. Mondrian\n\nThink you know? Play → https://gkall.online"),
+            ("2026-05-23", "pioneer-spotlight","🙏 *Shoutout to our Pioneer cohort.*\nRounds played, feedback received, bugs squashed. The site you'll see at launch is partly yours.\n\nJoin them → https://gkall.online"),
+            ("2026-05-24", "how-it-works",   "📜 *How gkall works:*\n10 questions. 10 seconds each. Difficulty climbs.\nTab-switch or devtools = game over.\nSkill only. https://gkall.online"),
+            ("2026-05-25", "why-usdt",       "💸 *Why USDT on Tron?*\nTransfer fee ≈ $0.001. More of every sponsor dollar reaches winners. Most blockchains lose 1–10% to gas. We don't."),
+            ("2026-05-26", "defense-stack",  "🔒 *Anti-cheat layer #1: server-side game sessions.*\nYour browser never sees the answer. Even with devtools open, you can't cheat. We built it after our own audit.\n\nDetails → https://gkall.online/#how"),
+            ("2026-05-27", "pioneer-push",   "⏳ *T-5 days to launch.*\nSeeking 50 more Pioneers before June 1. Play. Win. Tell us what to fix. Free + sponsored.\nhttps://gkall.online"),
+            ("2026-05-28", "telegram-push",  "📣 *Channel reminder:* this is where live winner announcements drop, plus drops, behind-the-scenes, and Pioneer credit. Tap notifications. → https://t.me/gkallonline"),
+            ("2026-05-29", "categories",     "📚 *Categories on gkall:*\nSport • Science • History • Religion • Music • Art • Movies • Literature • Geography • Food • Animals • Lifestyle • plus MMLU's 57 academic subjects. If it's known, it's in here."),
+            ("2026-05-30", "24-hr",          "🚀 *T-24 hours to public launch.*\nJune 1: first Top 3 monthly announced. May Pioneers locked in.\nLast chance to climb before everyone sees the board.\n\nhttps://gkall.online"),
+            ("2026-05-31", "launch-eve",     "🎯 *Tomorrow we go fully public.*\nMay 2026 winners decided at midnight UTC. $50 / $25 / $10 USDT for top 3.\nPioneers — this is your last day. Push it.\n\nhttps://gkall.online"),
+            ("2026-06-01", "launch",         "🚀 *gkall is officially LIVE.*\n\nThe All-Knowledge Challenge. 33,000+ questions. $1 USDT for every 10/10 round + $50/$25/$10 monthly top 3.\n\nPowered by HAG_Ai — a full-fledged AI consulting firm building Finance Agents, market & football predictions, and ERP customization.\n\nMay 2026 winners announced today.\n\nTry your knowledge → https://gkall.online"),
+        ]
+        for (d, t, m) in countdown_seed:
+            c.execute("INSERT OR IGNORE INTO countdown_posts(post_date, theme, message) VALUES(?,?,?)", (d, t, m))
 
 def question_count():
     with db() as c:
@@ -355,9 +416,15 @@ def _public_question(plan, idx):
     }
 
 def _finalize_session_score(c, sess, plan, new_score, total_time, status, ip):
-    """Create the scores row when a game ends. Returns (score_id, claim_code)."""
+    """Create the scores row when a game ends. Returns (score_id, claim_code, cap_reached)."""
     won = (status == "won")
-    prize = PRIZE_USDT if won else 0
+    # Check per-player monthly cap
+    cap_reached = False
+    if won:
+        already = player_instant_wins_this_month(c, sess["name"])
+        if already >= INSTANT_WIN_CAP_PER_MONTH:
+            cap_reached = True
+    prize = 0 if (not won or cap_reached) else PRIZE_USDT
     # Unique claim code
     code = None
     for _ in range(5):
@@ -370,7 +437,7 @@ def _finalize_session_score(c, sess, plan, new_score, total_time, status, ip):
         "VALUES(?,?,?,?,?,?,?,?)",
         (sess["name"], new_score, prize, 1 if won else 0, total_time, ip, _now(), code)
     )
-    return cur.lastrowid, code
+    return cur.lastrowid, code, cap_reached
 
 # ---- Telegram announcer ----
 import threading
@@ -392,6 +459,44 @@ def tg_announce(text):
         except Exception as e:
             print("tg_announce error:", e)
     threading.Thread(target=_send, daemon=True).start()
+
+# ---- Countdown post scheduler ----
+def _countdown_loop():
+    """Background thread: posts the next due countdown message to Telegram once per check."""
+    while True:
+        try:
+            today = time.strftime("%Y-%m-%d", time.gmtime())
+            with db() as c:
+                row = c.execute(
+                    "SELECT id, message FROM countdown_posts "
+                    "WHERE post_date <= ? AND posted_at IS NULL "
+                    "ORDER BY post_date ASC LIMIT 1",
+                    (today,)
+                ).fetchone()
+                if row:
+                    tg_announce(row["message"])
+                    c.execute("UPDATE countdown_posts SET posted_at = ? WHERE id = ?",
+                              (int(time.time()), row["id"]))
+                    c.commit()
+                    print(f"[countdown] posted id={row['id']}", flush=True)
+        except Exception as e:
+            print("countdown loop err:", e)
+        time.sleep(3600)  # check hourly
+
+def start_countdown_scheduler():
+    t = threading.Thread(target=_countdown_loop, daemon=True)
+    t.start()
+    print("countdown scheduler started", flush=True)
+
+# ---- Instant win cap helper ----
+def player_instant_wins_this_month(c, name):
+    return c.execute("""
+        SELECT COUNT(*) FROM scores
+        WHERE LOWER(name) = LOWER(?)
+          AND won = 1
+          AND prize > 0
+          AND strftime('%Y-%m', created_at, 'unixepoch') = ?
+    """, (name, current_ym())).fetchone()[0]
 
 # ---- Monthly leaderboard ----
 def current_ym():
@@ -632,6 +737,27 @@ class Handler(BaseHTTPRequestHandler):
             months = [{"ym": ym, "winners": ws} for ym, ws in list(grouped.items())[:limit]]
             return self._json(200, {"months": months})
 
+        if p == "/api/about":
+            return self._json(200, {
+                "operator": "HAG_Ai",
+                "description": ABOUT_HAG_AI,
+                "services": [
+                    {"name": "Finance Agents", "tagline": "AI-driven finance modeling & forecasting"},
+                    {"name": "Market & Football Predictions", "tagline": "Quant + ML for sports and capital markets"},
+                    {"name": "ERP Customization", "tagline": "Tailored enterprise systems built to your workflow"},
+                ],
+                "contact_email": "hello@gkall.online",
+            }, cache="public, max-age=300")
+
+        if p == "/api/sponsors":
+            with db() as c:
+                rows = c.execute(
+                    "SELECT name, tier, amount_usdt, month, link_url, note, display_order "
+                    "FROM sponsors WHERE status='active' "
+                    "ORDER BY display_order ASC, amount_usdt DESC, created_at ASC"
+                ).fetchall()
+            return self._json(200, [dict(r) for r in rows], cache="public, max-age=60")
+
         if p == "/api/sponsor":
             tg_url = ""
             if TG_CHANNEL:
@@ -709,6 +835,16 @@ class Handler(BaseHTTPRequestHandler):
                     FROM monthly_winners
                     ORDER BY year_month DESC, rank ASC
                 """).fetchall()
+            return self._json(200, [dict(r) for r in rows])
+
+        if p == "/api/admin/sponsors":
+            if not self._admin_ok(): return self._json(401, {"error":"unauthorized"})
+            with db() as c:
+                rows = c.execute(
+                    "SELECT id, name, tier, amount_usdt, month, tx_hash, link_url, note, "
+                    "display_order, status, datetime(created_at,'unixepoch') AS created "
+                    "FROM sponsors ORDER BY created_at DESC"
+                ).fetchall()
             return self._json(200, [dict(r) for r in rows])
 
         if p == "/api/admin/feedback":
@@ -929,14 +1065,14 @@ class Handler(BaseHTTPRequestHandler):
 
                 if game_over:
                     total_time = now - sess["started_at"]
-                    score_id, claim_code = _finalize_session_score(c, sess, plan, new_score, total_time, new_status, ip)
+                    score_id, claim_code, cap_reached = _finalize_session_score(c, sess, plan, new_score, total_time, new_status, ip)
                     c.execute(
                         "UPDATE game_sessions SET current_q=?, score=?, answers=?, last_action_at=?, status=?, score_id=? WHERE id=?",
                         (new_q, new_score, json.dumps(answers), now, new_status, score_id, sid)
                     )
                     c.commit()
-                    # Telegram announce 10/10
-                    if new_status == "won" and new_score == 10:
+                    # Telegram announce 10/10 only when payout is real
+                    if new_status == "won" and new_score == 10 and not cap_reached:
                         tg_announce(
                             f"🏆 *New 10/10 winner!*\n\n"
                             f"*{sess['name']}* aced 10 questions in {total_time:.1f}s and just won *${PRIZE_USDT} USDT* on gkall.online.\n\n"
@@ -949,6 +1085,8 @@ class Handler(BaseHTTPRequestHandler):
                         "total_time": total_time,
                         "score_id": score_id,
                         "claim_code": (claim_code if new_score >= QUALIFY_MIN else None),
+                        "cap_reached": cap_reached,
+                        "monthly_cap": INSTANT_WIN_CAP_PER_MONTH,
                     }
                     # Reveal correct option text ONLY on full-round timeouts at Q10
                     # (prevents bots from enumerating answers by intentionally answering wrong)
@@ -1044,7 +1182,7 @@ class Handler(BaseHTTPRequestHandler):
             if not TRC20_RE.match(wallet):
                 return self._json(400, {"error":"bad_wallet", "detail":"TRC20 address must start with T and be 34 chars."})
             if not social_attested:
-                return self._json(400, {"error":"social_required", "detail":"Please confirm you've followed and liked the latest post on all our social channels — required for payout."})
+                return self._json(400, {"error":"social_required", "detail":"Please confirm you've joined our Telegram channel — required for payout (https://t.me/gkallonline)."})
             with db() as c:
                 score = c.execute("SELECT id, name FROM scores WHERE claim_code=?", (code,)).fetchone()
                 if not score:
@@ -1075,15 +1213,17 @@ class Handler(BaseHTTPRequestHandler):
             if not TRC20_RE.match(wallet):
                 return self._json(400, {"error":"bad_wallet", "detail":"Tron TRC20 address must start with T and be 34 chars."})
             if not social_attested:
-                return self._json(400, {"error":"social_required", "detail":"Please confirm you've followed and liked the latest post on all our social channels — required for payout."})
+                return self._json(400, {"error":"social_required", "detail":"Please confirm you've joined our Telegram channel — required for payout (https://t.me/gkallonline)."})
             try:
                 score_id = int(score_id) if score_id is not None else None
             except (TypeError, ValueError):
                 score_id = None
             with db() as c:
                 row = c.execute("SELECT id, won, prize FROM scores WHERE id=?", (score_id,)).fetchone() if score_id else None
-                if not row or not row["won"] or row["prize"] != PRIZE_USDT:
-                    return self._json(400, {"error":"no_winning_score", "detail":"This score is not eligible. Win the quiz first."})
+                if not row or not row["won"]:
+                    return self._json(400, {"error":"no_winning_score", "detail":"This score is not eligible. Win 10/10 first."})
+                if row["prize"] != PRIZE_USDT:
+                    return self._json(400, {"error":"cap_reached", "detail":f"This 10/10 hit the monthly instant-payout cap ({INSTANT_WIN_CAP_PER_MONTH} per player per month). Your score still counts toward the monthly leaderboard."})
                 dup = c.execute("SELECT id FROM claims WHERE score_id=?", (score_id,)).fetchone()
                 if dup:
                     return self._json(409, {"error":"already_claimed", "claim_id": dup["id"]})
@@ -1110,6 +1250,43 @@ class Handler(BaseHTTPRequestHandler):
                     "WHERE year_month=? ORDER BY rank", (ym,)
                 ).fetchall()
             return self._json(200, {"ok": True, "ym": ym, "inserted": n, "winners": [dict(r) for r in rows]})
+
+        if p == "/api/admin/sponsors/add":
+            if not self._admin_ok(): return self._json(401, {"error":"unauthorized"})
+            payload = self._body(2048) or {}
+            name   = str(payload.get("name","")).strip()[:80]
+            tier   = str(payload.get("tier","pioneer")).strip().lower()
+            try: amount = int(payload.get("amount_usdt", 0))
+            except (TypeError, ValueError): amount = 0
+            month  = str(payload.get("month","")).strip()[:7] or None
+            tx     = str(payload.get("tx_hash","")).strip()[:128] or None
+            link   = str(payload.get("link_url","")).strip()[:200] or None
+            note   = str(payload.get("note","")).strip()[:500] or None
+            order_ = int(payload.get("display_order", 0) or 0)
+            if not name or tier not in ("pioneer","round","title") or amount <= 0:
+                return self._json(400, {"error":"bad_fields"})
+            with db() as c:
+                cur = c.execute(
+                    "INSERT INTO sponsors(name,tier,amount_usdt,month,tx_hash,link_url,note,display_order,created_at) "
+                    "VALUES(?,?,?,?,?,?,?,?,?)",
+                    (name, tier, amount, month, tx, link, note, order_, int(time.time()))
+                )
+                c.commit()
+            tg_announce(f"💎 *New {tier.title()} Sponsor — {name}!*\nContribution: ${amount} USDT. Thank you for supporting the gkall prize pool.")
+            return self._json(200, {"ok": True, "id": cur.lastrowid})
+
+        m_sp = re.match(r"^/api/admin/sponsors/(\d+)/(hide|show|remove)$", p)
+        if m_sp:
+            if not self._admin_ok(): return self._json(401, {"error":"unauthorized"})
+            sid = int(m_sp.group(1)); action = m_sp.group(2)
+            with db() as c:
+                if action == "remove":
+                    c.execute("DELETE FROM sponsors WHERE id=?", (sid,))
+                else:
+                    c.execute("UPDATE sponsors SET status=? WHERE id=?",
+                              ("hidden" if action == "hide" else "active", sid))
+                c.commit()
+            return self._json(200, {"ok": True})
 
         m_mw = re.match(r"^/api/admin/monthly/(\d+)/(paid|reject)$", p)
         if m_mw:
@@ -1166,6 +1343,7 @@ def main():
     if question_count() < 200:
         print("bootstrapping question bank…")
         bootstrap_questions()
+    start_countdown_scheduler()
     httpd = ThreadingHTTPServer(LISTEN, Handler)
     print(f"gkall listening on {LISTEN[0]}:{LISTEN[1]}  static={STATIC_DIR}  db={DB_PATH}", flush=True)
     print(f"admin token: {'SET' if ADMIN_TOKEN != 'change-me-admin-token' else 'DEFAULT (change ADMIN_TOKEN env var!)'}")
