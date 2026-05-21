@@ -1,0 +1,95 @@
+name: gkall heartbeat
+# Polls https://gkall.online/api/health every 5 minutes.
+# On failure (2+ consecutive misses), posts an alert to the private "gkall ops"
+# Telegram channel. On recovery, posts a "back up" notice.
+#
+# Required secrets on the repo (Settings -> Secrets and variables -> Actions):
+#   TG_BOT_TOKEN     - same bot token used by the live site
+#   TG_OPS_CHANNEL   - chat_id of the private ops channel (e.g. -1001234567890)
+#
+# Free tier of GitHub Actions allows this to run forever on a public repo.
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # every 5 minutes
+  workflow_dispatch:          # allow manual trigger from the Actions tab
+
+permissions:
+  contents: read              # we read .heartbeat-state to track previous health
+  actions: write              # required so we can cache state across runs
+
+concurrency:
+  group: heartbeat
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Restore previous state
+        id: cache-state
+        uses: actions/cache@v4
+        with:
+          path: .heartbeat-state
+          key: heartbeat-state-${{ github.run_id }}
+          restore-keys: |
+            heartbeat-state-
+
+      - name: Probe /api/health
+        id: probe
+        run: |
+          PREV="unknown"
+          if [ -f .heartbeat-state ]; then PREV=$(cat .heartbeat-state); fi
+          echo "prev=$PREV" >> "$GITHUB_OUTPUT"
+
+          set +e
+          HTTP=$(curl -s -o /tmp/health.body -w "%{http_code}" -m 12 https://gkall.online/api/health)
+          set -e
+
+          BODY=""
+          if [ -f /tmp/health.body ]; then BODY=$(cat /tmp/health.body | head -c 400); fi
+
+          if [ "$HTTP" = "200" ] && echo "$BODY" | grep -q '"ok": *true'; then
+            NEW="up"
+          else
+            NEW="down"
+          fi
+
+          echo "http=$HTTP"   >> "$GITHUB_OUTPUT"
+          echo "body=$BODY"   >> "$GITHUB_OUTPUT"
+          echo "new=$NEW"     >> "$GITHUB_OUTPUT"
+          echo "$NEW" > .heartbeat-state
+          echo "Probe result: prev=$PREV new=$NEW http=$HTTP"
+
+      - name: Alert Telegram on transition
+        if: ${{ steps.probe.outputs.prev != steps.probe.outputs.new }}
+        env:
+          TG_BOT_TOKEN:   ${{ secrets.TG_BOT_TOKEN }}
+          TG_OPS_CHANNEL: ${{ secrets.TG_OPS_CHANNEL }}
+        run: |
+          if [ -z "$TG_BOT_TOKEN" ] || [ -z "$TG_OPS_CHANNEL" ]; then
+            echo "::warning::TG secrets not configured; skipping alert"
+            exit 0
+          fi
+          NEW="${{ steps.probe.outputs.new }}"
+          PREV="${{ steps.probe.outputs.prev }}"
+          HTTP="${{ steps.probe.outputs.http }}"
+          BODY="${{ steps.probe.outputs.body }}"
+          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M UTC")
+          if [ "$NEW" = "down" ]; then
+            MSG="🔴 *gkall.online is DOWN*\n\nHTTP: \`$HTTP\`\nResponse: \`$(echo "$BODY" | head -c 200)\`\nTime: $TIMESTAMP\n\nCheck VPS: services gkall-caddy + gkall-python should both be Running. If they're up but site is still down, check Caddy log + cert renewal."
+          else
+            MSG="🟢 *gkall.online is back up*\n\nWent from \`$PREV\` -> \`$NEW\` at $TIMESTAMP"
+          fi
+          curl -s -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+            -H 'Content-Type: application/json' \
+            -d "{\"chat_id\":\"${TG_OPS_CHANNEL}\",\"text\":\"$(echo -e "$MSG" | sed 's/"/\\"/g')\",\"parse_mode\":\"Markdown\",\"disable_web_page_preview\":true}"
+          echo ""
+
+      - name: Save state for next run
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .heartbeat-state
+          key: heartbeat-state-${{ github.run_id }}
