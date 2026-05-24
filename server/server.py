@@ -263,6 +263,14 @@ def init_db():
         if "referred_by" not in cols:
             c.execute("ALTER TABLE game_sessions ADD COLUMN referred_by TEXT")
 
+        # One-shot question retirement: each question retires forever the first
+        # time any player answers it correctly. Makes memorization gaming impossible
+        # and gives every question a "no one has gotten this right yet" narrative.
+        q_cols = [r[1] for r in c.execute("PRAGMA table_info(questions)").fetchall()]
+        if "retired_at" not in q_cols:
+            c.execute("ALTER TABLE questions ADD COLUMN retired_at INTEGER")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_questions_active ON questions(difficulty, retired_at)")
+
         # Re-tag graduate-level MMLU subjects to Expert (difficulty=4)
         c.execute("""
             UPDATE questions SET difficulty = 4
@@ -462,23 +470,50 @@ def _expire_old_sessions(c):
     c.execute("UPDATE game_sessions SET status='expired' WHERE status='active' AND last_action_at < ?", (cutoff,))
 
 def _build_question_plan(c):
-    """Pick questions per GAME_COMPOSITION, shuffle their options per session."""
+    """Pick questions per GAME_COMPOSITION, shuffle their options per session.
+
+    Preference order for each difficulty bucket:
+      1. ACTIVE questions (retired_at IS NULL) — i.e. nobody has correctly answered yet
+      2. RETIRED questions — only used as fallback when active pool runs short
+      3. Any-difficulty fill — emergency fallback if a tier is fully depleted
+
+    This implements the one-shot retirement model: questions disappear from the
+    active pool the moment any player gets them right.
+    """
     plan = []
     chosen_ids = set()
     for diff, count in GAME_COMPOSITION:
+        # 1. Try active (not-yet-retired) questions first
         params = (diff,) + tuple(chosen_ids) + (count,)
-        placeholder = "" if not chosen_ids else (" AND id NOT IN (" + ",".join("?" * len(chosen_ids)) + ")")
+        excl_clause = "" if not chosen_ids else (" AND id NOT IN (" + ",".join("?" * len(chosen_ids)) + ")")
         rows = c.execute(
             f"SELECT id, category, difficulty, question, options, answer_index "
-            f"FROM questions WHERE difficulty=?{placeholder} ORDER BY RANDOM() LIMIT ?",
+            f"FROM questions WHERE difficulty=? AND retired_at IS NULL{excl_clause} "
+            f"ORDER BY RANDOM() LIMIT ?",
             params
         ).fetchall()
+        # 2. If active pool too thin, fall back to retired questions in same tier
         if len(rows) < count:
-            # Top up without exclusion if pool is small
+            need = count - len(rows)
+            already = chosen_ids | {r["id"] for r in rows}
+            params2 = (diff,) + tuple(already) + (need,)
+            excl2 = "" if not already else (" AND id NOT IN (" + ",".join("?" * len(already)) + ")")
             fill = c.execute(
-                "SELECT id, category, difficulty, question, options, answer_index "
-                "FROM questions WHERE difficulty=? ORDER BY RANDOM() LIMIT ?",
-                (diff, count - len(rows))
+                f"SELECT id, category, difficulty, question, options, answer_index "
+                f"FROM questions WHERE difficulty=?{excl2} ORDER BY RANDOM() LIMIT ?",
+                params2
+            ).fetchall()
+            rows = list(rows) + list(fill)
+        # 3. Last-ditch: any difficulty (only if a whole tier is empty)
+        if len(rows) < count:
+            need = count - len(rows)
+            already = chosen_ids | {r["id"] for r in rows}
+            params3 = tuple(already) + (need,)
+            excl3 = "" if not already else (" WHERE id NOT IN (" + ",".join("?" * len(already)) + ")")
+            fill = c.execute(
+                f"SELECT id, category, difficulty, question, options, answer_index "
+                f"FROM questions{excl3} ORDER BY RANDOM() LIMIT ?",
+                params3
             ).fetchall()
             rows = list(rows) + list(fill)
         for r in rows:
@@ -787,6 +822,9 @@ class Handler(BaseHTTPRequestHandler):
                 monthly_paid= c.execute("SELECT COALESCE(SUM(prize_usdt),0) FROM monthly_winners WHERE status='paid'").fetchone()[0]
                 pending     = c.execute("SELECT COUNT(*) FROM claims WHERE status='pending'").fetchone()[0]
                 qcount      = c.execute("SELECT COUNT(*) FROM questions").fetchone()[0]
+                # One-shot retirement: split active vs retired
+                qactive     = c.execute("SELECT COUNT(*) FROM questions WHERE retired_at IS NULL").fetchone()[0]
+                qretired    = qcount - qactive
                 month_players = c.execute("""
                     SELECT COUNT(DISTINCT LOWER(name)) FROM scores
                     WHERE strftime('%Y-%m', created_at, 'unixepoch') = ?
@@ -796,7 +834,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(200, {
                 "plays": total_plays, "winners": winners,
                 "paid_usdt": paid_out + monthly_paid, "pending_claims": pending,
-                "questions": qcount, "prize_usdt": PRIZE_USDT,
+                "questions": qcount,
+                "questions_active": qactive,
+                "questions_retired": qretired,
+                "prize_usdt": PRIZE_USDT,
                 "monthly_prizes": MONTHLY_PRIZES,
                 "month": cur_ym, "month_players": month_players,
                 "days_remaining": meta["days_remaining"],
@@ -1361,6 +1402,14 @@ class Handler(BaseHTTPRequestHandler):
                 elapsed = now - sess["last_action_at"]   # seconds since last action (server clock)
                 timeout = elapsed > (TIMER_SEC + TIMER_BUFFER)
                 correct = (not timeout) and (choice == plan[cq]["a"])
+
+                # One-shot retirement: the first time any player answers this question
+                # correctly, retire it from the active pool forever.
+                if correct:
+                    c.execute(
+                        "UPDATE questions SET retired_at=? WHERE id=? AND retired_at IS NULL",
+                        (now, qid)
+                    )
 
                 # Append to answer log (forensic). Mouse trail kept for later analysis.
                 answers = json.loads(sess["answers"])
