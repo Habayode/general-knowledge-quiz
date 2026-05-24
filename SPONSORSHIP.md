@@ -1,6 +1,6 @@
 # gkall.online — Sponsorship Roadmap & Tier Structure
 
-**Wallet (USDT TRC20):** `TMNVuGuxMfTVVFJuVcjsxswYsCkMnTZRSy`
+**Wallet (USDT TRC20):** `TCUQq4iHrAW4vzAE97ZHNFPHeoqBh5XarM`
 **Contact:** hello@gkall.online | https://t.me/gkallonline
 **Launch:** June 1, 2026
 
