@@ -77,8 +77,9 @@ TIMER_SEC    = 10                 # per-question timer (client + server)
 TIMER_BUFFER = 1.5                # seconds of slack on server check (network + animation)
 SESSION_TTL  = 600                # active session expires after this many seconds idle
 GAME_COMPOSITION = [(1, 2), (2, 3), (3, 3), (4, 2)]  # (difficulty, count)
-START_PER_MIN     = 5             # max /api/game/start per IP per minute
-START_PER_DAY     = 50            # max /api/game/start per IP per 24h
+START_PER_MIN     = 5             # max /api/game/start per IP per minute (bot defense)
+START_PER_DAY     = 10            # max /api/game/start per IP per 24h (engagement cap)
+START_PER_MONTH   = 20            # max /api/game/start per IP per 30d  (engagement cap)
 ACTIVE_SESSIONS_PER_IP = 1        # max concurrent active sessions for one IP
 OTDB_BATCH   = 50  # per difficulty
 TRC20_RE     = re.compile(r"^T[1-9A-HJ-NP-Za-km-z]{33}$")
@@ -1256,11 +1257,13 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(200, {"ok": True, "message":"Thanks Pioneer — feedback received."})
 
         if p == "/api/game/start":
-            # Rate limits: 5/min and 50/day per IP
+            # Rate limits: 5/min, 10/day, 20/month — per IP
             if not rate_ok(ip, "game_start", window=60, maxn=START_PER_MIN):
                 return self._json(429, {"error":"rate_limited", "detail":"Too many starts in the past minute. Slow down."})
             if not rate_ok(ip, "game_start_daily", window=86400, maxn=START_PER_DAY):
-                return self._json(429, {"error":"daily_limit", "detail":f"Daily limit ({START_PER_DAY} games) reached. Resets in 24h."})
+                return self._json(429, {"error":"daily_limit", "detail":f"Daily limit ({START_PER_DAY} rounds) reached. Resets in 24h. Come back tomorrow!"})
+            if not rate_ok(ip, "game_start_monthly", window=2592000, maxn=START_PER_MONTH):
+                return self._json(429, {"error":"monthly_limit", "detail":f"Monthly limit ({START_PER_MONTH} rounds) reached. Resets in 30 days. The cap keeps the prize pool sustainable."})
 
             # 8KB body cap — Turnstile tokens can be 1-2 KB
             payload = self._body(8192) or {}
