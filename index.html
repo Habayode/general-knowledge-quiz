@@ -836,7 +836,8 @@
       <div id="claim-success" class="panel" style="display:none">
         <div class="panel-trophy">✅</div>
         <h2>Claim received</h2>
-        <p class="muted">Claim <b>#<span id="claim-id">—</span></b> is queued for manual review.</p>
+        <p id="claim-success-msg" class="muted" style="margin-top:6px">🎉 Your claim is pending payout.</p>
+        <p class="muted" style="margin-top:10px">Claim ref <b>#<span id="claim-id">—</span></b> · queued for manual review.</p>
         <p class="muted" style="margin-top:10px">You'll be paid in USDT (TRC20) once verified. If you provided a contact, we'll reach out.</p>
         <div class="panel-actions">
           <button class="btn btn-ghost" onclick="go('home')">Back home</button>
@@ -1884,9 +1885,25 @@ async function submitClaim() {
       btn.disabled = false; btn.textContent = 'Submit claim';
       return;
     }
-    markClaimed(pendingClaim.score_id);
+    // Mark every covered score as claimed locally (server may aggregate multiple wins)
+    if (Array.isArray(j.claim_ids) && j.claim_ids.length) {
+      // We don't get score_ids back, but the next /api/mywins refresh will reconcile.
+      // Mark the originally-submitted one immediately:
+      markClaimed(pendingClaim.score_id);
+    } else {
+      markClaimed(pendingClaim.score_id);
+    }
     setPending(null);
     document.getElementById('claim-id').textContent = j.claim_id;
+    // If server aggregated multiple wins, show the cumulative message
+    const wins = j.wins_covered || 1;
+    const total = j.total_usdt || PRIZE_USDT;
+    const msgEl = document.getElementById('claim-success-msg');
+    if (msgEl && wins > 1) {
+      msgEl.innerHTML = '🎉 <b>$' + total + ' USDT</b> pending — your submission covered <b>' + wins + ' winning rounds</b> this month. We\'ll send all of them in one transaction.';
+    } else if (msgEl) {
+      msgEl.innerHTML = '🎉 <b>$' + total + ' USDT</b> pending payout to your wallet.';
+    }
     document.getElementById('claim-eligible').style.display = 'none';
     document.getElementById('claim-success').style.display = 'block';
   } catch(e) {
