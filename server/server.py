@@ -1543,24 +1543,70 @@ class Handler(BaseHTTPRequestHandler):
                 score_id = int(score_id) if score_id is not None else None
             except (TypeError, ValueError):
                 score_id = None
+            ym = current_ym()
             with db() as c:
-                row = c.execute("SELECT id, won, prize FROM scores WHERE id=?", (score_id,)).fetchone() if score_id else None
+                # Verify the submitted score is a real winning round (proof of identity)
+                row = c.execute("SELECT id, name, won, prize FROM scores WHERE id=?",
+                                (score_id,)).fetchone() if score_id else None
                 if not row or not row["won"]:
-                    return self._json(400, {"error":"no_winning_score", "detail":"This score is not eligible. Win 10/10 first."})
+                    return self._json(400, {"error":"no_winning_score",
+                                            "detail":"This score is not eligible. Win 10/10 first."})
+                if row["name"].lower() != name.lower():
+                    return self._json(400, {"error":"name_mismatch",
+                                            "detail":"This claim code doesn't match the name you entered."})
                 if row["prize"] != PRIZE_USDT:
-                    return self._json(400, {"error":"cap_reached", "detail":f"This 10/10 hit the monthly instant-payout cap ({INSTANT_WIN_CAP_PER_MONTH} per player per month). Your score still counts toward the monthly leaderboard."})
-                dup = c.execute("SELECT id FROM claims WHERE score_id=?", (score_id,)).fetchone()
-                if dup:
-                    return self._json(409, {"error":"already_claimed", "claim_id": dup["id"]})
+                    return self._json(400, {"error":"cap_reached",
+                                            "detail":f"This 10/10 hit the monthly instant-payout cap ({INSTANT_WIN_CAP_PER_MONTH} per player per month). Your score still counts toward the monthly leaderboard."})
+
+                # Auto-aggregate: find ALL of this player's prize-eligible wins this month
+                # that aren't already in claims. One submission covers them all.
+                eligible_rows = c.execute("""
+                    SELECT id, prize FROM scores
+                    WHERE LOWER(name) = LOWER(?)
+                      AND won = 1
+                      AND prize > 0
+                      AND strftime('%Y-%m', created_at, 'unixepoch') = ?
+                      AND id NOT IN (
+                          SELECT score_id FROM claims WHERE score_id IS NOT NULL
+                      )
+                    ORDER BY id ASC
+                """, (name, ym)).fetchall()
+
+                if not eligible_rows:
+                    # Submitted score is already claimed
+                    existing = c.execute("SELECT id FROM claims WHERE score_id=?",
+                                         (score_id,)).fetchone()
+                    return self._json(409, {"error":"already_claimed",
+                                            "claim_id": existing["id"] if existing else None,
+                                            "detail":"All your eligible wins for this month are already claimed."})
+
+                # Insert one claim row per eligible win — same wallet/contact across all.
+                # First row's id is the "primary" claim id we return.
                 now = int(time.time())
-                cur = c.execute(
-                    "INSERT INTO claims(name,wallet,contact,amount_usdt,score_id,status,ip,social_attested,social_handle,created_at,updated_at) "
-                    "VALUES(?,?,?,?,?,?,?,?,?,?,?)",
-                    (name, wallet, contact, PRIZE_USDT, score_id, "pending", ip, 1, social_handle, now, now)
-                )
-                cid = cur.lastrowid
+                created_ids = []
+                total = 0
+                for e in eligible_rows:
+                    cur = c.execute(
+                        "INSERT INTO claims(name,wallet,contact,amount_usdt,score_id,status,ip,"
+                        "social_attested,social_handle,created_at,updated_at) "
+                        "VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                        (name, wallet, contact, e["prize"], e["id"], "pending", ip,
+                         1, social_handle, now, now)
+                    )
+                    created_ids.append(cur.lastrowid)
+                    total += e["prize"]
                 c.commit()
-            return self._json(200, {"ok": True, "claim_id": cid, "status": "pending"})
+
+            return self._json(200, {
+                "ok": True,
+                "claim_id": created_ids[0],            # back-compat: primary claim id
+                "claim_ids": created_ids,              # all claim rows created
+                "wins_covered": len(eligible_rows),
+                "total_usdt": total,
+                "status": "pending",
+                "message": (f"${total} USDT pending — covers {len(eligible_rows)} winning "
+                            f"round{'s' if len(eligible_rows) != 1 else ''} this month."),
+            })
 
         if p == "/api/admin/monthly/finalize":
             if not self._admin_ok(): return self._json(401, {"error":"unauthorized"})

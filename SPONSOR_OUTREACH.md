@@ -4,6 +4,16 @@
 
 **Why now:** A funded sponsor wallet visible on the Sponsor page makes the May-pool guarantee feel more solid for Pioneers, and "X is a Sponsor" is an artifact we can post on launch day.
 
+---
+
+## 🏆 First payout shipped — use this in every email opener
+
+**Reusable proof line (paste at the top of every outreach body):**
+
+> ✅ **First USDT payout completed May 24, 2026** — $3 USDT to our first cap-hitter. Tronscan-verifiable: https://tronscan.org/#/transaction/0acefd934b15cbadb92ced8d9fd9aae85b00265a9194155627e0f225bd5e743f
+
+This single line moves the cold-email math from "trust us, we're launching" to "look at the chain". Use it.
+
 **Approach:** Personal email from `hello@gkall.online`. Never spray-and-pray; each draft below is hand-tailored to the recipient. **Send max 3 per day** so the operator can actually engage with replies.
 
 **Acceptance rate to expect:** 1–2 in 10. The point of casting 10 is to find those 1–2.
@@ -35,6 +45,10 @@ Hi YellowCard team,
 
 I'm building gkall.online — a skill-based USDT quiz that pays winners
 on Tron (TRC20). Public launch is June 1, 2026.
+
+✅ First USDT payout shipped May 24, 2026 — $3 USDT to our first
+cap-hitter (3 × 10/10 wins in one session). Tronscan:
+https://tronscan.org/#/transaction/0acefd934b15cbadb92ced8d9fd9aae85b00265a9194155627e0f225bd5e743f
 
 Pioneer prelaunch is live now. Every winner needs a USDT-friendly
 off-ramp; YellowCard is the obvious one for African players.
@@ -72,6 +86,9 @@ Hi Bitnob team,
 Building gkall.online — a skill-based USDT (TRC20) quiz where 10/10
 in a round earns $1 instantly, and the monthly leaderboard pays
 $50/$25/$10. Public launch June 1, 2026.
+
+✅ First payout shipped May 24 — $3 USDT to our first cap-hitter.
+Tronscan: https://tronscan.org/#/transaction/0acefd934b15cbadb92ced8d9fd9aae85b00265a9194155627e0f225bd5e743f
 
 Bitnob is the wallet I'd recommend Nigerian winners receive their
 USDT in. Could we explore a launch-month sponsorship slot?
