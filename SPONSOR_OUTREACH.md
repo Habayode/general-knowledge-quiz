@@ -83,7 +83,7 @@ Pioneer Sponsor tier is $50 USDT, Round Sponsor is $200+. In return:
   you'd be the first)
 - Every winner sees "Sponsored by Bitnob" on their claim screen
 
-Wallet: TMNVuGuxMfTVVFJuVcjsxswYsCkMnTZRSy (Tron / TRC20)
+Wallet: TCUQq4iHrAW4vzAE97ZHNFPHeoqBh5XarM (Tron / TRC20)
 Site:  https://gkall.online
 
 15-min call this week?
@@ -396,7 +396,7 @@ HAG_Ai · gkall.online
 Most likely shape of an accepted sponsorship:
 - Reply within 48 hours of send
 - Ask for a 15-min call OR a one-pager
-- After call: send wallet send to `TMNVuGuxMfTVVFJuVcjsxswYsCkMnTZRSy`
+- After call: send wallet send to `TCUQq4iHrAW4vzAE97ZHNFPHeoqBh5XarM`
 - Email `hello@gkall.online` with the tx hash + how they'd like to be credited
 - Sponsor goes live on the Sponsor Wall within 24 hours of confirmation
 
