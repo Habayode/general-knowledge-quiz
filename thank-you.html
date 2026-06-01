@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>gkall.online — Pioneer round concluded</title>
+<meta name="description" content="The gkall.online Pioneer round has concluded. Thank you to every player. Powered by HAG_Ai." />
+<meta property="og:title" content="gkall.online — Pioneer round concluded" />
+<meta property="og:description" content="Thank you to every Pioneer. The chain record stays permanent. Powered by HAG_Ai." />
+<meta property="og:image" content="https://gkall.online/og-image.png" />
+<meta property="og:url" content="https://gkall.online" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f5c451'/%3E%3Ctext x='32' y='46' font-family='system-ui,sans-serif' font-size='42' font-weight='800' text-anchor='middle' fill='%230b0f1f'%3EG%3C/text%3E%3C/svg%3E" />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:
+      radial-gradient(60% 50% at 80% 10%, rgba(245,196,81,0.18), transparent 60%),
+      radial-gradient(60% 50% at 10% 90%, rgba(96,165,250,0.15), transparent 60%),
+      linear-gradient(180deg,#06070d 0%, #0b0f1f 70%, #06070d 100%);
+    color:#e6e7ec;
+    min-height:100vh;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:40px 24px;line-height:1.55;
+  }
+  .container{max-width:720px;width:100%;text-align:center}
+
+  .logo-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:28px}
+  .logo{
+    width:60px;height:60px;border-radius:14px;
+    background:linear-gradient(135deg,#f5c451,#f59e0b);
+    color:#0b0f1f;font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:42px;
+    display:flex;align-items:center;justify-content:center;line-height:1;
+    box-shadow:0 10px 32px rgba(245,196,81,0.35);
+  }
+  .wordmark{font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:32px;
+    background:linear-gradient(135deg,#f5c451,#ffae3a);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-0.02em}
+
+  h1{
+    font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:54px;line-height:1.05;
+    color:#e6e7ec;margin-bottom:18px;letter-spacing:-0.02em;
+  }
+  h1 .accent{color:#f5c451}
+
+  .lead{font-size:18px;color:#a8aec1;margin-bottom:36px;max-width:560px;margin-left:auto;margin-right:auto}
+
+  .stats{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:32px 0;
+    text-align:left;
+  }
+  .stat{
+    background:rgba(255,255,255,0.04);border:1px solid rgba(245,196,81,0.20);
+    border-radius:14px;padding:18px 18px;
+  }
+  .stat-label{font-size:11px;text-transform:uppercase;letter-spacing:0.14em;
+    color:#8a90a6;font-weight:600;margin-bottom:6px}
+  .stat-value{font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:28px;color:#f5c451;line-height:1}
+  .stat-sub{font-size:12px;color:#a8aec1;margin-top:6px}
+
+  .proof{
+    background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.30);
+    border-radius:14px;padding:22px;margin:32px 0;text-align:left;
+  }
+  .proof-head{display:flex;align-items:center;gap:8px;font-family:'Space Grotesk',sans-serif;
+    font-weight:700;color:#4ade80;margin-bottom:10px;font-size:14px;letter-spacing:0.08em;text-transform:uppercase}
+  .proof a{color:#7ec8ff;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12.5px}
+  .proof p{color:#a8aec1;font-size:14px;margin-top:8px}
+
+  .escrow{
+    background:rgba(245,196,81,0.06);border:1px solid rgba(245,196,81,0.35);
+    border-radius:14px;padding:22px;margin:24px 0;text-align:left;
+  }
+  .escrow-head{font-family:'Space Grotesk',sans-serif;font-weight:700;color:#f5c451;margin-bottom:10px;font-size:14px;letter-spacing:0.08em;text-transform:uppercase}
+  .escrow p{color:#e6e7ec;font-size:15px}
+  .escrow code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;background:rgba(0,0,0,0.4);padding:2px 8px;border-radius:6px;color:#f5c451}
+  .escrow a{color:#f5c451;font-weight:600}
+
+  .footer{
+    margin-top:48px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.08);
+    font-size:14px;color:#8a90a6;
+  }
+  .footer a{color:#f5c451;text-decoration:none;font-weight:600}
+  .footer a:hover{text-decoration:underline}
+
+  .socials{display:flex;gap:18px;justify-content:center;margin-top:14px;font-size:14px}
+  .socials a{color:#8a90a6;text-decoration:none}
+  .socials a:hover{color:#f5c451}
+
+  @media (max-width: 600px){
+    h1{font-size:38px}
+    .stats{grid-template-columns:1fr;}
+    .stat{padding:14px}
+    .lead{font-size:16px}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo-row">
+    <div class="logo">G</div>
+    <div class="wordmark">gkall.online</div>
+  </div>
+
+  <h1>Pioneer round<br><span class="accent">concluded.</span></h1>
+
+  <p class="lead">
+    Thank you to every Pioneer who played during May 2026.
+    Due to operator-side constraints, gkall.online has wound down ahead of the planned June 1 public launch.
+    The on-chain record of every payout remains permanent.
+  </p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Plays · May 2026</div>
+      <div class="stat-value">488</div>
+      <div class="stat-sub">rounds completed</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Distinct Pioneers</div>
+      <div class="stat-value">5</div>
+      <div class="stat-sub">across NG · IN · KE</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">USDT paid</div>
+      <div class="stat-value">$3+</div>
+      <div class="stat-sub">payouts continuing via escrow</div>
+    </div>
+  </div>
+
+  <div class="proof">
+    <div class="proof-head">✅ First payout · permanent on-chain</div>
+    <a href="https://tronscan.org/#/transaction/0acefd934b15cbadb92ced8d9fd9aae85b00265a9194155627e0f225bd5e743f" target="_blank" rel="noopener">
+      tronscan.org/#/transaction/0acefd934b15cbadb92ced8d9fd9aae85b00265a9194155627e0f225bd5e743f
+    </a>
+    <p>$3 USDT to Testimony, our first 10/10 cap-hitter (May 23, 2026).</p>
+  </div>
+
+  <div class="escrow">
+    <div class="escrow-head">🕒 7-day escrow window for May winners</div>
+    <p>
+      If you were on the May 2026 monthly leaderboard and didn't claim before close, you have until <b>June 1, 2026</b> to request your prize.
+    </p>
+    <p style="margin-top:10px">
+      Email <a href="mailto:hello@gkall.online">hello@gkall.online</a> with your <code>XXXX-XXXX-XXXX</code> claim code, your USDT (TRC20) wallet, and your Telegram + X handles for verification.
+    </p>
+    <p style="margin-top:10px;font-size:13px;color:#8a90a6">After June 1, unclaimed prizes remain with HAG_Ai.</p>
+  </div>
+
+  <div class="footer">
+    <div>
+      <strong style="color:#e6e7ec">gkall.online</strong> was a project of <a href="https://hagai.online" target="_blank" rel="noopener">HAG_Ai</a> —
+      an AI-enabled consulting firm based in Lagos.
+    </div>
+    <div style="margin-top:10px">
+      Consulting enquiries: <a href="mailto:hello@hagai.online">hello@hagai.online</a>
+    </div>
+    <div class="socials">
+      <a href="https://t.me/gkallonline" target="_blank" rel="noopener">Telegram</a> ·
+      <a href="https://x.com/gkallonline" target="_blank" rel="noopener">X</a> ·
+      <a href="https://hagai.online" target="_blank" rel="noopener">HAG_Ai</a>
+    </div>
+    <div style="margin-top:18px;font-size:11px;color:#5d6275;letter-spacing:0.10em">© 2026 HAG_Ai · gkall.online · MMXXVI</div>
+  </div>
+</div>
+</body>
+</html>
