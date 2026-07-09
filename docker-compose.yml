@@ -1,0 +1,33 @@
+services:
+  gkall:
+    build: .
+    image: gkall:portfolio
+    container_name: gkall
+    restart: unless-stopped
+    volumes:
+      - ./data:/data
+    environment:
+      PORTFOLIO_MODE: "1"
+      PRIZE_USDT: "0"
+      MONTHLY_PRIZES: "0,0,0"
+      # Leave these blank in portfolio mode — Telegram bot + Turnstile aren't needed
+      # for a static demo. Set them if you want to keep the channel connection.
+      TG_BOT_TOKEN: ""
+      TG_CHANNEL: ""
+      TURNSTILE_SITE_KEY: ""
+      TURNSTILE_SECRET: ""
+      ADMIN_TOKEN: "${ADMIN_TOKEN:-portfolio-mode-no-admin-needed}"
+      SOCIAL_TWITTER: "https://x.com/gkallonline"
+    # Choose ONE routing model based on how the recon droplet fronts subdomains:
+    #
+    # A) If the droplet uses nginx-proxy / Caddy / Traefik on a shared "web" network,
+    #    join that network + set the appropriate labels; no host port needed.
+    # B) If you route via a reverse proxy that listens on the host, expose a port:
+    ports:
+      - "8085:8080"   # host:container — pick a free port on the droplet
+    networks:
+      - default
+
+networks:
+  default:
+    name: gkall_net
