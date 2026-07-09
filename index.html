@@ -44,6 +44,21 @@
     -webkit-font-smoothing:antialiased;
     overflow-x:hidden;
   }
+  /* Portfolio-mode banner (added dynamically when /api/config.portfolio_mode=true) */
+  .portfolio-bar{
+    background:linear-gradient(90deg, rgba(245,196,81,0.14), rgba(96,165,250,0.14));
+    border-bottom:1px solid rgba(245,196,81,0.35);
+    color:#e6e7ec;
+    padding:10px 20px;
+    font-size:0.86rem;
+    line-height:1.5;
+    text-align:center;
+    letter-spacing:0.01em;
+  }
+  .portfolio-bar b{color:#f5c451;font-weight:700}
+  .portfolio-bar a{color:#f5c451;text-decoration:underline;font-weight:600}
+  .portfolio-bar a:hover{color:#ffae3a}
+  body.has-portfolio-bar{padding-top:0}
   body::before{
     content:""; position:fixed; inset:0; z-index:-1;
     background:
@@ -2104,12 +2119,19 @@ fetch(API + '/api/sponsor').then(r => r.json()).then(s => {
   renderSocials('footer-socials', s.socials);
   if (s.launch_date_utc) renderCountdown(s.launch_date_utc);
 }).catch(() => {});
-// load CAPTCHA config (Turnstile)
+// load CAPTCHA config (Turnstile) + portfolio-mode banner
 fetch(API + '/api/config').then(r => r.json()).then(cfg => {
   turnstileConfig = { enabled: !!cfg.turnstile_enabled, site_key: cfg.turnstile_site_key || '' };
   // If already on the play page, render the widget now
   if (turnstileConfig.enabled && document.getElementById('view-play').classList.contains('active')) {
     tryRenderTurnstile();
+  }
+  if (cfg.portfolio_mode) {
+    const bar = document.createElement('div');
+    bar.className = 'portfolio-bar';
+    bar.innerHTML = '🎨 <b>Portfolio mode</b> · This is a HAG_Ai case study. USDT payouts are disabled; the May 2026 Pioneer round payouts are permanent on <a href="https://tronscan.org/#/transaction/0acefd934b15cbadb92ced8d9fd9aae85b00265a9194155627e0f225bd5e743f" target="_blank" rel="noopener">Tronscan</a>. Play the mechanic anyway — the anti-cheat, the pool, the leaderboard all still run. Consulting: <a href="https://hagai.online" target="_blank" rel="noopener">hagai.online</a>';
+    document.body.insertBefore(bar, document.body.firstChild);
+    document.body.classList.add('has-portfolio-bar');
   }
 }).catch(() => {});
 

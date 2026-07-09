@@ -59,8 +59,13 @@ SPONSORSHIP_TIERS  = [
                "Permanent recognition in the Hall of Fame"]},
 ]
 SPONSOR_MIN_USDT = 50  # smallest accepted contribution = entry to Pioneer Sponsor tier
-PRIZE_USDT   = 1
-MONTHLY_PRIZES = [50, 25, 10]    # 1st, 2nd, 3rd place at month end (USDT TRC20)
+# Portfolio mode: set PORTFOLIO_MODE=1 to disable prize payouts while keeping the
+# gameplay, leaderboard, and anti-cheat intact. Used when hosting gkall as a
+# HAG_Ai portfolio piece (post-May 2026 shutdown) — visitors experience the
+# mechanic, but no USDT moves and the claim endpoints refuse politely.
+PORTFOLIO_MODE = os.environ.get("PORTFOLIO_MODE", "0") == "1"
+PRIZE_USDT   = 0 if PORTFOLIO_MODE else int(os.environ.get("PRIZE_USDT", "1"))
+MONTHLY_PRIZES = [0, 0, 0] if PORTFOLIO_MODE else [int(x) for x in os.environ.get("MONTHLY_PRIZES", "50,25,10").split(",")]
 QUALIFY_MIN  = 5                  # minimum score to appear on any ranked leaderboard
 INSTANT_WIN_CAP_PER_MONTH = 3    # max paid instant-wins per unique player per month
 ABOUT_HAG_AI = (
@@ -811,6 +816,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(200, {
                 "turnstile_site_key": TURNSTILE_SITE_KEY or "",
                 "turnstile_enabled": bool(TURNSTILE_SECRET),
+                "portfolio_mode": PORTFOLIO_MODE,
             }, cache="public, max-age=60")
 
         if p == "/api/stats":
@@ -1533,6 +1539,13 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(200, {"ok": True, "score_id": sid, "claim_code": code})
 
         if p == "/api/claim/monthly":
+            if PORTFOLIO_MODE:
+                return self._json(410, {
+                    "error": "portfolio_mode",
+                    "detail": ("This site is preserved as a HAG_Ai portfolio piece. "
+                               "Monthly payouts are disabled. The May 2026 monthly "
+                               "top-3 has already been paid — see Tronscan.")
+                })
             if not rate_ok(ip, "claim_monthly", window=3600, maxn=5):
                 return self._json(429, {"error":"rate_limited"})
             payload = self._body(2048)
@@ -1574,6 +1587,13 @@ class Handler(BaseHTTPRequestHandler):
                                     "message": "Verified. Your prize will be paid after we verify your Telegram + X follows."})
 
         if p == "/api/claim":
+            if PORTFOLIO_MODE:
+                return self._json(410, {
+                    "error": "portfolio_mode",
+                    "detail": ("This site is preserved as a HAG_Ai portfolio piece. "
+                               "Payouts are disabled. The original May 2026 payouts "
+                               "remain on Tronscan and are permanent.")
+                })
             if not rate_ok(ip, "claim", window=3600, maxn=3):
                 return self._json(429, {"error":"rate_limited"})
             payload = self._body(2048)
