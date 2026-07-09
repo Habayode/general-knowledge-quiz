@@ -2129,7 +2129,7 @@ fetch(API + '/api/config').then(r => r.json()).then(cfg => {
   if (cfg.portfolio_mode) {
     const bar = document.createElement('div');
     bar.className = 'portfolio-bar';
-    bar.innerHTML = '🎨 <b>Portfolio mode</b> · This is a HAG_Ai case study. USDT payouts are disabled; the May 2026 Pioneer round payouts are permanent on <a href="https://tronscan.org/#/transaction/0acefd934b15cbadb92ced8d9fd9aae85b00265a9194155627e0f225bd5e743f" target="_blank" rel="noopener">Tronscan</a>. Play the mechanic anyway — the anti-cheat, the pool, the leaderboard all still run. Consulting: <a href="https://hagai.online" target="_blank" rel="noopener">hagai.online</a>';
+    bar.innerHTML = '🎨 <b>Portfolio mode</b> · This is a HAG_Ai case study. USDT payouts are disabled; the May 2026 Pioneer round payouts are permanent on <a href="https://tronscan.org/#/transaction/0acefd934b15cbadb92ced8d9fd9aae85b00265a9194155627e0f225bd5e743f" target="_blank" rel="noopener">Tronscan</a>. Play the mechanic anyway: the anti-cheat, the pool, the leaderboard all still run. Consulting: <a href="https://hagai.online" target="_blank" rel="noopener">hagai.online</a>';
     document.body.insertBefore(bar, document.body.firstChild);
     document.body.classList.add('has-portfolio-bar');
   }
