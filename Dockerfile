@@ -11,9 +11,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# App code
-COPY server/       /app/server/
-COPY public/       /app/public/
+# App code — server plus the static assets it serves out of server/public/
+COPY server/                        /app/server/
+COPY index.html                     /app/server/public/index.html
+COPY admin.html                     /app/server/public/admin.html
+COPY robots.txt                     /app/server/public/robots.txt
+COPY sitemap.xml                    /app/server/public/sitemap.xml
+COPY og-image.png                   /app/server/public/og-image.png
+COPY google17d112ff5fd2b224.html    /app/server/public/google17d112ff5fd2b224.html
 
 # Data volume — SQLite DB + logs land here so container upgrades don't wipe state
 RUN mkdir -p /data
@@ -24,7 +29,6 @@ ENV PORTFOLIO_MODE=1 \
     PRIZE_USDT=0 \
     MONTHLY_PRIZES=0,0,0 \
     DB_PATH=/data/quizdb.sqlite \
-    STATIC_DIR=/app/public \
     HOST=0.0.0.0 \
     PORT=8080
 

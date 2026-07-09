@@ -26,9 +26,9 @@ from urllib.parse import urlparse, parse_qs
 
 HERE         = Path(__file__).parent.resolve()
 STATIC_DIR   = HERE / "public"
-DB_PATH      = HERE / "quizdb.sqlite"
+DB_PATH      = Path(os.environ.get("DB_PATH", str(HERE / "quizdb.sqlite")))
 SEED_PATH    = HERE / "questions_seed.json"
-LISTEN       = ("127.0.0.1", 8080)    # bound locally — Caddy fronts it on :443
+LISTEN       = (os.environ.get("HOST", "127.0.0.1"), int(os.environ.get("PORT", "8080")))
 ADMIN_TOKEN  = os.environ.get("ADMIN_TOKEN", "change-me-admin-token")
 SPONSOR_WALLET = os.environ.get("SPONSOR_WALLET", "TCUQq4iHrAW4vzAE97ZHNFPHeoqBh5XarM")
 TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "")  # e.g. "7890123456:ABC..."
