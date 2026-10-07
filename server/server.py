@@ -1157,6 +1157,10 @@ class Handler(BaseHTTPRequestHandler):
         if p in ("/admin", "/admin/"):
             return self._file(STATIC_DIR / "admin.html")
 
+        # /bible-life pretty URL (standalone client-side game, no API use)
+        if p in ("/bible-life", "/bible-life/"):
+            return self._file(STATIC_DIR / "bible-life.html")
+
         # Static
         rel = p.lstrip("/")
         if rel == "": rel = "index.html"

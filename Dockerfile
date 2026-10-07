@@ -15,6 +15,8 @@ WORKDIR /app
 COPY server/                        /app/server/
 COPY index.html                     /app/server/public/index.html
 COPY admin.html                     /app/server/public/admin.html
+COPY bible-life.html                /app/server/public/bible-life.html
+COPY bible-life-og.png              /app/server/public/bible-life-og.png
 COPY robots.txt                     /app/server/public/robots.txt
 COPY sitemap.xml                    /app/server/public/sitemap.xml
 COPY og-image.png                   /app/server/public/og-image.png
