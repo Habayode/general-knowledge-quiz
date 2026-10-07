@@ -34,6 +34,8 @@
   --accent:#8c3b2b; --good:#2f7a3a; --warn:#a96a12; --bad:#b0372b;
   --good-soft:rgba(47,122,58,.12); --bad-soft:rgba(176,55,43,.12);
   --shadow:0 18px 40px -18px rgba(70,45,10,.35); --radius:18px;
+  /* lifetime chart series (validated categorical order: blue, orange, aqua, yellow, magenta) */
+  --s-faith:#2a78d6; --s-wisdom:#eb6834; --s-health:#1baf7a; --s-joy:#eda100; --s-favor:#e87ba4; --grid:rgba(110,90,60,.16);
   --serif:'Cormorant Garamond',Georgia,serif; --display:'Cinzel',Georgia,serif;
   --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
   color-scheme:light;
@@ -46,6 +48,7 @@
     --accent:#e08a6c; --good:#79c46f; --warn:#e6ad4c; --bad:#f08072;
     --good-soft:rgba(121,196,111,.13); --bad-soft:rgba(240,128,114,.13);
     --shadow:0 18px 40px -18px rgba(0,0,0,.7); color-scheme:dark;
+    --s-faith:#3987e5; --s-wisdom:#d95926; --s-health:#199e70; --s-joy:#c98500; --s-favor:#d55181; --grid:rgba(239,230,212,.12);
   }
 }
 :root[data-theme="dark"]{
@@ -55,6 +58,7 @@
   --accent:#e08a6c; --good:#79c46f; --warn:#e6ad4c; --bad:#f08072;
   --good-soft:rgba(121,196,111,.13); --bad-soft:rgba(240,128,114,.13);
   --shadow:0 18px 40px -18px rgba(0,0,0,.7); color-scheme:dark;
+    --s-faith:#3987e5; --s-wisdom:#d95926; --s-health:#199e70; --s-joy:#c98500; --s-favor:#d55181; --grid:rgba(239,230,212,.12);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -307,6 +311,36 @@ button.item:disabled{opacity:.5}
 .howto p{font-size:.92rem;margin-bottom:10px}
 .howto ul{padding-left:18px;font-size:.9rem;display:grid;gap:6px;margin-bottom:10px}
 
+/* odds, natures, ambition, chart */
+.choice .odds{margin-left:auto;flex:none;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:99px;background:var(--surface-3);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.choice .odds.hi{color:var(--good);background:var(--good-soft)}
+.choice .odds.lo{color:var(--bad);background:var(--bad-soft)}
+.choice > span:nth-child(2){min-width:0}
+.natures{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.nature{display:flex;gap:10px;align-items:flex-start;text-align:left;padding:10px 12px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface)}
+.nature[aria-checked="true"]{border-color:var(--gold);background:var(--gold-soft)}
+.nature .ni{font-size:1.3rem;line-height:1.2}
+.nature b{display:block;font-size:.88rem;color:var(--ink)}
+.nature span{display:block;font-size:.74rem;color:var(--muted);line-height:1.3}
+.amb{padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--surface-2);display:grid;gap:6px}
+.amb .at{display:flex;justify-content:space-between;gap:10px;font-size:.88rem}
+.amb .at b{font-weight:700}
+.amb small{font-size:.76rem;color:var(--muted)}
+.amb.done{border-color:var(--gold);background:var(--gold-soft)}
+.chart{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 12px 10px;text-align:left}
+.chart svg{display:block;width:100%;height:auto;overflow:visible;touch-action:pan-y}
+.chart .axis{font:500 9px var(--sans);fill:var(--faint)}
+.chart .gl{stroke:var(--grid);stroke-width:1}
+.chart .ln-s{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.chart .xh{stroke:var(--line-2);stroke-width:1;opacity:0}
+.chart .xh.on{opacity:1}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:.76rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px;font-variant-numeric:tabular-nums}
+.legend i{width:12px;height:3px;border-radius:2px;display:inline-block}
+.legend b{color:var(--ink);font-weight:700}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:.72rem;border-radius:10px;padding:6px 8px;line-height:1.45;white-space:nowrap;transform:translate(-50%,0);opacity:0;transition:opacity .12s;z-index:2}
+.tip.on{opacity:1}
+.tip i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px}
 @media (min-width:600px){
   .app{padding:0 0}
   .game{border-left:1px solid var(--line);border-right:1px solid var(--line);background:var(--bg)}
@@ -363,6 +397,10 @@ button.item:disabled{opacity:.5}
         <button type="button" role="radio" data-g="m" aria-checked="true">👶 Son</button>
         <button type="button" role="radio" data-g="f" aria-checked="false">👶 Daughter</button>
       </div>
+    </div>
+    <div>
+      <div class="field-label" id="lbl-n">Temperament</div>
+      <div class="natures" role="radiogroup" aria-labelledby="lbl-n" id="natures"></div>
     </div>
     <div>
       <label class="field-label" for="in-name" style="display:block">Your name</label>
@@ -546,6 +584,12 @@ const ACH = [
   { id: 'pearl',     name: 'Pearl of great price',       desc: 'Sell all you have for one pearl.', ref: 'Matt 13:46' },
   { id: 'flee',      name: 'Flee to the mountains',      desc: 'Escape Jerusalem before its fall.', ref: 'Luke 21:21' },
   { id: 'gens',      name: 'Children’s children',        desc: 'Play three generations of one family.', ref: 'Prov 17:6' },
+  { id: 'ambition',  name: 'A tree of life',             desc: 'Fulfil your life’s ambition.', ref: 'Prov 13:12' },
+  { id: 'judge',     name: 'Judge righteously',          desc: 'Rule rightly in 5 cases at the gate.', ref: 'Deut 1:16' },
+  { id: 'prophet',   name: 'Here am I; send me',         desc: 'Answer the call to be a prophet.', ref: 'Isa 6:8' },
+  { id: 'sower',     name: 'Whatsoever a man soweth',    desc: 'See 5 of your choices bear fruit years later.', ref: 'Gal 6:7' },
+  { id: 'water',     name: 'And he said, Come',          desc: 'Walk on the water.', ref: 'Matt 14:29' },
+  { id: 'lazarus',   name: 'Lazarus, come forth',        desc: 'See Lazarus raised from the dead.', ref: 'John 11:43' },
   { id: 'crown',     name: 'A crown of life',            desc: 'Stay faithful unto death.', ref: 'Rev 2:10' },
 ];
 
@@ -587,6 +631,44 @@ const ASSETS = [
   { id: 'house',    name: 'Home',           icon: '🏠', price: 120, inc: 0, max: 1 },
 ];
 const ASSET = Object.fromEntries(ASSETS.map(a => [a.id, a]));
+
+// Temperament: chosen at birth. Shifts starting stats and the odds of one kind of test.
+const NATURES = {
+  bold:     { name: 'Bold',          icon: '🦁', bonus: 'health', st: { health: 6, favor: 2 }, ref: 'Prov 28:1', desc: 'Better odds when strength is tested.' },
+  clever:   { name: 'Clever',        icon: '🦉', bonus: 'wisdom', st: { wisdom: 6 },            ref: 'Prov 1:5',  desc: 'Better odds when wits are tested.' },
+  devout:   { name: 'Devout',        icon: '🕯️', bonus: 'faith',  st: { faith: 10 },            ref: 'Ps 42:1',   desc: 'Better odds when faith is tested.' },
+  gracious: { name: 'Gracious',      icon: '🤝', bonus: 'favor',  st: { favor: 8 },             ref: 'Prov 22:11', desc: 'Better odds with people.' },
+  merry:    { name: 'Merry-hearted', icon: '🎶', bonus: 'joy',    st: { joy: 10 },              ref: 'Prov 15:13', desc: 'Joy runs deep and fades slowly.' },
+  diligent: { name: 'Diligent',      icon: '⚒️', bonus: null,     st: { health: 3 },            ref: 'Prov 12:24', desc: 'Your work improves every year.' },
+};
+
+// Life ambitions: chosen at 13. Progress 0..1; fulfilling one adds to your legacy.
+const AMBITIONS = {
+  house:  { name: 'A full household', icon: '🏡', goal: 'Raise 5 children and see 3 grandchildren', ref: 'Psalm 128:3', q: 'Thy children like olive plants round about thy table.',
+            prog: s => (Math.min(1, children(true).length / 5) + Math.min(1, (s.c.grand || 0) / 3)) / 2 },
+  giver:  { name: 'Prosper to give',  icon: '🌾', goal: 'Give away 200 shekels in your lifetime', ref: 'Proverbs 3:9', q: 'Honour the LORD with thy substance, and with the firstfruits of all thine increase.',
+            prog: s => Math.min(1, (s.c.given || 0) / 200) },
+  wisdom: { name: 'Get wisdom',       icon: '📜', goal: 'Reach Wisdom 90 and win 20 Scripture challenges', ref: 'Proverbs 4:7', q: 'Wisdom is the principal thing; therefore get wisdom.',
+            prog: s => (Math.min(1, s.st.wisdom / 90) + Math.min(1, (s.c.trivia || 0) / 20)) / 2 },
+  walk:   { name: 'Walk with God',    icon: '🕊️', goal: 'Reach Faith 95 and bear 6 fruits of the Spirit', ref: 'Genesis 5:24', q: 'And Enoch walked with God.',
+            prog: s => (Math.min(1, s.st.faith / 95) + Math.min(1, s.fruits.length / 6)) / 2 },
+  name:   { name: 'A good name',      icon: '⭐', goal: 'Reach Favour 90 and be called as an elder or prophet', ref: 'Proverbs 22:1', q: 'A good name is rather to be chosen than great riches.',
+            prog: s => (Math.min(1, s.st.favor / 90) + (s.calling ? 1 : 0)) / 2 },
+};
+
+// Cases at the city gate: the first option is the ruling the Law gives.
+const CASES = [
+  { q: 'One man’s ox gored his neighbour’s ox, and it died. The ox had never pushed before.', o: ['Sell the live ox and divide the price; divide the dead ox too', 'The owner of the goring ox must hand over his own ox', 'The loss lies where it fell; no one pays'], law: 'Then they shall sell the live ox, and divide the money of it; and the dead ox also they shall divide.', r: 'Exodus 21:35' },
+  { q: 'A man found his neighbour’s straying ass and kept it all winter. Now he says, “I fed it, so it is mine.”', o: ['Restore it to its owner', 'It belongs to the man who fed it', 'Sell it and split the price'], law: 'Thou shalt not see thy brother’s ox or his sheep go astray… thou shalt in any case bring them again unto thy brother.', r: 'Deuteronomy 22:1' },
+  { q: 'A man died leaving five daughters and no son. His brother now claims the land.', o: ['The daughters inherit their father’s land', 'The brother takes the land', 'Sell the land and give the daughters a dowry'], law: 'If a man die, and have no son, then ye shall cause his inheritance to pass unto his daughter.', r: 'Numbers 27:8' },
+  { q: 'A farmer hired a labourer for the day, then told him to come back next week for his wages.', o: ['He must pay before the sun goes down', 'Next week is fair enough', 'Pay him in grain at the harvest'], law: 'At his day thou shalt give him his hire, neither shall the sun go down upon it.', r: 'Deuteronomy 24:15' },
+  { q: 'A lender took a poor man’s only cloak as a pledge and means to keep it overnight.', o: ['Return the cloak by sundown', 'He may keep it until the debt is paid', 'Sell the cloak to settle the debt'], law: 'If thou at all take thy neighbour’s raiment to pledge, thou shalt deliver it unto him by that the sun goeth down.', r: 'Exodus 22:26' },
+  { q: 'A single witness accuses a man of stealing a goat. There is no other evidence.', o: ['One witness is not enough to condemn him', 'Condemn him on the witness’s word', 'Condemn him if he hesitates under oath'], law: 'One witness shall not rise up against a man for any iniquity… at the mouth of two witnesses, or at the mouth of three witnesses, shall the matter be established.', r: 'Deuteronomy 19:15' },
+  { q: 'It is proven that a witness lied to have his neighbour fined thirty shekels.', o: ['He must suffer what he plotted for his neighbour', 'A warning is enough', 'He pays a small fine to the elders'], law: 'Then shall ye do unto him, as he had thought to have done unto his brother.', r: 'Deuteronomy 19:19' },
+  { q: 'A rich farmer drives the widows and strangers out of his fields at harvest.', o: ['He must leave the corners and gleanings for the poor', 'His field, his harvest', 'He may charge them for gleaning'], law: 'Thou shalt not wholly reap the corners of thy field… thou shalt leave them for the poor and stranger.', r: 'Leviticus 19:9-10' },
+  { q: 'A poor man sold his field. His kinsman now has the silver to buy it back, but the buyer refuses.', o: ['The kinsman may redeem it', 'The sale is final', 'Only the poor man himself may buy it back'], law: 'If any of his kin come to redeem it, then shall he redeem that which his brother sold.', r: 'Leviticus 25:25' },
+  { q: 'A rich man and a poor man dispute a debt. The rich man is an old friend of yours.', o: ['Judge by the facts alone, favouring neither', 'Favour your old friend', 'Favour the poor man because he is poor'], law: 'Ye shall not respect persons in judgment; but ye shall hear the small as well as the great.', r: 'Deuteronomy 1:17' },
+];
 
 // Bible challenge: answers verified against the KJV. a = index of the correct option.
 const TRIVIA = [
@@ -746,6 +828,26 @@ function avatarFor(age, g) {
   return g === 'm' ? '👴' : '👵';
 }
 function v(q, r) { return { q, r }; }    // verse literal
+// Chance a stat-tested choice succeeds: scales from lo (stat 0) to hi (stat 100), plus the temperament bonus.
+function oddsOf(stat, lo, hi) {
+  const n = NATURES[S.nature];
+  return clamp(lo + (hi - lo) * S.st[stat] / 100 + (n && n.bonus === stat ? .1 : 0), .05, .95);
+}
+// Delayed consequences: a choice now schedules an event years later.
+function sow(id, minY, maxY, data) { S.seeds.push({ id, at: S.age + int(minY, maxY), data: data || {} }); }
+function dueSeeds() {
+  const due = S.seeds.filter(x => x.at <= S.age);
+  S.seeds = S.seeds.filter(x => x.at > S.age);
+  return due.map(x => SEEDS[x.id] && SEEDS[x.id](x.data)).filter(Boolean).map(e => { inc('reaped'); if (S.c.reaped >= 5) award('sower'); return e; });
+}
+function snap() { return [S.age, ...STATS.map(k => S.st[k])]; }
+function ruler() {
+  const y = yearOf();
+  if (S.era === 'patriarchs') return 'Abimelech, king of Gerar';
+  if (S.era === 'kingdom') return y < -1010 ? 'King Saul' : y < -970 ? 'King David' : y < -931 ? 'King Solomon' : 'King Rehoboam';
+  return y < 39 ? 'Herod Antipas' : y < 44 ? 'King Herod Agrippa' : 'the Roman governor';
+}
+function callingName() { return S.calling === 'elder' ? 'Elder of the gate' : S.calling === 'prophet' ? 'Prophet' : ''; }
 
 // ---------------------------------------------------------------- meta (persistent across lives)
 let META = store.get(KEY.META, null);
@@ -831,10 +933,14 @@ function newLife(opts) {
     job: null, tithe: false, titheYears: 0, applied: -1,
     people: [], nextPid: 1, assets: {}, c: {}, fruits: [], flags: {}, once: {}, seen: {},
     log: [], chron: [], gen: opts.gen || 1, ach: [], asked: [], yr: {}, peakSins: 0, dead: false,
+    nature: null, ambition: null, calling: null, seeds: [], hist: [],
   };
   S.birthYear = opts.birthYear ?? int(era.birth[0], era.birth[1]);
   S.tribe = era.israelite ? (opts.tribe || pick(TRIBES)) : null;
   S.st = opts.st || { faith: int(30, 55), wisdom: int(4, 12), health: int(65, 95), joy: int(55, 85), favor: int(35, 60) };
+  S.nature = NATURES[opts.nature] ? opts.nature : pick(Object.keys(NATURES));
+  for (const [k, n] of Object.entries(NATURES[S.nature].st)) S.st[k] = clamp(S.st[k] + n, 0, 100);
+  S.hist = [snap()];
   if (opts.inherit) return S;   // continueAs() fills in the family
 
   const father = addPerson('Father', 'm', int(20, 38), { bond: int(55, 85) });
@@ -852,6 +958,7 @@ function newLife(opts) {
   logVerse(S.gender === 'm' && S.era === 'kingdom' && chance(.5)
     ? v('For this child I prayed; and the LORD hath given me my petition which I asked of him.', '1 Samuel 1:27')
     : v('Lo, children are an heritage of the LORD: and the fruit of the womb is his reward.', 'Psalm 127:3'));
+  log(`${NATURES[S.nature].icon} The midwife says you have a <b>${NATURES[S.nature].name.toLowerCase()}</b> spirit. <span class="ref">${NATURES[S.nature].ref}</span>`);
   chron(`Born in ${S.place}, ${fmtYear(S.birthYear)}`);
   META.lives++; saveMeta();
   award('born');
@@ -889,12 +996,14 @@ function ageUp() {
   if (S.age === 70) award('seventy');
   if (S.age === 80) award('eighty');
   if (S.age === 100) award('hundred');
+  S.hist.push(snap());
 
   if (chance(deathChance(S.age, S.st.health))) {
     S.st.health = 0;
     S.cause = S.age >= 60 ? 'old' : 'sudden';
   } else {
-    QUEUE.push(...rollEvents());
+    const reaped = dueSeeds();
+    QUEUE.push(...reaped, ...rollEvents());
   }
   checkFruits();
   save();
@@ -908,7 +1017,7 @@ function yearlyBody() {
   if (S.st.joy >= 70) dh += 1;                       // Prov 17:22
   if (S.st.faith >= 75 && a >= 40 && chance(.5)) dh += 1;   // Prov 3:1-2
   if (S.money < 0) dh -= 2;
-  const dj = (S.st.joy < 55 ? 1 : S.st.joy > 60 ? -1 : 0) + (S.money < 0 ? -4 : 0) + (spouse() ? 1 : 0);
+  const dj = (S.st.joy < 55 ? 1 : S.st.joy > 60 && !(S.nature === 'merry' && S.st.joy < 80) ? -1 : 0) + (S.money < 0 ? -4 : 0) + (spouse() ? 1 : 0);
   const dw = a <= 22 ? int(1, 3) : 0;
   const df = hasJob('taxcollector') ? -2 : 0;
   apply({ health: dh, joy: dj, wisdom: dw, favor: df });
@@ -956,7 +1065,7 @@ function yearlyEconomy() {
   const j = job();
   if (S.job && j) {
     S.job.years++;
-    S.job.perf = clamp(S.job.perf + int(-6, 5), 0, 100);
+    S.job.perf = clamp(S.job.perf + int(-6, 5) + (S.nature === 'diligent' ? 3 : 0), 0, 100);
     const pay = Math.round(j.pay * (0.6 + S.job.perf / 125) * Math.pow(1.25, S.job.promo || 0));
     if (pay > 0) { income += pay; lines.push(`${pay} as ${esc(jobTitle())}`); }
     if (j.id !== 'disciple') {
@@ -1029,7 +1138,7 @@ const EVENTS = [
     verse: v('Be strong and of a good courage; be not afraid… for the LORD thy God is with thee whithersoever thou goest.', 'Joshua 1:9'),
     choices: [
       { t: 'Stay right where you are and pray', run: () => { inc('patience'); return O('Your mother finds you by the well, just where she lost you. She weeps and laughs at once.', { faith: 4, wisdom: 2 }); } },
-      { t: 'Go and look for her', run: () => chance(.5) ? O('A kind woman selling figs walks you home. Your parents thank her with a gift of oil.', { favor: 2, joy: 1 }) : O('You wander until dark. Your father finds you crying by the city gate.', { joy: -4, health: -1 }) },
+      { t: 'Go and look for her', chk: ['wisdom', .25, .85], run: (s, ok) => ok ? O('A kind woman selling figs walks you home. Your parents thank her with a gift of oil.', { favor: 2, joy: 1 }) : O('You wander until dark. Your father finds you crying by the city gate.', { joy: -4, health: -1 }) },
       { t: 'Cry as loudly as you can', run: () => O('Half the market hears you. So does your mother.', { joy: -1, favor: -1 }) },
     ] },
   { id: 'shema', title: 'Hear, O Israel', icon: '📜', era: ['kingdom', 'gospels'], min: 5, max: 10, once: true, w: 2,
@@ -1050,8 +1159,8 @@ const EVENTS = [
     text: () => `A bigger child mocks you in front of the others, mimicking the way you walk.`,
     verse: v('A soft answer turneth away wrath: but grievous words stir up anger.', 'Proverbs 15:1'),
     choices: [
-      { t: 'Give a soft answer', run: () => { inc('meek'); return chance(.7) ? O('The bully laughs, unsure what to do, and walks off. Later the two of you are almost friends.', { favor: 3, wisdom: 2 }) : O('The teasing goes on a while, but your heart stays quiet.', { joy: -2, wisdom: 2 }); } },
-      { t: 'Hit back', run: () => chance(.5) ? O('You win the scuffle, but the elders hear of it.', { joy: 2, favor: -3 }) : O('You lose the scuffle and your lip is split.', { health: -6, joy: -4 }) },
+      { t: 'Give a soft answer', chk: ['wisdom', .35, .95], run: (s, ok) => { inc('meek'); return ok ? O('The bully laughs, unsure what to do, and walks off. Later the two of you are almost friends.', { favor: 3, wisdom: 2 }) : O('The teasing goes on a while, but your heart stays quiet.', { joy: -2, wisdom: 2 }); } },
+      { t: 'Hit back', chk: ['health', .2, .8], run: (s, ok) => ok ? O('You win the scuffle, but the elders hear of it.', { joy: 2, favor: -3 }) : O('You lose the scuffle and your lip is split.', { health: -6, joy: -4 }) },
       { t: 'Tell your parents', run: () => O('Your father has a quiet word with the boy’s father.', { favor: 1, joy: 1 }) },
     ] },
   { id: 'figs', title: 'The neighbour’s fig tree', icon: '🌳', min: 6, max: 14, once: true,
@@ -1081,9 +1190,9 @@ const EVENTS = [
     text: () => `While keeping your family’s sheep, a lion springs from the thicket and seizes a lamb.`,
     verse: v('Thy servant kept his father’s sheep, and there came a lion, and a bear, and took a lamb out of the flock.', '1 Samuel 17:34'),
     choices: [
-      { t: 'Go after it with sling and staff', run: () => chance(.55) ? (chron('Rescued a lamb from a lion'), O('Your stone strikes true. The lion drops the lamb and flees. Your family speaks of it for years.', { favor: 6, joy: 5, faith: 3 })) : O('The lion turns on you. You escape, but bear its scars for life.', { health: -18, joy: -4 }) },
+      { t: 'Go after it with sling and staff', chk: ['health', .2, .85], run: (s, ok) => ok ? (chron('Rescued a lamb from a lion'), O('Your stone strikes true. The lion drops the lamb and flees. Your family speaks of it for years.', { favor: 6, joy: 5, faith: 3 })) : O('The lion turns on you. You escape, but bear its scars for life.', { health: -18, joy: -4 }) },
       { t: 'Run for help', run: () => O('The men come with spears, but the lamb is lost. Your father says you did wisely.', { wisdom: 3, favor: 1 }) },
-      { t: 'Cry out to the LORD', run: () => chance(.5) ? O('The lion drops the lamb at the sound of your voice and slinks away.', { faith: 6, joy: 3 }) : O('The lion is gone, and the lamb with it. You pray for courage next time.', { faith: 3 }) },
+      { t: 'Cry out to the LORD', chk: ['faith', .2, .85], run: (s, ok) => ok ? O('The lion drops the lamb at the sound of your voice and slinks away.', { faith: 6, joy: 3 }) : O('The lion is gone, and the lamb with it. You pray for courage next time.', { faith: 3 }) },
     ] },
   { id: 'passover12', title: 'Your first Passover in Jerusalem', icon: '🐑', era: ['gospels'], min: 12, max: 12, once: true, force: true,
     text: () => `This year you go up with the whole family for the feast. The Temple is the most beautiful thing you have ever seen: white stone and gold, shining in the sun.`,
@@ -1100,6 +1209,14 @@ const EVENTS = [
       { t: 'Decide to make your own way first', run: () => O('There will be time for God later, you think.', { joy: 2, faith: -2 }) },
     ] },
 
+  { id: 'ambition', title: 'What will you make of your life?', icon: '🧭', min: 13, max: 40, once: true, force: true,
+    cond: s => !s.ambition,
+    text: () => `You are old enough now to ask what your life is for. An old man at the gate tells you: “Write the vision, and make it plain.” What will you set your heart on?`,
+    verse: v('Commit thy works unto the LORD, and thy thoughts shall be established.', 'Proverbs 16:3'),
+    choices: () => [...Object.entries(AMBITIONS).map(([id, a]) => ({ t: `${a.icon} ${a.name}`, sub: a.goal, run: () => { S.ambition = id; chron(`Set your heart on: ${a.name}`); return O(`You set your heart on this: <b>${esc(a.goal.toLowerCase())}</b>. Track it in your profile.`, { joy: 2, wisdom: 2 }, 0, v(a.q, a.ref)); } })),
+      { t: 'Let life unfold as it will', run: () => O('You will take each year as it comes.', { joy: 2 }) }],
+  },
+
   // ---------- youth ----------
   { id: 'entice', title: 'An invitation at dusk', icon: '🍷', min: 14, max: 23, once: true,
     text: () => `Some young men of the town invite you to join them tonight. There will be strong drink, and talk of “easy silver” from a traveller’s pack.`,
@@ -1107,7 +1224,7 @@ const EVENTS = [
     choices: [
       { t: 'Go with them', run: () => { sin(); return chance(.5) ? O('The night ends with the watchmen chasing you through the streets. Your name is spoken in shame at the gate.', { favor: -10, joy: -2, health: -3 }) : O('It is a wild night. You wake with a sore head and a heavy heart.', { joy: 2, health: -4, faith: -4 }); } },
       { t: 'Refuse', run: () => { inc('temper'); return O('You go home. The next week, two of them are taken before the elders.', { faith: 3, wisdom: 4 }); } },
-      { t: 'Refuse, and warn them', run: () => { inc('temper'); return chance(.4) ? O('One of them listens and turns back. He becomes a lifelong friend.', { favor: 4, faith: 3 }, 0, null, addPerson('Friend', S.gender, S.age + int(-1, 2), { bond: 80 })) : O('They laugh at you. You do not mind.', { faith: 3, wisdom: 3, joy: -1 }); } },
+      { t: 'Refuse, and warn them', chk: ['favor', .15, .75], run: (s, ok) => { inc('temper'); return ok ? O('One of them listens and turns back. He becomes a lifelong friend.', { favor: 4, faith: 3 }, 0, null, addPerson('Friend', S.gender, S.age + int(-1, 2), { bond: 80 })) : O('They laugh at you. You do not mind.', { faith: 3, wisdom: 3, joy: -1 }); } },
     ] },
   { id: 'music', title: 'A gift for music', icon: '🎶', min: 10, max: 20, once: true,
     text: () => S.era === 'kingdom' ? `They say the son of Jesse plays the harp so well that evil spirits flee. You find an old lyre and your fingers seem to know the strings.` : `An old lyre is found among your family’s things, and your fingers seem to know the strings.`,
@@ -1145,8 +1262,8 @@ const EVENTS = [
     text: () => `On the road you find a leather purse with twenty shekels inside. Nobody is in sight.`,
     verse: v('In like manner shalt thou do… with all lost thing of thy brother’s, which he hath lost, and thou hast found.', 'Deuteronomy 22:3'),
     choices: [
-      { t: 'Seek out its owner', run: () => { inc('temper'); inc('kind'); return chance(.45) ? O('The owner, a grain merchant, presses five shekels into your hand as thanks.', { favor: 6, faith: 2 }, 5) : O('You find the owner, a poor widow. Her tears of relief are thanks enough.', { favor: 6, faith: 3, joy: 2 }); } },
-      { t: 'Keep it', run: () => { sin(); return chance(.3) ? O('The owner recognises the purse on your belt. You are shamed before the elders and must repay double.', { favor: -12, faith: -4 }, -20) : O('Twenty shekels richer. Your conscience is quieter than you expected, and that worries you.', { faith: -5 }, 20); } },
+      { t: 'Seek out its owner', run: () => { inc('temper'); inc('kind'); sow('purse-good', 6, 15); return chance(.45) ? O('The owner, a grain merchant, presses five shekels into your hand as thanks.', { favor: 6, faith: 2 }, 5) : O('You find the owner, a poor widow. Her tears of relief are thanks enough.', { favor: 6, faith: 3, joy: 2 }); } },
+      { t: 'Keep it', run: () => { sin(); const caught = chance(.3); if (!caught) sow('purse-bad', 2, 8); return caught ? O('The owner recognises the purse on your belt. You are shamed before the elders and must repay double.', { favor: -12, faith: -4 }, -20) : O('Twenty shekels richer. Your conscience is quieter than you expected, and that worries you.', { faith: -5 }, 20); } },
     ] },
   { id: 'balance', title: 'A thumb on the scales', icon: '⚖️', min: 18, cool: 6,
     cond: s => hasJob('merchant', 'caravan', 'farmer', 'potter', 'vinedresser', 'weaver', 'fisherman') || owns('field'),
@@ -1154,7 +1271,7 @@ const EVENTS = [
     verse: v('A false balance is abomination to the LORD: but a just weight is his delight.', 'Proverbs 11:1'),
     choices: [
       { t: 'Use honest weights', run: () => { inc('temper'); return O('Your name for fair dealing spreads through the market.', { faith: 3, favor: 4 }); } },
-      { t: 'Use the lighter stone', run: () => { sin(); return O('Fifteen shekels richer. You avoid the buyer’s eyes.', { faith: -5, favor: -2 }, 15); } },
+      { t: 'Use the lighter stone', run: () => { sin(); sow('scales', 3, 9); return O('Fifteen shekels richer. You avoid the buyer’s eyes.', { faith: -5, favor: -2 }, 15); } },
     ] },
   { id: 'sabbath', title: 'A deal on the Sabbath', icon: '🕯️', era: ['kingdom', 'gospels'], min: 16, cool: 6,
     text: () => `A wealthy traveller wants to buy from you at a good price. The only trouble: the sun has set, and it is the Sabbath.`,
@@ -1167,21 +1284,21 @@ const EVENTS = [
     text: () => S.era === 'patriarchs' ? `In the heat of the day, three travellers stand by your tent door, dusty from the road.` : `At evening three travellers knock, asking for a place to sleep. The inn is full.`,
     verse: v('Be not forgetful to entertain strangers: for thereby some have entertained angels unawares.', 'Hebrews 13:2'),
     choices: [
-      { t: 'Wash their feet and prepare a meal', sub: 'Costs 3 shekels', run: () => { inc('kind'); inc('good'); if (chance(.15)) { award('angels'); chron('Entertained angels unawares'); return O('As they leave, one turns and blesses your house, and then they are simply… gone. You never forget their faces.', { faith: 10, joy: 6, favor: 4 }, -3); } return O('They eat, sleep and leave at dawn with blessings on your house.', { favor: 4, joy: 3 }, -3); } },
+      { t: 'Wash their feet and prepare a meal', sub: 'Costs 3 shekels', run: () => { inc('kind'); inc('good'); sow('guest', 4, 10); if (chance(.15)) { award('angels'); chron('Entertained angels unawares'); return O('As they leave, one turns and blesses your house, and then they are simply… gone. You never forget their faces.', { faith: 10, joy: 6, favor: 4 }, -3); } return O('They eat, sleep and leave at dawn with blessings on your house.', { favor: 4, joy: 3 }, -3); } },
       { t: 'Turn them away', run: () => O('You close the door. The night is colder than it should be.', { favor: -3, faith: -2 }) },
     ] },
   { id: 'samaritan', title: 'A wounded man on the road', icon: '🩹', min: 16, cool: 10,
     text: () => S.era === 'gospels' ? `Going down the road toward Jericho, you see a man stripped, beaten and left half dead. A priest and a Levite have already passed by on the other side.` : `On a lonely road you find a traveller beaten by robbers and left half dead.`,
     verse: v('Which now of these three, thinkest thou, was neighbour unto him that fell among the thieves?', 'Luke 10:36'),
     choices: [
-      { t: 'Bind his wounds and pay for an inn', sub: 'Costs 4 shekels', run: () => { inc('kind'); inc('good'); award('samaritan'); chron('Cared for a wounded traveller'); return O('You pour in oil and wine, set him on your animal and pay the innkeeper. He lives.', { favor: 5, faith: 4, joy: 3 }, -4); } },
+      { t: 'Bind his wounds and pay for an inn', sub: 'Costs 4 shekels', run: () => { inc('kind'); inc('good'); award('samaritan'); sow('samaritan', 5, 14); chron('Cared for a wounded traveller'); return O('You pour in oil and wine, set him on your animal and pay the innkeeper. He lives.', { favor: 5, faith: 4, joy: 3 }, -4); } },
       { t: 'Pass by on the other side', run: () => O('You hurry on. The man’s face stays with you for weeks.', { faith: -4, joy: -3 }) },
     ] },
   { id: 'widow', title: 'The widow and the fatherless', icon: '🍞', min: 18, cool: 6,
     text: () => `A widow in your street has nothing left in the jar, and her children are hungry.`,
     verse: v('Pure religion and undefiled before God and the Father is this, To visit the fatherless and widows in their affliction.', 'James 1:27'),
     choices: [
-      { t: 'Give her 6 shekels and flour', if: s => s.money >= 6, need: '6 shekels', run: () => { inc('good'); inc('given', 6); return O('The children eat well tonight, and the widow blesses your name.', { favor: 5, faith: 3, joy: 3 }, -6); } },
+      { t: 'Give her 6 shekels and flour', if: s => s.money >= 6, need: '6 shekels', run: () => { inc('good'); inc('given', 6); sow('widow', 5, 12); return O('The children eat well tonight, and the widow blesses your name.', { favor: 5, faith: 3, joy: 3 }, -6); } },
       { t: 'Give your time: mend her roof', run: () => { inc('kind'); return O('It takes three days. She cries when it rains and the roof holds.', { favor: 4, joy: 2, health: -1 }); } },
       { t: 'Someone else will help her', run: () => O('Someone else does, eventually.', { faith: -2 }) },
     ] },
@@ -1190,7 +1307,7 @@ const EVENTS = [
     text: () => { S.yr.friend = pick(friends()).id; return `<b>${esc(person(S.yr.friend).name)}</b> comes to you in need, asking to borrow 10 shekels until the harvest.`; },
     verse: v('If thou lend money to any of my people that is poor by thee, thou shalt not be to him as an usurer.', 'Exodus 22:25'),
     choices: [
-      { t: 'Lend freely, without interest', run: () => { const f = person(S.yr.friend); f.bond = clamp(f.bond + 12, 0, 100); inc('kind'); if (chance(.7)) { S.flags.repay = (S.flags.repay || 0) + 10; return O(`${esc(f.name)} weeps with gratitude.`, { favor: 3, joy: 2 }, -10); } return O(`${esc(f.name)} could never repay. You forgive the debt.`, { favor: 3, faith: 3 }, -10); } },
+      { t: 'Lend freely, without interest', run: () => { const f = person(S.yr.friend); f.bond = clamp(f.bond + 12, 0, 100); inc('kind'); if (chance(.7)) { sow('repay', 1, 3, { id: f.id }); return O(`${esc(f.name)} weeps with gratitude.`, { favor: 3, joy: 2 }, -10); } return O(`${esc(f.name)} could never repay. You forgive the debt.`, { favor: 3, faith: 3 }, -10); } },
       { t: 'Lend, but charge interest', run: () => { sin(); const f = person(S.yr.friend); f.bond = clamp(f.bond - 15, 0, 100); return O('You take a pledge and charge a fifth more. The friendship cools.', { favor: -4 }, 2); } },
       { t: 'Refuse', run: () => { const f = person(S.yr.friend); f.bond = clamp(f.bond - 10, 0, 100); return O(`${esc(f.name)} leaves quietly.`, { favor: -1 }); } },
     ] },
@@ -1215,15 +1332,15 @@ const EVENTS = [
     text: () => `Your neighbour’s vineyard lies right beside your land. It would be perfect for you. You find yourself thinking about it day and night.`,
     verse: v('Thou shalt not covet thy neighbour’s house… nor any thing that is thy neighbour’s.', 'Exodus 20:17'),
     choices: [
-      { t: 'Offer a fair price', if: s => s.money >= 60, need: '60 shekels', run: () => chance(.5) ? (S.assets.vineyard = (S.assets.vineyard || 0) + 1, O('He agrees gladly. The vineyard is yours, bought honestly.', { joy: 5, favor: 2 }, -60)) : O('“The LORD forbid it me, that I should give the inheritance of my fathers unto thee.” You accept his answer.', { wisdom: 3 }) },
+      { t: 'Offer a fair price', if: s => s.money >= 60, need: '60 shekels', chk: ['favor', .2, .8], run: (s, ok) => ok ? (S.assets.vineyard = (S.assets.vineyard || 0) + 1, O('He agrees gladly. The vineyard is yours, bought honestly.', { joy: 5, favor: 2 }, -60)) : O('“The LORD forbid it me, that I should give the inheritance of my fathers unto thee.” You accept his answer.', { wisdom: 3 }) },
       { t: 'Let it go', run: () => { inc('meek'); inc('temper'); return O('You give thanks for what you have. The longing fades.', { faith: 3, joy: 2 }); } },
-      { t: 'Scheme to take it', run: () => { sin(); sin(); return O('False witnesses, a quiet word with an elder… You get the land, and lose your good name.', { favor: -12, faith: -8 }, 0, null, (S.assets.vineyard = (S.assets.vineyard || 0) + 1)); } },
+      { t: 'Scheme to take it', run: () => { sin(); sin(); sow('naboth', 3, 8); return O('False witnesses, a quiet word with an elder… You get the land, and lose your good name.', { favor: -12, faith: -8 }, 0, null, (S.assets.vineyard = (S.assets.vineyard || 0) + 1)); } },
     ] },
   { id: 'accused', title: 'Falsely accused', icon: '🧑‍⚖️', min: 18, cool: 10,
     text: () => `A neighbour claims before the elders at the gate that you moved his boundary stone.`,
     verse: v('Thou shalt not raise a false report.', 'Exodus 23:1'),
     choices: [
-      { t: 'Speak the truth calmly', run: () => { inc('meek'); return chance(.7) ? O('Witnesses confirm your word. The elders rule for you, and your name is stronger than before.', { favor: 6, faith: 2 }) : O('The elders do not believe you, and you pay a fine. You hold your peace.', { favor: -2, faith: 3 }, -8); } },
+      { t: 'Speak the truth calmly', chk: ['favor', .35, .95], run: (s, ok) => { inc('meek'); return ok ? O('Witnesses confirm your word. The elders rule for you, and your name is stronger than before.', { favor: 6, faith: 2 }) : O('The elders do not believe you, and you pay a fine. You hold your peace.', { favor: -2, faith: 3 }, -8); } },
       { t: 'Bribe an elder', run: () => { sin(); return O('The case is dropped. The elder smiles at you now, in a way you dislike.', { favor: -3, faith: -5 }, -10); } },
       { t: 'Shout him down', run: () => O('Everyone at the gate hears your anger. Nobody remembers the facts.', { favor: -5, joy: -2 }) },
     ] },
@@ -1240,7 +1357,7 @@ const EVENTS = [
     text: () => { const b = pick(siblings()); S.yr.sib = b.id; return `Your ${sibWord(b.gender)} <b>${esc(b.name)}</b> has wronged you badly, with harsh words before the whole family.`; },
     verse: v('I say not unto thee, Until seven times: but, Until seventy times seven.', 'Matthew 18:22'),
     choices: [
-      { t: 'Forgive', run: () => { inc('peace'); inc('love'); const b = person(S.yr.sib); b.bond = clamp(b.bond + 15, 0, 100); return O(`You embrace ${esc(b.name)}. “How good and how pleasant it is for brethren to dwell together in unity.”`, { joy: 4, faith: 3 }); } },
+      { t: 'Forgive', run: () => { inc('peace'); inc('love'); const b = person(S.yr.sib); sow('joseph', 6, 15, { id: b.id }); b.bond = clamp(b.bond + 15, 0, 100); return O(`You embrace ${esc(b.name)}. “How good and how pleasant it is for brethren to dwell together in unity.”`, { joy: 4, faith: 3 }); } },
       { t: 'Demand an apology first', run: () => { const b = person(S.yr.sib); b.bond = clamp(b.bond - 6, 0, 100); return chance(.5) ? O(`${esc(b.name)} apologises, stiffly.`, { favor: 1 }) : O('The silence between you lasts the whole year.', { joy: -4 }); } },
       { t: 'Cut them off', run: () => { const b = person(S.yr.sib); b.bond = clamp(b.bond - 30, 0, 100); return O('You stop speaking. It hurts more than you admit.', { joy: -6, faith: -2 }); } },
     ] },
@@ -1253,13 +1370,13 @@ const EVENTS = [
     verse: v('Lay not up for yourselves treasures upon earth, where moth and rust doth corrupt, and where thieves break through and steal.', 'Matthew 6:19'),
     choices: [
       { t: 'Forgive and commit it to God', run: () => { inc('peace'); return O('It is only silver. You sleep well that night.', { faith: 4, joy: -1 }, -S.yr.loss); } },
-      { t: 'Hunt down the thief', run: () => chance(.5) ? O('You find him in the next village and take back most of it.', { joy: 2, health: -2 }, -Math.round(S.yr.loss * .2)) : O('You search for a month and find nothing.', { joy: -5 }, -S.yr.loss) },
+      { t: 'Hunt down the thief', chk: ['wisdom', .2, .8], run: (s, ok) => ok ? O('You find him in the next village and take back most of it.', { joy: 2, health: -2 }, -Math.round(S.yr.loss * .2)) : O('You search for a month and find nothing.', { joy: -5 }, -S.yr.loss) },
     ] },
   { id: 'sick', title: 'Laid low with sickness', icon: '🛏️', min: 18, cool: 6, w: 1,
     text: () => `A sickness takes hold of you. For days you cannot rise from your bed.`,
     verse: v('Is any sick among you? let him call for the elders of the church; and let them pray over him.', 'James 5:14'),
     choices: [
-      { t: 'Call the elders to pray', run: () => chance(.65) ? O('You rise on the third day, weak but whole.', { health: -4, faith: 5 }) : O('Recovery is slow, but it comes.', { health: -12, faith: 3 }) },
+      { t: 'Call the elders to pray', chk: ['faith', .3, .9], run: (s, ok) => ok ? O('You rise on the third day, weak but whole.', { health: -4, faith: 5 }) : O('Recovery is slow, but it comes.', { health: -12, faith: 3 }) },
       { t: 'Pay a physician', sub: '8 shekels', if: s => s.money >= 8, need: '8 shekels', run: () => O('The physician’s remedies do their work.', { health: -2 }, -8) },
       { t: 'Rest and wait it out', run: () => { inc('patience'); return O('You lie still and listen to the rain. It passes, slowly.', { health: -10 }); } },
     ] },
@@ -1338,15 +1455,15 @@ const EVENTS = [
     text: () => `The Philistines have gathered their armies. Your company is ordered to the front.`,
     verse: v('For the battle is the LORD’s.', '1 Samuel 17:47'),
     choices: [
-      { t: 'Inquire of the LORD, then fight', run: () => chance(.75) ? O('The LORD gives the victory. You return with spoil.', { faith: 4, favor: 6 }, int(8, 18)) : O('You are wounded in the fighting, but Israel prevails.', { health: -18, faith: 3, favor: 4 }) },
-      { t: 'Charge in first, for glory', run: () => chance(.5) ? O('Your courage is sung about in the camp.', { favor: 10, joy: 5 }, int(10, 20)) : O('A Philistine spear finds you.', { health: -30 }) },
+      { t: 'Inquire of the LORD, then fight', chk: ['faith', .4, .95], run: (s, ok) => ok ? O('The LORD gives the victory. You return with spoil.', { faith: 4, favor: 6 }, int(8, 18)) : O('You are wounded in the fighting, but Israel prevails.', { health: -18, faith: 3, favor: 4 }) },
+      { t: 'Charge in first, for glory', chk: ['health', .2, .8], run: (s, ok) => ok ? O('Your courage is sung about in the camp.', { favor: 10, joy: 5 }, int(10, 20)) : O('A Philistine spear finds you.', { health: -30 }) },
     ] },
   { id: 'fishempty', title: 'We have toiled all the night', icon: '🎣', era: ['gospels'], min: 14, cool: 3,
     cond: s => hasJob('fisherman') && !(yearOf(s) >= 29 && yearOf(s) <= 32 && !s.once.calling),
     text: () => `You fish all night on the lake and catch nothing at all.`,
     verse: v('Master, we have toiled all the night, and have taken nothing.', 'Luke 5:5'),
     choices: [
-      { t: 'Cast once more at dawn', run: () => { inc('patience'); return chance(.5) ? O('The nets are suddenly heavy! A fine catch.', { joy: 5 }, int(6, 12)) : O('Nothing. You mend your nets and go home.', { joy: -2 }); } },
+      { t: 'Cast once more at dawn', chk: ['faith', .25, .8], run: (s, ok) => { inc('patience'); return ok ? O('The nets are suddenly heavy! A fine catch.', { joy: 5 }, int(6, 12)) : O('Nothing. You mend your nets and go home.', { joy: -2 }); } },
       { t: 'Go home and sleep', run: () => O('You sleep until noon.', { health: 2 }) },
     ] },
   { id: 'exact', title: 'An easy profit', icon: '💰', era: ['gospels'], min: 18, cool: 3,
@@ -1379,7 +1496,7 @@ const EVENTS = [
     verse: v('And thou shalt take no gift: for the gift blindeth the wise, and perverteth the words of the righteous.', 'Exodus 23:8'),
     choices: [
       { t: 'Refuse the gift', run: () => { inc('temper'); return O('You write the contract straight. The widow keeps her field.', { faith: 4, favor: 4 }); } },
-      { t: 'Take it', run: () => { sin(); sin(); return O('The words bend easily. Your conscience does not.', { faith: -8, favor: -4 }, 30); } },
+      { t: 'Take it', run: () => { sin(); sin(); sow('bribe', 3, 10); return O('The words bend easily. Your conscience does not.', { faith: -8, favor: -4 }, 30); } },
     ] },
   { id: 'potter', title: 'The vessel was marred', icon: '🏺', min: 14, once: true,
     cond: s => hasJob('potter'),
@@ -1398,20 +1515,60 @@ const EVENTS = [
       { t: 'Attend only paying patients', run: () => O('Your purse is fuller. Your sleep is not.', { faith: -3 }, 5) },
     ] },
 
+  // ---------- callings ----------
+  { id: 'call-elder', title: 'A seat in the gate', icon: '🏛️', min: 35, once: true, force: true,
+    cond: s => !s.calling && s.st.wisdom >= 70 && s.st.favor >= 60,
+    text: () => `The elders of ${esc(S.place)} come to your door. They want you to sit with them in the gate, to hear disputes and give judgment under the Law.`,
+    verse: v('And he took ten men of the elders of the city, and said, Sit ye down here. And they sat down.', 'Ruth 4:2'),
+    choices: [
+      { t: 'Take your seat among the elders', run: () => { S.calling = 'elder'; chron('Called to sit among the elders in the gate'); return O('From now on, cases will be brought to you. Judge rightly: the Law is your guide.', { favor: 8, wisdom: 3 }); } },
+      { t: 'You are not worthy of it', run: () => { inc('meek'); return O('They respect you more for refusing.', { favor: 3 }); } },
+    ] },
+  { id: 'case', title: 'A case at the gate', icon: '⚖️', min: 35, cool: 2, w: 5,
+    cond: s => s.calling === 'elder',
+    text: () => { const done = S.flags.cases || []; const open = CASES.map((_, i) => i).filter(i => !done.includes(i)); S.yr.case = open.length ? pick(open) : int(0, CASES.length - 1); return `${CASES[S.yr.case].q}<br><br>The people wait for your judgment.`; },
+    verse: v('Hear the causes between your brethren, and judge righteously between every man and his brother.', 'Deuteronomy 1:16'),
+    choices: () => { const c = CASES[S.yr.case]; return c.o.map((t, i) => ({ t, i })).sort(() => rnd() - .5).map(o => ({ t: o.t, run: () => judge(o.i === 0) })); },
+  },
+  { id: 'call-prophet', title: 'The word of the LORD', icon: '🔥', min: 25, once: true, force: true,
+    cond: s => !s.calling && s.st.faith >= 92 && s.st.wisdom >= 60 && s.fruits.length >= 3,
+    text: () => `In the night you hear your name spoken, three times, though no one is there. Then the word of the LORD comes to you: you are to speak for Him, even to ${esc(ruler())}.`,
+    verse: v('Say not, I am a child: for thou shalt go to all that I shall send thee, and whatsoever I command thee thou shalt speak.', 'Jeremiah 1:7'),
+    choices: [
+      { t: '“Here am I; send me”', run: () => { S.calling = 'prophet'; award('prophet'); chron('Called to be a prophet'); return O('You will never again be ordinary. The word burns in your bones.', { faith: 8, favor: 2, joy: -2 }); } },
+      { t: 'Run the other way, like Jonah', run: () => { sow('jonah', 1, 2); return O('You go down to the coast and look for a ship. The word does not leave you.', { faith: -6, joy: -4 }); } },
+    ] },
+  { id: 'proph-word', title: 'Go, speak to the ruler', icon: '📣', min: 25, cool: 4, w: 4,
+    cond: s => s.calling === 'prophet',
+    text: () => `The poor of the land are being crushed by heavy taxes and false judges. The LORD sends you to speak against it before ${esc(ruler())}.`,
+    verse: v('But let judgment run down as waters, and righteousness as a mighty stream.', 'Amos 5:24'),
+    choices: [
+      { t: 'Speak the word boldly', chk: ['faith', .3, .95], run: (s, ok) => (inc('prophesied'), ok) ? (chron(`Rebuked ${ruler()}`), O('The ruler is silent a long while, then lowers the burden on the poor. The people bless your name.', { favor: 10, faith: 4, joy: 4 })) : O('You are beaten and thrown in a dungeon for a season, as Jeremiah was. But you said it.', { health: -16, faith: 5, favor: 3 }) },
+      { t: 'Soften the message to keep the peace', run: () => O('The ruler smiles. Nothing changes.', { favor: 2, faith: -5 }) },
+    ] },
+  { id: 'proph-comfort', title: 'Comfort ye my people', icon: '🫂', min: 25, cool: 5, w: 3,
+    cond: s => s.calling === 'prophet',
+    text: () => `A hard year has fallen on the town. People gather at your door, asking whether God has forgotten them.`,
+    verse: v('Comfort ye, comfort ye my people, saith your God.', 'Isaiah 40:1'),
+    choices: [
+      { t: 'Speak comfort and hope', run: () => { inc('kind'); inc('love'); inc('prophesied'); return O('You remind them of every time the LORD has been faithful. They go home lighter.', { favor: 6, joy: 4, faith: 3 }); } },
+      { t: 'Call them to repentance first', run: () => O('Some listen. Some drift away.', { faith: 3, favor: -2 }) },
+    ] },
+
   // ---------- Days of the Patriarchs ----------
   { id: 'wells', title: 'The strife over the wells', icon: '💧', era: ['patriarchs'], min: 16, once: true,
     text: () => `Your family dug a well in the valley and found springing water. Now the herdsmen of Gerar claim it: “The water is ours.”`,
     verse: v('For now the LORD hath made room for us, and we shall be fruitful in the land.', 'Genesis 26:22'),
     choices: [
       { t: 'Give it up and dig elsewhere', run: () => { inc('meek'); inc('peace'); S.assets.sheep = (S.assets.sheep || 0) + int(4, 8); award('wells'); chron('Gave up a well; found Rehoboth'); return O('You move on and dig again, and again, until no one strives with you. You call the place Rehoboth: room.', { faith: 6, favor: 5, joy: 4 }); } },
-      { t: 'Fight for what is yours', run: () => chance(.5) ? O('You keep the well, but the feud lasts years.', { favor: -4, joy: -3 }) : O('You are beaten and lose the well anyway.', { health: -14, joy: -5 }) },
+      { t: 'Fight for what is yours', chk: ['health', .2, .75], run: (s, ok) => ok ? O('You keep the well, but the feud lasts years.', { favor: -4, joy: -3 }) : O('You are beaten and lose the well anyway.', { health: -14, joy: -5 }) },
     ] },
   { id: 'famine', title: 'Famine in the land', icon: '🌾', cause: 'famine', era: ['patriarchs'], min: 14, once: true, w: 2.5,
     text: () => `A grievous famine covers all the land. Word comes that there is corn in Egypt, stored up by a Hebrew whom Pharaoh has set over all the land: a man named Joseph.`,
     verse: v('Behold, I have heard that there is corn in Egypt: get you down thither, and buy for us from thence.', 'Genesis 42:2'),
     choices: [
       { t: 'Go down to Egypt to buy corn', sub: '15 shekels', run: () => { award('famine'); chron('Went down to Egypt in the famine'); return O('The journey is long, but you return with sacks of grain. In Egypt, they said the governor wept when he heard a Hebrew tongue.', { health: 2, wisdom: 4, joy: 3 }, -15); } },
-      { t: 'Stay, trust God and share what you have', run: () => { inc('kind'); return chance(.6) ? (award('famine'), O('You eat little, share much, and somehow the jar is never quite empty.', { faith: 8, health: -10, favor: 5 })) : O('Hunger is hard. You survive, barely.', { faith: 4, health: -22 }); } },
+      { t: 'Stay, trust God and share what you have', chk: ['faith', .25, .9], run: (s, ok) => { inc('kind'); return ok ? (award('famine'), O('You eat little, share much, and somehow the jar is never quite empty.', { faith: 8, health: -10, favor: 5 })) : O('Hunger is hard. You survive, barely.', { faith: 4, health: -22 }); } },
     ] },
   { id: 'ladder', title: 'A dream at Bethel', icon: '🪜', era: ['patriarchs'], min: 14, once: true,
     text: () => `Sleeping in the open with a stone for a pillow, you dream of a ladder set up on the earth, its top reaching to heaven, and angels ascending and descending on it.`,
@@ -1449,6 +1606,21 @@ const EVENTS = [
       { t: 'Bury them simply under an oak', run: () => O('You bury them beneath a great oak, and call it the oak of weeping.', { joy: -2 }) },
     ] },
 
+  { id: 'lot', title: 'Let there be no strife', icon: '🏞️', era: ['patriarchs'], min: 18, once: true,
+    text: () => `Your herdsmen and your kinsman’s herdsmen keep quarrelling over pasture. The land cannot bear you both. Before you lies the well-watered plain of Jordan, and behind you the hill country.`,
+    verse: v('Let there be no strife, I pray thee, between me and thee… if thou wilt take the left hand, then I will go to the right.', 'Genesis 13:8-9'),
+    choices: [
+      { t: 'Let your kinsman choose first', run: () => { inc('meek'); inc('peace'); sow('lot', 4, 9); return O('He takes the green plain. You go up into the hills.', { favor: 4, faith: 4 }); } },
+      { t: 'Take the well-watered plain yourself', run: () => { sow('sodom', 5, 10); return O('The plain is lush and the cities near Sodom are rich. Your flocks grow fat.', { joy: 4 }, int(10, 20)); } },
+    ] },
+  { id: 'hagar', title: 'A mother in the wilderness', icon: '🏜️', era: ['patriarchs'], min: 16, once: true,
+    text: () => `In the wilderness of Beersheba you find a young mother sitting a bowshot away from her son, who lies under a shrub. Their water is gone. She cannot bear to watch him die.`,
+    verse: v('And God opened her eyes, and she saw a well of water.', 'Genesis 21:19'),
+    choices: [
+      { t: 'Share your water and lead them to a well', run: () => { inc('kind'); inc('good'); return O('The boy drinks and sits up. She looks at you and says, “Thou God seest me.”', { faith: 6, favor: 3, joy: 5 }); } },
+      { t: 'You have barely enough for yourself', run: () => O('You walk on. You hear later that an angel of God called to her.', { faith: -3 }) },
+    ] },
+
   // ---------- Kingdom of Israel ----------
   { id: 'goliath', title: 'The valley of Elah', icon: '🪨', era: ['kingdom'], min: 8, once: true, force: true,
     cond: s => yearOf(s) >= -1027 && yearOf(s) <= -1022,
@@ -1456,7 +1628,7 @@ const EVENTS = [
     verse: v('Thou comest to me with a sword… but I come to thee in the name of the LORD of hosts.', '1 Samuel 17:45'),
     choices: [
       { t: 'Watch, and pray', run: () => { award('giant'); chron('Saw David defeat Goliath'); return O('One stone. The giant falls on his face to the earth. The whole valley erupts in a roar.', { faith: 10, joy: 8 }); } },
-      { t: 'Pursue the fleeing Philistines', if: s => s.age >= 16, need: 'age 16+', run: () => { award('giant'); chron('Pursued the Philistines after Goliath fell'); return chance(.8) ? O('You chase them to the gates of Ekron and return with spoil.', { faith: 6, favor: 6, joy: 6 }, int(8, 15)) : O('You are wounded in the chase.', { faith: 6, health: -15 }); } },
+      { t: 'Pursue the fleeing Philistines', if: s => s.age >= 16, need: 'age 16+', chk: ['health', .45, .95], run: (s, ok) => { award('giant'); chron('Pursued the Philistines after Goliath fell'); return ok ? O('You chase them to the gates of Ekron and return with spoil.', { faith: 6, favor: 6, joy: 6 }, int(8, 15)) : O('You are wounded in the chase.', { faith: 6, health: -15 }); } },
     ] },
   { id: 'adullam', title: 'The cave of Adullam', icon: '🕳️', era: ['kingdom'], min: 18, once: true,
     cond: s => yearOf(s) >= -1022 && yearOf(s) <= -1012 && (s.money < 0 || s.st.joy < 40),
@@ -1491,7 +1663,7 @@ const EVENTS = [
     verse: v('The hearts of the men of Israel are after Absalom.', '2 Samuel 15:13'),
     choices: [
       { t: 'Follow King David into exile', run: () => { S.flags.loyal = true; chron('Stayed loyal to David in Absalom’s revolt'); return O('You cross the Jordan with the king. When Absalom falls in the wood of Ephraim, you return with David, honoured.', { favor: 10, faith: 4, health: -3 }); } },
-      { t: 'Join Absalom', run: () => { sin(); return O('Absalom is caught by his hair in an oak and slain. You creep home in shame.', { favor: -12, joy: -6 }); } },
+      { t: 'Join Absalom', run: () => { sin(); sow('shimei', 1, 1); return O('Absalom is caught by his hair in an oak and slain. You creep home in shame.', { favor: -12, joy: -6 }); } },
       { t: 'Stay home and wait', run: () => O('You wait it out. Absalom falls; the king returns.', { wisdom: 2 }) },
     ] },
   { id: 'plague', cause: 'plague', era: ['kingdom'], once: true, force: true,
@@ -1524,6 +1696,22 @@ const EVENTS = [
     choices: [
       { t: 'Stay with the house of David and the Temple', run: () => O('You keep going up to Jerusalem for the feasts, as your fathers did.', { faith: 6, favor: 2 }) },
       { t: 'Follow Jeroboam', run: () => { sin(); return O('The golden calves are close and convenient.', { faith: -8, joy: 2 }); } },
+    ] },
+
+  { id: 'abigail', title: 'David’s young men at the shearing', icon: '🧺', era: ['kingdom'], min: 18, once: true, force: true,
+    cond: s => yearOf(s) >= -1018 && yearOf(s) <= -1012 && ((s.assets.sheep || 0) >= 6 || s.money >= 30 || hasJob('shepherd', 'farmer', 'herdsman')),
+    text: () => `It is sheep-shearing time. Ten young men arrive from David, who is hiding from Saul in the wilderness. Their men guarded your shepherds all season and took nothing. Now they ask for whatever you can spare.`,
+    verse: v('Then Abigail made haste, and took two hundred loaves, and two bottles of wine, and five sheep ready dressed.', '1 Samuel 25:18'),
+    choices: [
+      { t: 'Load donkeys with bread, wine and meat, like Abigail', sub: '15 shekels', run: () => { inc('good'); inc('given', 15); chron('Fed David’s men in the wilderness'); return O('David blesses you: “Blessed be thy advice.” Years later, his officers still remember your name.', { favor: 10, joy: 5, faith: 2 }, -15); } },
+      { t: '“Who is David?”', run: () => { loseFlock(.3); return O('Like Nabal, you send them away empty. David’s men return in anger and your flocks pay the price.', { favor: -8, joy: -6 }); } },
+    ] },
+  { id: 'judgment', title: 'Two women before the king', icon: '👶', era: ['kingdom'], min: 10, once: true,
+    cond: s => yearOf(s) >= -969 && yearOf(s) <= -962, w: 3,
+    text: () => `You are in the crowd when two women come before King Solomon, both claiming the same baby. Neither will give way. The king calls for a sword.`,
+    verse: v('And they feared the king: for they saw that the wisdom of God was in him, to do judgment.', '1 Kings 3:28'),
+    choices: [
+      { t: 'Watch what the king does', run: () => { chron('Saw Solomon’s judgment of the two mothers'); return O('“Divide the living child in two.” One woman cries out, “Give her the living child, and in no wise slay it.” The king gives the baby to her: she is the mother. The crowd gasps.', { wisdom: 8, joy: 3 }); } },
     ] },
 
   // ---------- Days of Jesus ----------
@@ -1619,6 +1807,54 @@ const EVENTS = [
   { id: 'hosanna', era: ['gospels'], min: 5, once: true, force: true,
     cond: s => yearOf(s) === 33,
     run: () => { if (S.disciple || S.flags.metJesus) { log('Jesus rides into Jerusalem on a colt. You spread your cloak in the way, wave palm branches and cry: <b>“Hosanna to the Son of David!”</b> <span class="ref">Matt 21:9</span>', 'holy'); return { d: { joy: 6, faith: 4 } }; } log('Crowds in Jerusalem spread palm branches before a teacher from Galilee riding on a colt. <span class="ref">Matt 21:8</span>'); return { d: {} }; } },
+  { id: 'nicodemus', title: 'A visit by night', icon: '🌙', era: ['gospels'], min: 20, once: true, w: 4,
+    cond: s => hasJob('scribe', 'levite') && yearOf(s) >= 29 && yearOf(s) <= 33,
+    text: () => `You are a teacher of the Law, and you cannot stop thinking about the miracles of the man from Nazareth. You could go to Him after dark, when no one would see.`,
+    verse: v('Except a man be born again, he cannot see the kingdom of God.', 'John 3:3'),
+    choices: [
+      { t: 'Go to Him by night', run: () => { meet(); chron('Went to Jesus by night'); return O('“How can a man be born when he is old?” you ask. He speaks of wind, and Spirit, and of God so loving the world. You walk home under the stars, changed.', { faith: 10, wisdom: 6 }); } },
+      { t: 'It would ruin your reputation', run: () => O('You stay among the scribes. You wonder about it for years.', { favor: 2, faith: -2 }) },
+    ] },
+  { id: 'lepers', title: 'Ten lepers', icon: '🙌', era: ['gospels'], min: 15, once: true, force: true,
+    cond: s => yearOf(s) >= 29 && yearOf(s) <= 33 && s.st.health < 40 && s.once.hem,
+    text: () => `Your sickness has become leprosy. You live outside the village with nine others. One day the Teacher passes. You lift up your voices: “Jesus, Master, have mercy on us.” He says, “Go shew yourselves unto the priests.” On the way, your skin becomes clean.`,
+    verse: v('And one of them, when he saw that he was healed, turned back, and with a loud voice glorified God.', 'Luke 17:15'),
+    choices: [
+      { t: 'Turn back and fall at His feet to give thanks', run: () => { meet(); chron('Healed of leprosy; turned back to give thanks'); return O('“Were there not ten cleansed? but where are the nine?… thy faith hath made thee whole.”', { health: 40, faith: 12, joy: 10 }); } },
+      { t: 'Hurry on to the priests with the others', run: () => O('You are clean. You never thanked Him.', { health: 40, joy: 6 }) },
+    ] },
+  { id: 'water', title: 'Walking on the sea', icon: '🌊', era: ['gospels'], once: true, w: 4,
+    cond: s => s.disciple && yearOf(s) >= 30 && yearOf(s) <= 32,
+    text: () => `In the fourth watch of the night, with the boat tossed by waves, you see a figure walking toward you on the water. “Be of good cheer; it is I; be not afraid.”`,
+    verse: v('And he said, Come. And when Peter was come down out of the ship, he walked on the water, to go to Jesus.', 'Matthew 14:29'),
+    choices: [
+      { t: '“Lord, bid me come unto thee on the water”', chk: ['faith', .2, .9], run: (s, ok) => ok ? (award('water'), chron('Walked on the water'), O('You step out. The water holds. You walk on the sea toward Him, step after impossible step.', { faith: 14, joy: 12 })) : O('You step out and walk, then see the wind and begin to sink. He catches you: “O thou of little faith, wherefore didst thou doubt?”', { faith: 8, health: -2 }) },
+      { t: 'Stay in the boat', run: () => O('You watch Peter try. You are safe, and a little sorry.', { faith: 2 }) },
+    ] },
+  { id: 'lazarus', title: '“Lazarus, come forth”', icon: '🪨', era: ['gospels'], min: 8, once: true,
+    cond: s => yearOf(s) >= 32 && yearOf(s) <= 33 && (s.place === 'Bethany' || s.place === 'Jerusalem' || s.disciple || s.flags.metJesus), w: 4,
+    text: () => `In Bethany, Lazarus has been in the grave four days. His sisters Martha and Mary are weeping. Jesus stands at the tomb and tells them to take away the stone.`,
+    verse: v('Lord, by this time he stinketh: for he hath been dead four days.', 'John 11:39'),
+    choices: [
+      { t: 'Help roll away the stone', run: () => { meet(); award('lazarus'); chron('Saw Lazarus raised from the dead'); return O('He cries with a loud voice, “Lazarus, come forth.” And he that was dead comes out, bound hand and foot with graveclothes.', { faith: 15, joy: 12 }); } },
+      { t: 'Stand back with the mourners', run: () => { meet(); award('lazarus'); return O('You see it from the back of the crowd. You will never doubt the resurrection again.', { faith: 10, joy: 8 }); } },
+    ] },
+  { id: 'bartimaeus', title: 'A blind man by the Jericho road', icon: '🦯', era: ['gospels'], min: 8, once: true, w: 3,
+    cond: s => yearOf(s) >= 32 && yearOf(s) <= 33 && (s.place === 'Jericho' || chance(.4)),
+    text: () => `Blind Bartimaeus is shouting from the roadside as Jesus passes: “Jesus, thou son of David, have mercy on me!” The crowd tells him to be quiet.`,
+    verse: v('Be of good comfort, rise; he calleth thee.', 'Mark 10:49'),
+    choices: [
+      { t: 'Help him through the crowd to Jesus', run: () => { meet(); inc('kind'); return O('He throws off his cloak and comes. “Lord, that I might receive my sight.” Immediately he sees, and follows Jesus in the way.', { faith: 8, favor: 4, joy: 6 }); } },
+      { t: 'Tell him to hold his peace', run: () => O('He only cries out the more. Jesus stops anyway.', { faith: -2 }) },
+    ] },
+  { id: 'supper', title: 'The upper room', icon: '🍞', era: ['gospels'], once: true, force: true,
+    cond: s => s.disciple && yearOf(s) === 33,
+    text: () => `At the Passover meal, the Master rises, lays aside His garments, takes a towel, and begins to wash the disciples’ feet. Now He kneels in front of you.`,
+    verse: v('If I wash thee not, thou hast no part with me.', 'John 13:8'),
+    choices: [
+      { t: 'Let Him wash your feet', run: () => { inc('meek', 2); chron('The Lord washed your feet'); return O('Then He breaks the bread: “This is my body which is given for you.” You do not understand yet. You will.', { faith: 10, joy: 4 }); } },
+      { t: '“Thou shalt never wash my feet”', run: () => { inc('meek'); return O('“If I wash thee not…” “Lord, not my feet only, but also my hands and my head.”', { faith: 8, wisdom: 3 }); } },
+    ] },
   { id: 'cross', title: 'Darkness over all the land', icon: '✝️', era: ['gospels'], min: 10, once: true, force: true,
     cond: s => yearOf(s) === 33,
     text: () => S.disciple ? `In the garden of Gethsemane, soldiers come with lanterns and swords. The Master is arrested and tried through the night. By the third hour He is crucified at Golgotha.` : `At Passover, the Teacher from Nazareth is crucified outside Jerusalem. From the sixth hour there is darkness over all the land until the ninth hour.`,
@@ -1626,6 +1862,14 @@ const EVENTS = [
     choices: [
       { t: 'Go to Golgotha and stay near the cross', run: () => { chron('Stood near the cross'); return O('You stand among the women near the cross until it is finished. On the third day, the tomb is empty: “He is not here: for he is risen, as he said.”', { faith: 15, joy: 8, favor: 3 }); } },
       { t: 'Flee and hide', run: () => O('You hide behind locked doors, ashamed. Then on the first day of the week, the news: “The Lord is risen indeed.” He shows you His hands, and forgives you.', { faith: 12, joy: 6 }) },
+    ] },
+  { id: 'emmaus', title: 'The road to Emmaus', icon: '🛤️', era: ['gospels'], min: 12, once: true, force: true,
+    cond: s => yearOf(s) === 33 && !s.disciple && s.flags.metJesus,
+    text: () => `Three days after the crucifixion you walk the road to Emmaus, sad and confused. A stranger joins you and, beginning at Moses and all the prophets, explains everything concerning the Messiah.`,
+    verse: v('Did not our heart burn within us, while he talked with us by the way?', 'Luke 24:32'),
+    choices: [
+      { t: '“Abide with us: for it is toward evening”', run: () => { chron('Met the risen Lord on the Emmaus road'); return O('At supper He takes bread, blesses it and breaks it, and your eyes are opened. It is Him. Then He vanishes. You run seven miles back to Jerusalem in the dark.', { faith: 15, joy: 15 }); } },
+      { t: 'Bid the stranger goodnight', run: () => O('Later, you hear who He was. Your heart had known.', { faith: 8, joy: 4 }) },
     ] },
   { id: 'pentecost', title: 'The day of Pentecost', icon: '🔥', era: ['gospels'], min: 10, once: true, force: true,
     cond: s => yearOf(s) === 33,
@@ -1664,7 +1908,7 @@ const EVENTS = [
     cond: s => s.disciple && yearOf(s) === 44,
     text: () => `King Herod Agrippa has killed James the brother of John with the sword. Now his soldiers come for you.`,
     verse: v('Peter therefore was kept in prison: but prayer was made without ceasing of the church unto God for him.', 'Acts 12:5'),
-    choices: [{ t: 'Pray in the prison', run: () => S.st.faith >= 60 ? (chron('Delivered from Herod’s prison'), O('In the night a light shines in the cell. Your chains fall off and the iron gate opens of its own accord.', { faith: 10, joy: 8 })) : O('Months pass in chains before you are released.', { health: -20, faith: 4 }) }] },
+    choices: [{ t: 'Pray in the prison', chk: ['faith', .15, .95], run: (s, ok) => ok ? (chron('Delivered from Herod’s prison'), O('In the night a light shines in the cell. Your chains fall off and the iron gate opens of its own accord.', { faith: 10, joy: 8 })) : O('Months pass in chains before you are released.', { health: -20, faith: 4 }) }] },
   { id: 'claudius', title: 'A great dearth', icon: '🌾', era: ['gospels'], once: true,
     cond: s => s.believer && yearOf(s) >= 46 && yearOf(s) <= 48, w: 4,
     text: () => `The prophet Agabus foretold a great dearth throughout the world, and it has come in the days of Claudius Caesar. The brethren in Judea are hungry.`,
@@ -1681,9 +1925,17 @@ const EVENTS = [
     text: () => `The church at Antioch is praying for workers to carry the gospel to the cities of Asia and Macedonia.`,
     verse: v('Go ye therefore, and teach all nations.', 'Matthew 28:19'),
     choices: [
-      { t: 'Go on a missionary journey', run: () => chance(.75) ? O('Through storm, synagogue and marketplace you preach. Churches are planted behind you.', { faith: 8, favor: 6, joy: 6, health: -6 }) : O('You are beaten with rods at Philippi and thrown in the stocks. At midnight you sing hymns.', { faith: 10, health: -16 }) },
+      { t: 'Go on a missionary journey', chk: ['health', .35, .9], run: (s, ok) => ok ? O('Through storm, synagogue and marketplace you preach. Churches are planted behind you.', { faith: 8, favor: 6, joy: 6, health: -6 }) : O('You are beaten with rods at Philippi and thrown in the stocks. At midnight you sing hymns.', { faith: 10, health: -16 }) },
       { t: 'Support those who go', sub: '6 shekels', if: s => s.money >= 6, need: '6 shekels', run: () => { inc('given', 6); return O('Your gift goes with them, like Lydia’s did.', { faith: 3, favor: 3 }, -6); } },
       { t: 'Serve the church at home', run: () => O('You care for the saints in your own city.', { favor: 4, joy: 3 }) },
+    ] },
+  { id: 'corinth', title: 'A tentmaker from Tarsus', icon: '⛺', era: ['gospels'], min: 18, once: true, force: true,
+    cond: s => hasJob('tentmaker') && yearOf(s) >= 50 && yearOf(s) <= 52,
+    text: () => `A Jew named Paul joins the workshop of Aquila and Priscilla, where you stitch tents. He works with his hands all week and reasons in the synagogue every Sabbath.`,
+    verse: v('And because he was of the same craft, he abode with them, and wrought: for by their occupation they were tentmakers.', 'Acts 18:3'),
+    choices: [
+      { t: 'Work beside him and listen', run: () => { S.believer = true; chron('Worked beside the apostle Paul'); return O('Over leather and awl, Paul teaches you everything. By the time he leaves for Ephesus, you are a pillar of the church in Corinth.', { faith: 12, wisdom: 8, favor: 4 }); } },
+      { t: 'Keep to your own bench', run: () => O('He is a good worker, you admit.', { wisdom: 1 }) },
     ] },
   { id: 'martyr', title: 'Faithful unto death', icon: '👑', era: ['gospels'], min: 35, once: true, w: .5,
     cond: s => s.disciple && s.flags.apostle && yearOf(s) >= 40 && yearOf(s) <= 68,
@@ -1705,6 +1957,62 @@ const EVENTS = [
     cond: s => s.flags.stayed && yearOf(s) === 70,
     run: () => { log('The Romans breach the walls. The Temple burns, and there is not left one stone upon another. <span class="ref">Matt 24:2</span>', 'bad'); return { d: { health: -int(35, 70), joy: -20 } }; } },
 ];
+
+// The harvest of earlier choices. Each returns an event (or null if it no longer applies).
+const seedEv = (id, title, icon, text, verse, choices) => ({ id: 'seed-' + id, dynamic: true, title, icon, text: () => text, verse, choices });
+const SEEDS = {
+  guest: () => seedEv('guest', 'A guest returns', '🐪', 'A caravan stops at your door. Its master is one of the travellers you once sheltered, now a wealthy trader. “I never forgot your kindness,” he says.', v('Cast thy bread upon the waters: for thou shalt find it after many days.', 'Ecclesiastes 11:1'), [
+    { t: 'Accept his gift with thanks', run: () => O('He leaves you a purse of silver and a blessing on your house.', { joy: 6, favor: 3 }, int(25, 40)) },
+    { t: 'Ask him to give it to the poor instead', run: () => { inc('good', 2); return O('He laughs, and gives twice as much to the poor of your town in your name.', { favor: 10, faith: 4, joy: 4 }); } }]),
+  samaritan: () => seedEv('samaritan', 'A debt of kindness', '🤝', 'A steward from a great house finds you. He is the man you once found half dead on the road. He has risen high, and he has come to repay you.', v('Blessed are the merciful: for they shall obtain mercy.', 'Matthew 5:7'), [
+    { t: 'Accept a gift of sheep', run: () => { S.assets.sheep = (S.assets.sheep || 0) + int(6, 12); return O('A flock is driven to your door.', { joy: 8, favor: 3 }); } },
+    { t: '“Go, and help another as I helped you”', run: () => { inc('good'); inc('kind'); return O('He promises. Your kindness travels further than you ever will.', { faith: 6, favor: 6 }); } }]),
+  'purse-good': () => ({ id: 'seed-purse', dynamic: true, run: () => { log('🌱 The widow whose purse you returned has a son who is now a respected scribe. At the gate he speaks well of you to everyone. <span class="ref">Prov 22:1</span>', 'good'); return { d: { favor: 10 } }; } }),
+  'purse-bad': () => seedEv('purse-bad', 'The purse is recognised', '👛', 'The man whose purse you kept recognises its stitching at the market, years later, and calls you a thief before everyone.', v('He shall even restore it in the principal, and shall add the fifth part more thereto.', 'Leviticus 6:5'), [
+    { t: 'Confess and restore it with a fifth more', run: () => { repentAll(); return O('You pay back twenty-four shekels. The shame passes. The peace stays.', { faith: 5, favor: -3 }, -24); } },
+    { t: 'Deny everything', run: () => O('No one believes you.', { favor: -12, faith: -3 }) }]),
+  scales: () => seedEv('scales', 'The weights are tested', '⚖️', 'The market elders test every trader’s weights. Yours are found light.', v('Divers weights are an abomination unto the LORD; and a false balance is not good.', 'Proverbs 20:23'), [
+    { t: 'Confess and repay those you cheated', run: () => { repentAll(); return O('It costs you dearly, but you can look people in the eye again.', { faith: 5, favor: -2 }, -20); } },
+    { t: 'Blame your servant', run: () => { if (S.job) S.job.perf = clamp(S.job.perf - 30, 0, 100); return O('Nobody believes that, either. Customers stay away.', { favor: -12 }); } }]),
+  bribe: () => seedEv('bribe', 'The widow’s field', '📜', 'The widow you helped to cheat has appealed to the judges. The contract you wrote is read aloud, and everyone hears how its words were bent.', v('For the gift blindeth the wise, and perverteth the words of the righteous.', 'Exodus 23:8'), [
+    { t: 'Confess, and give back the bribe', run: () => { repentAll(); return O('Her field is restored. You return the silver and your seat among the scribes.', { faith: 6, favor: -6 }, -30); } },
+    { t: 'Defend the contract', run: () => { if (S.job) S.job.perf = 5; return O('You lose the case, and your good name with it.', { favor: -18, faith: -4 }); } }]),
+  repay: d => { const f = person(d.id); if (!f || !f.alive) return null; return { id: 'seed-repay', dynamic: true, run: () => { f.bond = clamp(f.bond + 8, 0, 100); log(`🌱 <b>${esc(f.name)}</b> repays your loan in full, with a jar of oil as thanks.`, 'good'); return { d: { joy: 3 }, money: 12 }; } }; },
+  naboth: () => seedEv('naboth', 'A prophet at the vineyard', '👉', 'A prophet meets you in the vineyard you took by deceit. “Hast thou killed, and also taken possession?”', v('Seest thou how Ahab humbleth himself before me? because he humbleth himself before me, I will not bring the evil in his days.', '1 Kings 21:29'), [
+    { t: 'Tear your clothes and humble yourself', run: () => { repentAll(); return O('You fast in sackcloth and give the vineyard back to the dead man’s family. The judgment passes over you.', { faith: 8, joy: -4 }, 0, null, (S.assets.vineyard = Math.max(0, (S.assets.vineyard || 0) - 1))); } },
+    { t: 'Drive him off', run: () => O('Within the year a sickness lays you low.', { health: -22, favor: -6 }) }]),
+  joseph: d => { const b = person(d.id); if (!b || !b.alive) return null; return seedEv('joseph', 'Your brother remembers', '🌾', `In a lean year, <b>${esc(b.name)}</b>, the ${sibWord(b.gender)} you once forgave, arrives with donkeys loaded with grain for your household.`, v('But as for you, ye thought evil against me; but God meant it unto good.', 'Genesis 50:20'), [
+    { t: 'Embrace and weep together', run: () => { b.bond = 100; inc('love'); return O('“God sent me before you to preserve life.” Your households are joined again.', { joy: 10, faith: 4 }, 20); } }]); },
+  shimei: () => seedEv('shimei', 'Before the king', '👑', 'Absalom is dead and King David is crossing the Jordan back to Jerusalem. Everyone who followed Absalom is waiting to see what he will do.', v('Therefore the king said unto Shimei, Thou shalt not die. And the king sware unto him.', '2 Samuel 19:23'), [
+    { t: 'Fall at the king’s feet and confess', run: () => { repentAll(); return O('David looks at you a long moment: “Thou shalt not die.” You go home pardoned.', { favor: 6, faith: 4, joy: 6 }); } },
+    { t: 'Hide until it blows over', run: () => O('Your name is on a list somewhere. You never quite feel safe.', { favor: -6, joy: -4 }) }]),
+  widow: () => ({ id: 'seed-widow', dynamic: true, run: () => { log('🌱 The widow you once fed is prospering again. Her sons bring you the firstfruits of their harvest. <span class="ref">Eccl 11:1</span>', 'good'); return { d: { joy: 4, favor: 3 }, money: 10 }; } }),
+  jonah: () => seedEv('jonah', 'The word comes a second time', '🐋', 'A great storm caught your ship, and you were thrown into the sea. Now you stand on the shore, alive and soaking, and the word of the LORD comes to you a second time.', v('And the word of the LORD came unto Jonah the second time.', 'Jonah 3:1'), [
+    { t: 'This time, go', run: () => { S.calling = 'prophet'; award('prophet'); chron('Called a second time; went as a prophet'); return O('You go. You will never run again.', { faith: 12, joy: 4 }); } },
+    { t: 'Refuse again', run: () => O('The word falls silent. It does not come a third time.', { faith: -10, joy: -6 }) }]),
+  lot: () => ({ id: 'seed-lot', dynamic: true, run: () => { S.assets.sheep = (S.assets.sheep || 0) + int(8, 14); log('🌱 In the hill country your flocks multiply beyond counting. “Lift up now thine eyes… for all the land which thou seest, to thee will I give it.” <span class="ref">Gen 13:14-15</span>', 'good'); return { d: { joy: 6, faith: 4 } }; } }),
+  sodom: () => seedEv('sodom', 'Fire on the plain', '🔥', 'Two strangers urge you to flee the cities of the plain before dawn: the LORD will destroy them. Your house and goods are here.', v('Escape for thy life; look not behind thee, neither stay thou in all the plain.', 'Genesis 19:17'), [
+    { t: 'Flee at once and do not look back', run: () => { sellOff(.6); return O('You leave with what you can carry. Behind you, fire and brimstone fall from heaven.', { faith: 8, joy: -6 }); } },
+    { t: 'Stay to save your goods', run: () => { loseFlock(.8); return O('You barely escape the burning plain with your life.', { health: -35, joy: -12 }); } }]),
+};
+function judge(right) {
+  const c = CASES[S.yr.case];
+  S.flags.cases = [...new Set([...(S.flags.cases || []), S.yr.case])];
+  if (right) { inc('cases'); if (S.c.cases >= 5) award('judge'); }
+  return right
+    ? O(`The elders nod, and the people praise your judgment. “${esc(c.law)}”`, { wisdom: 3, favor: 5 }, 0, v(c.law, c.r))
+    : O(`The people murmur. Afterwards an old elder quietly reminds you of the Law: “${esc(c.law)}”`, { favor: -4, wisdom: 2 }, 0, v(c.law, c.r));
+}
+function moveEvent() {
+  const options = ERAS[S.era].places.filter(p => p !== S.place).sort(() => rnd() - .5).slice(0, 4);
+  return {
+    id: 'move', dynamic: true, title: 'Where will you go?', icon: '🧭',
+    text: () => `You gather your household and goods. Where will you make your home?`,
+    verse: v('Get thee out of thy country, and from thy kindred, and from thy father’s house, unto a land that I will shew thee.', 'Genesis 12:1'),
+    choices: [...options.map(p => ({ t: p, run: () => { S.place = p; S.flags.moved = S.age; chron(`Moved to ${p}`); return O(`You settle in <b>${esc(p)}</b>. New streets, new neighbours, new chances.`, { joy: 4, favor: -3 }); } })),
+      { t: 'Stay where you are', run: () => O('You decide to stay. The journey money stays in your purse.', {}, 12) }],
+  };
+}
 
 // Choice builders that depend on state at display time
 function loavesChoices() {
@@ -1835,15 +2143,22 @@ function showEvent(ev) {
     ${ev.verse ? `<blockquote class="verse">“${esc(ev.verse.q)}”<cite>${esc(ev.verse.r)} · KJV</cite></blockquote>` : ''}
     <div class="choices" role="group" aria-label="Your choice">${choices.map((c, i) => {
       const ok = !c.if || c.if(S);
-      return `<button class="choice" data-i="${i}" ${ok ? '' : 'disabled'}><span class="k" aria-hidden="true">${i + 1}</span><span>${esc(typeof c.t === 'function' ? c.t() : c.t)}${c.sub ? `<small>${esc(c.sub)}</small>` : ''}${!ok ? `<small>Requires ${esc(c.need)}</small>` : ''}</span></button>`;
+      c._p = c.chk ? oddsOf(...c.chk) : null;
+      const pct = c._p != null ? Math.round(c._p * 100) : 0;
+      const odds = c._p != null ? `<span class="odds ${pct >= 65 ? 'hi' : pct < 40 ? 'lo' : ''}" title="Chance of success, based on your ${STAT_META[c.chk[0]].label}">${STAT_META[c.chk[0]].icon} ${pct}%</span>` : '';
+      return `<button class="choice" data-i="${i}" ${ok ? '' : 'disabled'}><span class="k" aria-hidden="true">${i + 1}</span><span>${esc(typeof c.t === 'function' ? c.t() : c.t)}${c.sub ? `<small>${esc(c.sub)}</small>` : ''}${!ok ? `<small>Requires ${esc(c.need)}</small>` : ''}</span>${odds}</button>`;
     }).join('')}</div>`;
   card.dataset.locked = '1';
   $$('.choice', card).forEach(b => b.addEventListener('click', () => choose(ev, choices[+b.dataset.i])));
   openModal();
 }
 function choose(ev, c) {
-  const r = c.run(S) || {};
+  const seeds0 = S.seeds.length;
+  const ok = c.chk ? chance(c._p) : undefined;
+  const r = c.run(S, ok) || {};
   const chips = apply(r.d, r.money);
+  if (c.chk) chips.unshift({ k: 'label', v: `${ok ? '✓ Succeeded' : '✗ Failed'} · ${Math.round(c._p * 100)}% ${STAT_META[c.chk[0]].label}` });
+  if (S.seeds.length > seeds0) chips.push({ k: 'label', v: '🌱 This choice will bear fruit in time · Gal 6:7' });
   noteCause(ev);
   log(`<b>${esc(ev.title)}${/[.!?”]$/.test(ev.title) ? '' : '.'}</b> ${r.text || ''}`, chips.some(x => x.v < 0 && x.k !== 'money') && !chips.some(x => x.v > 0) ? 'bad' : chips.some(x => x.v > 0) ? 'good' : '');
   checkFruits();
@@ -1891,6 +2206,14 @@ function checkFruits() {
     }
   }
   if (S.fruits.length === 9) award('fruits');
+  const amb = S.ambition && AMBITIONS[S.ambition];
+  if (amb && !S.flags.ambDone && amb.prog(S) >= .999) {
+    S.flags.ambDone = S.age;
+    log(`${amb.icon} Your heart’s desire is fulfilled: <b>${amb.name}</b>. “When the desire cometh, it is a tree of life.” <span class="ref">Prov 13:12</span>`, 'holy');
+    chron(`Fulfilled your ambition: ${amb.name}`);
+    apply({ joy: 10 });
+    award('ambition');
+  }
   if ((c.given || 0) >= 150) award('giver');
   if ((c.trivia || 0) >= 25) award('scholar');
 }
@@ -1921,6 +2244,7 @@ const ACTS = [
     cond: s => !s.yr.feast && (s.era !== 'kingdom' || yearOf(s) >= -1003),
     run: () => {
       S.yr.feast = true;
+      if (S.place === 'Jerusalem') S.money += 8;   // no journey needed: you live in the holy city
       if (S.era === 'gospels' && yearOf() >= 29 && yearOf() <= 33 && chance(.5)) { meet(); return ['In the Temple courts, a Teacher from Nazareth overturns the tables of the moneychangers: “Make not my Father’s house an house of merchandise.” <span class="ref">John 2:16</span>', { faith: 8, wisdom: 3, joy: 3 }, -8]; }
       if (chance(.25) && friends().length < 6) { const f = addPerson('Friend', S.gender, S.age + int(-3, 3), { bond: 65 }); return [`On the road you meet <b>${esc(f.name)}</b>, and become fast friends.`, { faith: 5, joy: 5 }, -8]; }
       return [S.era === 'patriarchs' ? 'You journey to Bethel and build an altar to the God who answered Jacob in the day of his distress. <span class="ref">Gen 35:3</span>' : '“I was glad when they said unto me, Let us go into the house of the LORD.” <span class="ref">Ps 122:1</span>', { faith: 6, joy: 5, favor: 2 }, -8];
@@ -1948,12 +2272,15 @@ const ACTS = [
   { id: 'endow', name: () => S.era === 'gospels' ? 'Build a synagogue for the town' : S.era === 'kingdom' ? 'Give gold for the house of the LORD' : 'Raise a great altar of stones', icon: '🏛️', min: 25, cost: 150, desc: 'A gift that outlives you.',
     cond: s => !s.flags.endowed,
     run: () => { S.flags.endowed = true; inc('good', 4); inc('given', 150); chron(S.era === 'gospels' ? 'Built a synagogue for the town' : 'Made a great offering to the LORD'); return [S.era === 'gospels' ? 'The elders say of you, “He loveth our nation, and he hath built us a synagogue.” <span class="ref">Luke 7:5</span>' : 'The people rejoice, for with a perfect heart you offered willingly to the LORD. <span class="ref">1 Chr 29:9</span>', { favor: 15, faith: 6, joy: 6 }, -150]; } },
+  { id: 'move', name: 'Move to another town', icon: '🧭', min: 18, cost: 12, desc: 'Take your household somewhere new.',
+    cond: s => !s.flags.moved || s.age - s.flags.moved >= 5,
+    run: () => { QUEUE.push(moveEvent()); return ['You load the donkeys and weigh where to go.', {}, -12]; } },
   { id: 'healer', name: 'Visit a physician', icon: '🌿', min: 0, cost: 10, desc: () => S.age < 16 ? 'Your parents pay.' : 'Herbs, oil and rest.',
     run: () => [`The physician tends to you.`, { health: int(8, 16) }, S.age < 16 ? 0 : -10] },
 ];
 function actName(a) { return typeof a.name === 'function' ? a.name() : a.name; }
 function actDesc(a) { return typeof a.desc === 'function' ? a.desc() : a.desc; }
-function actCost(a) { return a.id === 'healer' && S.age < 16 ? 0 : (a.cost || 0); }
+function actCost(a) { if (a.id === 'feast' && S.place === 'Jerusalem') return 0; return a.id === 'healer' && S.age < 16 ? 0 : (a.cost || 0); }
 function doAct(id) {
   const a = ACTS.find(x => x.id === id);
   if (!a || S.energy <= 0) return;
@@ -2013,6 +2340,7 @@ function openSheet(kind) {
   card.innerHTML = '<div class="grip" aria-hidden="true"></div>' + ({ acts: sheetActs, job: sheetJob, people: sheetPeople, assets: sheetAssets, profile: sheetProfile, menu: sheetMenu }[kind])();
   card.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeSheet));
   wireSheet(kind, card);
+  if (kind === 'profile') wireChart(card, S.hist);
   const sh = $('#sheet');
   if (!sh.open) sh.showModal();
 }
@@ -2139,8 +2467,18 @@ function sheetProfile() {
       <div class="kv"><span>⚖️ Unconfessed sins</span><span>${open}</span></div>
       ${S.believer || S.disciple ? `<div class="kv"><span>✝️ Walk</span><span>${S.disciple ? (S.flags.apostle ? 'Apostle' : 'Disciple') : 'Believer'}</span></div>` : ''}
     </div>
+    ${ambitionHTML()}
+    <div class="sec-t">Your life so far</div>
+    ${chartHTML(S.hist, `Stats by age · ${NATURES[S.nature].icon} ${NATURES[S.nature].name}${S.calling ? ' · ' + callingName() : ''}`)}
     <div class="sec-t">Fruit of the Spirit · ${S.fruits.length}/9 <span class="ref">Gal 5:22-23</span></div>
     <div class="fruits">${FRUITS.map(f => `<div class="fruit ${S.fruits.includes(f.id) ? 'on' : ''}"><span class="fi" aria-hidden="true">${f.icon}</span>${f.name}<small>${f.gloss}</small></div>`).join('')}</div>`;
+}
+function ambitionHTML() {
+  const a = S.ambition && AMBITIONS[S.ambition];
+  if (!a) return S.age >= 13 ? '' : `<div class="sec-t">Ambition</div><div class="empty">At 13 you will choose what to set your heart on.</div>`;
+  const p = Math.round(a.prog(S) * 100), done = !!S.flags.ambDone;
+  return `<div class="sec-t">Ambition</div><div class="amb ${done ? 'done' : ''}"><div class="at"><b>${a.icon} ${a.name}</b><span>${done ? '✓ Fulfilled' : p + '%'}</span></div>
+    <div class="meter ${done ? '' : p < 35 ? 'low' : p < 70 ? 'mid' : ''}" role="meter" aria-label="Ambition progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${p}"><i style="width:${p}%"></i></div><small>${esc(a.goal)} · ${esc(a.ref)}</small></div>`;
 }
 function sheetMenu() {
   const theme = store.get(KEY.THEME, 'auto');
@@ -2197,7 +2535,7 @@ function render() {
   if (!S) return;
   $('#avatar').textContent = avatarFor(S.age, S.gender);
   $('#who-name').textContent = S.name;
-  $('#who-sub').textContent = `Age ${S.age} · ${S.job ? jobTitle() : S.age < 10 ? 'Child' : 'No trade'} · ${S.place}`;
+  $('#who-sub').textContent = `Age ${S.age} · ${S.calling ? callingName() : S.job ? jobTitle() : S.age < 10 ? 'Child' : 'No trade'} · ${S.place}`;
   const c = $('#coins');
   c.textContent = `🪙 ${S.money}`;
   c.classList.toggle('neg', S.money < 0);
@@ -2210,12 +2548,52 @@ function render() {
   const b = $('#badge-acts');
   b.textContent = S.energy; b.classList.toggle('hidden', S.energy <= 0);
 }
+// Lifetime chart: one line per stat on a shared 0–100 scale, crosshair tooltip on hover/touch.
+function chartHTML(hist, label) {
+  if (!hist || hist.length < 2) return `<div class="chart"><div class="field-label">${label}</div><p class="sh-sub" style="margin:0">Your story is only beginning. Age up to see your life take shape.</p></div>`;
+  const W = 320, H = 150, L = 24, R = 6, T = 6, B = 18;
+  const a0 = hist[0][0], a1 = hist[hist.length - 1][0], span = Math.max(1, a1 - a0);
+  const x = a => L + (a - a0) / span * (W - L - R), y = val => T + (1 - val / 100) * (H - T - B);
+  const grid = [0, 50, 100].map(g => `<line class="gl" x1="${L}" x2="${W - R}" y1="${y(g)}" y2="${y(g)}"/><text class="axis" x="${L - 5}" y="${y(g) + 3}" text-anchor="end">${g}</text>`).join('');
+  const step = span > 60 ? 20 : span > 24 ? 10 : 5;
+  let ticks = '';
+  for (let a = Math.ceil(a0 / step) * step; a <= a1; a += step) ticks += `<text class="axis" x="${x(a)}" y="${H - 4}" text-anchor="middle">${a}</text>`;
+  const lines = STATS.map((k, i) => `<polyline class="ln-s" style="stroke:var(--s-${k})" points="${hist.map(h => `${x(h[0]).toFixed(1)},${y(h[i + 1]).toFixed(1)}`).join(' ')}"/>`).join('');
+  const last = hist[hist.length - 1];
+  const legend = STATS.map((k, i) => `<span><i style="background:var(--s-${k})"></i>${STAT_META[k].label} <b>${last[i + 1]}</b></span>`).join('');
+  const summary = STATS.map((k, i) => `${STAT_META[k].label} from ${hist[0][i + 1]} to ${last[i + 1]}`).join(', ');
+  return `<div class="chart" data-chart><div class="field-label">${label}</div>
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Stats by age, ${a0} to ${a1}: ${summary}">${grid}${ticks}${lines}<line class="xh" y1="${T}" y2="${H - B}" x1="-10" x2="-10"/></svg>
+    <div class="legend">${legend}</div><div class="tip" aria-hidden="true"></div></div>`;
+}
+function wireChart(root, hist) {
+  const box = root.querySelector('[data-chart]'); if (!box || !hist || hist.length < 2) return;
+  const svg = box.querySelector('svg'), tip = box.querySelector('.tip'), xh = box.querySelector('.xh');
+  const W = 320, L = 24, R = 6, a0 = hist[0][0], span = Math.max(1, hist[hist.length - 1][0] - a0);
+  const move = e => {
+    const r = svg.getBoundingClientRect();
+    const px = ((e.clientX - r.left) / r.width) * W;
+    const age = a0 + clamp((px - L) / (W - L - R), 0, 1) * span;
+    let h = hist[0]; for (const row of hist) if (Math.abs(row[0] - age) < Math.abs(h[0] - age)) h = row;
+    const hx = L + (h[0] - a0) / span * (W - L - R);
+    xh.setAttribute('x1', hx); xh.setAttribute('x2', hx); xh.classList.add('on');
+    tip.innerHTML = `<b>Age ${h[0]}</b><br>` + STATS.map((k, i) => `<i style="background:var(--s-${k})"></i>${STAT_META[k].label} ${h[i + 1]}`).join('<br>');
+    const br = box.getBoundingClientRect();
+    tip.style.left = `${clamp((hx / W) * r.width + r.left - br.left, 56, br.width - 56)}px`;
+    tip.style.top = `${r.top - br.top + 2}px`;
+    tip.classList.add('on');
+  };
+  svg.addEventListener('pointermove', move);
+  svg.addEventListener('pointerdown', move);
+  svg.addEventListener('pointerleave', () => { tip.classList.remove('on'); xh.classList.remove('on'); });
+}
 function renderLog() { $('#log').innerHTML = ''; S.log.forEach(g => renderGroup(g, false)); }
 
 // ---------------------------------------------------------------- death & legacy
 function die() {
   if (S.dead) return;
   S.dead = true;
+  if (S.hist.length && S.hist[S.hist.length - 1][0] === S.age) S.hist[S.hist.length - 1] = snap(); else S.hist.push(snap());
   if (!S.cause) S.cause = S.age >= 60 ? 'old' : 'sickness';
   const L = legacy();
   S.legacy = L;
@@ -2232,9 +2610,11 @@ function legacy() {
   const st = S.st, c = S.c;
   const open = (c.sins || 0) - (c.repented || 0);
   const kids = children(true).length;
-  const score = Math.max(0, Math.round((st.faith + st.wisdom + st.favor + st.joy) / 4 + S.age / 2 + S.fruits.length * 15 + kids * 8 + (c.grand || 0) * 3 + (c.given || 0) / 5 + (c.trivia || 0) * 2 + (S.ach || []).length * 6 + (S.disciple ? 40 : 0) - open * 6));
+  const score = Math.max(0, Math.round((st.faith + st.wisdom + st.favor + st.joy) / 4 + S.age / 2 + S.fruits.length * 15 + kids * 8 + (c.grand || 0) * 3 + (c.given || 0) / 5 + (c.trivia || 0) * 2 + (S.ach || []).length * 6 + (S.disciple ? 40 : 0) + (S.flags.ambDone ? 40 : 0) + (c.cases || 0) * 3 + (S.calling ? 15 : 0) + (c.reaped || 0) * 2 - open * 6));
   const T = (title, verse) => ({ title, verse, score });
   if (S.cause === 'martyr') return T('Faithful unto death', v('Be thou faithful unto death, and I will give thee a crown of life.', 'Revelation 2:10'));
+  if (S.calling === 'prophet' && (c.prophesied || 0) >= 3) return T('A prophet of the LORD', v('Surely the Lord GOD will do nothing, but he revealeth his secret unto his servants the prophets.', 'Amos 3:7'));
+  if (S.calling === 'elder' && (c.cases || 0) >= 4) return T('A judge in the gate', v('Judges and officers shalt thou make thee in all thy gates… and they shall judge the people with just judgment.', 'Deuteronomy 16:18'));
   if (S.disciple) return T('A fisher of men', v('I have fought a good fight, I have finished my course, I have kept the faith.', '2 Timothy 4:7'));
   if (S.peakSins >= 4 && open === 0 && st.faith >= 65) return T('The lost who was found', v('For this my son was dead, and is alive again; he was lost, and is found.', 'Luke 15:24'));
   if (S.money >= 300 && (c.given || 0) < (c.earned || 0) * .05) return T('The rich fool', v('Thou fool, this night thy soul shall be required of thee: then whose shall those things be, which thou hast provided?', 'Luke 12:20'));
@@ -2273,6 +2653,7 @@ function showDeath() {
       <div class="dates">${cap(childWord(S.gender))} of ${esc(parent('Father')?.name || 'an unknown father')} · ${esc(S.place)}<br>${fmtYear(S.birthYear)} – ${fmtYear(yearOf())} · aged ${S.age}</div>
       <p class="cause">${causeText()}</p>
       <div class="legacy"><span>Remembered as</span><b>${esc(L.title)}</b><span>${L.score} talents of legacy</span></div>
+      ${S.ambition ? `<p class="cause" style="font-size:.84rem;color:var(--muted)">${AMBITIONS[S.ambition].icon} Ambition: ${esc(AMBITIONS[S.ambition].name)} · ${S.flags.ambDone ? '<b style="color:var(--good)">fulfilled</b>' : Math.round(AMBITIONS[S.ambition].prog(S) * 100) + '% of the way'}</p>` : ''}
       <blockquote class="verse" style="text-align:left">“${esc(L.verse.q)}”<cite>${esc(L.verse.r)} · KJV</cite></blockquote>
     </div>
     <div class="sumgrid">
@@ -2281,6 +2662,7 @@ function showDeath() {
       <div class="sum"><b>${S.c.grand || 0}</b><span>Grandchildren</span></div>
       <div class="sum"><b>${S.fruits.length}/9</b><span>Fruits</span></div>
     </div>
+    ${chartHTML(S.hist, `A life in five lines · ${NATURES[S.nature].icon} ${NATURES[S.nature].name}`)}
     <div class="chron" aria-label="Life highlights"><div class="field-label">Chronicle</div><ul>${S.chron.slice(-14).map(([a, t]) => `<li><i>${a}</i><span>${esc(t)}</span></li>`).join('')}</ul></div>
     <div class="stack">
       ${heirs.length ? `<div class="field-label" style="text-align:left">Continue the family line</div>${heirs.slice(0, 6).map(k => `<button class="btn" data-heir="${k.id}">${avatarFor(k.age, k.gender)} Live as ${esc(k.name)} <span class="sub">${k.rel}, age ${k.age}</span></button>`).join('')}` : ''}
@@ -2288,6 +2670,7 @@ function showDeath() {
       <div class="grid2"><button class="btn sm" id="d-share">📤 Share</button><button class="btn sm" id="d-book">📖 Book of Remembrance</button></div>
       <button class="btn ghost sm" id="d-title">Return to title</button>
     </div>`;
+  wireChart(scr, S.hist);
   scr.querySelectorAll('[data-heir]').forEach(b => b.addEventListener('click', () => continueAs(+b.dataset.heir)));
   $('#d-new').addEventListener('click', showSetup);
   $('#d-title').addEventListener('click', showTitle);
@@ -2317,6 +2700,7 @@ function continueAs(id) {
   S = null;
   newLife({ era: old.era, name: heir.name, gender: heir.gender, place: old.place, birthYear: born, gen: old.gen + 1, tribe: old.tribe, inherit: true, st });
   S.age = heir.age;
+  S.hist = [snap()];
   S.rng = old.rng ^ 0x9E3779B9;
   S.money = share;
   S.assets = { ...old.assets };   // the house and flocks go to the one who carries on the line
@@ -2333,6 +2717,7 @@ function continueAs(id) {
   newYearGroup();
   log(`You are <b>${esc(heir.name)}</b>, ${childWord(heir.gender)} of ${esc(old.name)}, the ${ordinal(S.gen)} generation of your family. You inherit ${share} shekels${Object.values(S.assets).some(n => n > 0) ? ' and the family holdings' : ''}.`, 'holy');
   log(`“A good man leaveth an inheritance to his children’s children.” <span class="ref">Prov 13:22</span>`, 'verse');
+  log(`${NATURES[S.nature].icon} You have a <b>${NATURES[S.nature].name.toLowerCase()}</b> spirit.`);
   chron(`Took up the family line at ${heir.age}`);
   META.lives++; saveMeta();
   if (S.gen >= 3) award('gens');
@@ -2369,6 +2754,11 @@ function showHow() {
         <li><b>People</b>: honour your parents, marry, raise children and keep your friendships warm.</li>
         <li><b>Assets</b>: buy flocks, fields and vineyards. They yield shekels every year.</li>
         <li>Grow all nine <b>fruits of the Spirit</b> (tap your name to see them) and unlock milestones in the <b>Book of Remembrance</b>.</li>
+        <li><b>Temperament</b>: choose a nature at birth. It shapes your starting stats and your odds.</li>
+        <li><b>Odds</b>: risky choices show their chance of success, based on your stats. Grow the right stat before you need it.</li>
+        <li><b>Seeds</b>: 🌱 some choices come back years later, for good or ill. “Whatsoever a man soweth, that shall he also reap.”</li>
+        <li><b>Ambition</b>: at 13, set your heart on a goal. Fulfil it for a large legacy bonus.</li>
+        <li><b>Callings</b>: grow wise and respected to be called as an <b>elder of the gate</b> who judges cases by the Law of Moses, or grow in faith to be called as a <b>prophet</b>.</li>
         <li>When you die, carry on the family line as one of your children.</li>
       </ul>
       <p><b>Five stats</b>, after Luke 2:52: 🕊️ Faith, 📜 Wisdom, ❤️ Health, ☀️ Joy and ⭐ Favour with God and man. If health reaches zero, your life ends.</p>
@@ -2392,11 +2782,13 @@ function showTitle() {
   S = null; QUEUE = [];
   show('title');
 }
-const setup = { era: 'gospels', gender: 'm' };
+const setup = { era: 'gospels', gender: 'm', nature: 'random' };
 function showSetup() {
   $('#eras').innerHTML = Object.entries(ERAS).map(([k, e]) => `<button type="button" class="era" role="radio" aria-checked="${setup.era === k}" data-era="${k}"><span class="e-ico" aria-hidden="true">${e.icon}</span><span><b>${e.name}</b><span>${e.blurb}</span><i>${e.when}</i></span></button>`).join('');
   $$('#eras .era').forEach(b => b.addEventListener('click', () => { setup.era = b.dataset.era; showSetup(); }));
   $$('#genders button').forEach(b => b.setAttribute('aria-checked', b.dataset.g === setup.gender));
+  $('#natures').innerHTML = [['random', { name: 'Let God decide', icon: '🎲', desc: 'A temperament chosen at random.' }], ...Object.entries(NATURES)].map(([k, n]) => `<button type="button" class="nature" role="radio" aria-checked="${setup.nature === k}" data-nature="${k}"><span class="ni" aria-hidden="true">${n.icon}</span><span><b>${n.name}</b><span>${n.desc}</span></span></button>`).join('');
+  $$('#natures .nature').forEach(b => b.addEventListener('click', () => { setup.nature = b.dataset.nature; showSetup(); }));
   const sel = $('#in-place');
   const prev = sel.value;
   sel.innerHTML = ERAS[setup.era].places.map(p => `<option>${p}</option>`).join('');
@@ -2411,7 +2803,7 @@ $('#dice-name').addEventListener('click', () => { $('#in-name').value = mpick(NA
 $('#setup-back').addEventListener('click', showTitle);
 $('#btn-born').addEventListener('click', () => {
   const name = ($('#in-name').value || '').replace(/[^\p{L}\p{M} '\-]/gu, '').trim().slice(0, 18) || mpick(NAMES[setup.era][setup.gender]);
-  begin({ era: setup.era, gender: setup.gender, name, place: $('#in-place').value });
+  begin({ era: setup.era, gender: setup.gender, name, place: $('#in-place').value, nature: setup.nature === 'random' ? null : setup.nature });
 });
 $('#btn-random').addEventListener('click', () => {
   const era = mpick(Object.keys(ERAS)), gender = mpick(['m', 'f']);
@@ -2429,6 +2821,8 @@ function save() { if (S && !S.dead) store.set(KEY.SAVE, S); }
 function loadSave() {
   const s = store.get(KEY.SAVE, null);
   if (!s || s.v !== SAVE_VERSION || !ERAS[s.era] || s.dead) return null;
+  s.seeds = s.seeds || []; s.hist = s.hist || []; s.nature = NATURES[s.nature] ? s.nature : 'gracious';
+  s.ambition = s.ambition || null; s.calling = s.calling || null;
   return s;
 }
 
