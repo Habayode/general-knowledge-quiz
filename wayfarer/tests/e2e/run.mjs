@@ -173,7 +173,7 @@ async function playManually(page, { maxMs = 300000, shots = [] } = {}) {
           .click()
           .catch(() => {});
     }
-    if (await act(page.locator('.sheet .seat.window:not(.taken):not(:disabled)').first())) continue;
+    if (await act(page.locator('.sheet .seatmap .seat.window:not(.taken):not(:disabled)').first())) continue;
     if (await act(page.locator('.sheet .opt:not(:disabled)').first())) continue;
     if (await act(page.locator('.sheet-foot .btn', { hasText: 'Skip waiting' }))) continue;
     if (await act(page.locator('.sheet-foot .btn-primary'))) continue;
@@ -309,7 +309,15 @@ const scenarios = {
         { name: '07c-bagtag', when: (p) => p.locator('.sheet .bagtag').isVisible() },
       ],
     });
-    if (!ok) throw new Error('Manual flight did not finish');
+    if (!ok) {
+      await shot(page, 'fail-manual');
+      throw new Error(
+        `Manual flight did not finish: ${await page
+          .locator('.sheet')
+          .innerText()
+          .catch(() => 'no sheet')}`,
+      );
+    }
     const s = await page.evaluate(() => window.wayfarer.state);
     // LHR→CDG: UK to Schengen: passport control on departure and entry stamp at CDG.
     if (!s.stamps.some((x) => x.iso === 'FR' && x.port === 'CDG')) throw new Error('No CDG stamp');

@@ -267,6 +267,8 @@ class Journey {
 
   finish() {
     document.body.classList.remove('journeying');
+    // Re-open the planner (it was tucked away for the trip) on wide screens.
+    if (window.innerWidth > 900) $('#panel').classList.remove('collapsed');
     map.follow = false;
     stopEngine();
     hud.clear();
