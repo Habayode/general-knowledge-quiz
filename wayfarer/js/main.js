@@ -37,8 +37,17 @@ async function boot() {
       $('#loading')?.classList.add('gone');
     },
   });
-  map.onUserMove = () => $('#recenter').hidden = false;
-  window.wayfarer = { clock, get map() { return map; }, get journey() { return journey; }, state };
+  map.onUserMove = () => ($('#recenter').hidden = false);
+  window.wayfarer = {
+    clock,
+    get map() {
+      return map;
+    },
+    get journey() {
+      return journey;
+    },
+    state,
+  };
   countries = await countriesP;
 
   bindTabs();
@@ -72,7 +81,10 @@ function startPlanner() {
 
 function renderProfileChip() {
   const p = state.profile;
-  $('#profile').innerHTML = String(html`<span class="pc-flag">${p ? flag(p.nationality) : '🌐'}</span><span class="pc-name">${p?.name || 'Guest'}</span><span class="pc-wallet">${money(state.wallet)}</span>`);
+  $('#profile').innerHTML = String(
+    html`<span class="pc-flag">${p ? flag(p.nationality) : '🌐'}</span><span class="pc-name">${p?.name || 'Guest'}</span
+      ><span class="pc-wallet">${money(state.wallet)}</span>`,
+  );
 }
 
 function bindTabs() {
@@ -90,7 +102,9 @@ function bindTabs() {
 }
 
 function travelTo(place) {
-  $$('.tab').find((t) => t.dataset.tab === 'plan').click();
+  $$('.tab')
+    .find((t) => t.dataset.tab === 'plan')
+    .click();
   planner.setDestination(place);
   toast(`${place.name} added to your trip`);
 }
@@ -98,7 +112,10 @@ function travelTo(place) {
 // ── Controls: time, camera ────────────────────────────────────────────────
 function bindControls() {
   const ts = $('#timescale');
-  ts.innerHTML = TIME_SCALES.map((s) => `<button class="ts ${s === clock.scale ? 'on' : ''}" data-s="${s}" title="1 real second = ${label(s)}">${s === 1 ? 'Real time' : `×${s.toLocaleString('en-US')}`}</button>`).join('');
+  ts.innerHTML = TIME_SCALES.map(
+    (s) =>
+      `<button class="ts ${s === clock.scale ? 'on' : ''}" data-s="${s}" title="1 real second = ${label(s)}">${s === 1 ? 'Real time' : `×${s.toLocaleString('en-US')}`}</button>`,
+  ).join('');
   $$('.ts', ts).forEach((b) =>
     b.addEventListener('click', () => {
       clock.scale = Number(b.dataset.s);
@@ -225,7 +242,8 @@ class Journey {
       s.voyages++;
       s.co2kg += (v.co2gPerPaxKm * km) / 1000;
       this.achieve('first-voyage');
-      if (leg.path.coords.some(([x, y]) => (x > -80 && x < -79.4 && y > 8.9 && y < 9.4) || (x > 32.2 && x < 32.6 && y > 29.9 && y < 31.3))) this.achieve('canal');
+      if (leg.path.coords.some(([x, y]) => (x > -80 && x < -79.4 && y > 8.9 && y < 9.4) || (x > 32.2 && x < 32.6 && y > 29.9 && y < 31.3)))
+        this.achieve('canal');
     } else if (v.mode === 'bike') {
       s.bikeKm += km;
       this.achieve('first-ride');
@@ -260,12 +278,18 @@ class Journey {
     if (!this.aborted && last) {
       sfx('success');
       const totalKm = this.legs.reduce((s, l) => s + l.path.length, 0) / 1000;
-      modal(html`<div class="finish">
-        <div class="ob-hero">🏁</div>
-        <h2>You've arrived in ${last.to.name}</h2>
-        <p>${Math.round(totalKm).toLocaleString('en-US')} km by ${[...this.modes].map((m) => MODES[m]?.label.toLowerCase() || m).join(', ')} in ${fmtDur((clock.simMs - this.startMs) / 1000)} of travel time.</p>
-        <p class="muted">Local time ${fmtTime(clock.simMs, this.ctx.localTz)} · Wallet ${money(state.wallet)}</p>
-      </div>`);
+      modal(
+        html`<div class="finish">
+          <div class="ob-hero">🏁</div>
+          <h2>You've arrived in ${last.to.name}</h2>
+          <p>
+            ${Math.round(totalKm).toLocaleString('en-US')} km by
+            ${[...this.modes].map((m) => MODES[m]?.label.toLowerCase() || m).join(', ')} in ${fmtDur((clock.simMs - this.startMs) / 1000)}
+            of travel time.
+          </p>
+          <p class="muted">Local time ${fmtTime(clock.simMs, this.ctx.localTz)} · Wallet ${money(state.wallet)}</p>
+        </div>`,
+      );
       if (last.to.kind === 'landmark' || LANDMARKS.some((l) => distance(l.coord, last.to.coord) < 3000)) {
         const lm = LANDMARKS.find((l) => distance(l.coord, last.to.coord) < 3000);
         if (lm) setTimeout(() => openLandmark(lm, { map, onTravel: travelTo }), 1200);
@@ -286,6 +310,7 @@ class Journey {
     clock.cancelAll();
     $('#sheet').hidden = true;
     $('#sheet').innerHTML = '';
+    map.removeVehicle();
     hushVoice();
     this.finish();
   }
@@ -403,9 +428,16 @@ class Journey {
   }
 
   renderLegs() {
-    $('#legs').innerHTML = String(html`<ol class="leg-progress">${this.legs.map(
-      (l, i) => html`<li class="${i < this.index ? 'done' : i === this.index ? 'now' : ''}" title="${l.from.name} → ${l.to.name}"><span>${MODES[l.mode]?.icon || '•'}</span><small>${l.to.name}</small></li>`,
-    )}</ol>`);
+    $('#legs').innerHTML = String(
+      html`<ol class="leg-progress">
+        ${this.legs.map(
+          (l, i) =>
+            html`<li class="${i < this.index ? 'done' : i === this.index ? 'now' : ''}" title="${l.from.name} → ${l.to.name}">
+              <span>${MODES[l.mode]?.icon || '•'}</span><small>${l.to.name}</small>
+            </li>`,
+        )}
+      </ol>`,
+    );
   }
 
   /** Location card: country, nearest town (reverse geocoded), local time and live weather. */
@@ -416,7 +448,10 @@ class Journey {
     if (!force && now - this.lastLocality < 20000) return;
     this.lastLocality = now;
     const pos = [normalizeLon(t.pos[0]), t.pos[1]];
-    const [wx, loc] = await Promise.all([weatherAt(pos).catch(() => null), t.mode === 'fly' && t.altFt > 10000 ? null : reverseLocality(pos)]);
+    const [wx, loc] = await Promise.all([
+      weatherAt(pos).catch(() => null),
+      t.mode === 'fly' && t.altFt > 10000 ? null : reverseLocality(pos),
+    ]);
     if (wx) this.ctx.localTz = lastTz = wx.timezone;
     this.place = { wx, loc };
   }
@@ -434,7 +469,9 @@ class Journey {
       const fresh = list.find((x) => !this.seenNearby.has(x.title));
       if (fresh) {
         this.seenNearby.add(fresh.title);
-        const node = toastLink(`📍 Nearby: <b>${escapeHtml(fresh.title)}</b> · ${(fresh.distM / 1000).toFixed(1)} km`, () => map.flyTo(fresh.coord, { zoom: 15.5, pitch: 60, duration: 2500 }));
+        const node = toastLink(`📍 Nearby: <b>${escapeHtml(fresh.title)}</b> · ${(fresh.distM / 1000).toFixed(1)} km`, () =>
+          map.flyTo(fresh.coord, { zoom: 15.5, pitch: 60, duration: 2500 }),
+        );
         void node;
       }
     } catch {
@@ -525,7 +562,22 @@ function loop(now) {
     }
     checkLandmarks(t);
     const sheetOpen = !$('#sheet').hidden;
-    const kind = sheetOpen || clock.paused ? 'none' : t.mode === 'fly' ? (t.d > 0 || t.phase === 'Taxi' ? 'jet' : 'none') : t.mode === 'sail' ? (t.speedMs > 0.5 ? 'ship' : 'none') : VEHICLES[t.vehicle].mode === 'drive' ? 'car' : VEHICLES[t.vehicle].mode === 'bike' ? 'bike' : 'none';
+    const kind =
+      sheetOpen || clock.paused
+        ? 'none'
+        : t.mode === 'fly'
+          ? t.d > 0 || t.phase === 'Taxi'
+            ? 'jet'
+            : 'none'
+          : t.mode === 'sail'
+            ? t.speedMs > 0.5
+              ? 'ship'
+              : 'none'
+            : VEHICLES[t.vehicle].mode === 'drive'
+              ? 'car'
+              : VEHICLES[t.vehicle].mode === 'bike'
+                ? 'bike'
+                : 'none';
     engineSound(kind, t.speedMs, t.altFt || 0);
   }
   if (map?.ready) map.updateDaylight(new Date(clock.simMs));
@@ -553,23 +605,25 @@ function renderPlaceCard(t) {
   const loc = high ? null : p?.loc;
   const wx = p?.wx;
   const where = high ? `Over ${c ? c.name : 'the ocean'}` : t.mode === 'sail' && !loc?.locality ? 'At sea' : loc?.locality || c?.name || '';
-  card.innerHTML = String(html`
-    <div class="pcard-flag">${c ? flag(c.iso) : t.mode === 'sail' ? '🌊' : '🌐'}</div>
-    <div class="pcard-main">
-      <b>${where}</b>
-      <small>${[loc?.region, c?.name].filter((x, i, a) => x && a.indexOf(x) === i).join(', ')}</small>
-    </div>
-    <div class="pcard-side">
-      <b>${fmtTime(clock.simMs, journey.ctx.localTz)}</b>
-      <small>${wx ? `${wx.icon} ${Math.round(wx.tempC)}°C` : ''}</small>
-    </div>`);
+  card.innerHTML = String(
+    html` <div class="pcard-flag">${c ? flag(c.iso) : t.mode === 'sail' ? '🌊' : '🌐'}</div>
+      <div class="pcard-main">
+        <b>${where}</b>
+        <small>${[loc?.region, c?.name].filter((x, i, a) => x && a.indexOf(x) === i).join(', ')}</small>
+      </div>
+      <div class="pcard-side">
+        <b>${fmtTime(clock.simMs, journey.ctx.localTz)}</b>
+        <small>${wx ? `${wx.icon} ${Math.round(wx.tempC)}°C` : ''}</small>
+      </div>`,
+  );
 }
 
 $('#skipwait').onclick = () => clock.skipWait();
 
 boot().catch((err) => {
   console.error(err);
-  $('#loading').innerHTML = `<div class="boot-error"><h2>Wayfarer couldn't start</h2><p>${escapeHtml(err.message)}</p><p>Check your connection and reload.</p></div>`;
+  $('#loading').innerHTML =
+    `<div class="boot-error"><h2>Wayfarer couldn't start</h2><p>${escapeHtml(err.message)}</p><p>Check your connection and reload.</p></div>`;
 });
 
 export { clock, ACHIEVEMENTS };

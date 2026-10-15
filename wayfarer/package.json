@@ -5,18 +5,22 @@
   "description": "Wayfarer: a real-world travel simulator on real satellite imagery and real road, air and sea routes.",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/",
+    "test": "node --test tests/*.test.mjs",
     "test:e2e": "node tests/e2e/run.mjs",
     "build:countries": "node tools/build-countries.mjs",
     "serve": "http-server -p 8090 -c-1 .",
     "build:sealanes": "node tools/build-sealanes.mjs",
     "build:ports": "node tools/build-ports.mjs",
-    "build:data": "npm run build:countries && npm run build:sealanes && npm run build:ports"
+    "build:data": "npm run build:countries && npm run build:sealanes && npm run build:ports",
+    "lint": "eslint . && prettier --check \"js/**/*.js\" \"tools/**/*.mjs\" \"tests/**/*.mjs\" css/app.css index.html",
+    "format": "prettier --write \"js/**/*.js\" \"tools/**/*.mjs\" \"tests/**/*.mjs\" css/app.css index.html"
   },
   "devDependencies": {
+    "eslint": "10.1.0",
     "maplibre-gl": "5.24.0",
     "mapshaper": "0.7.86",
     "playwright": "1.56.1",
+    "prettier": "3.8.1",
     "searoute-js": "0.1.0"
   }
 }

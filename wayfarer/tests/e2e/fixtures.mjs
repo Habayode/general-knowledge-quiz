@@ -43,7 +43,12 @@ export function png(w, h, pixel) {
   ihdr.writeUInt32BE(h, 4);
   ihdr[8] = 8;
   ihdr[9] = 2;
-  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', deflateSync(raw)),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
 }
 export const SAT_TILE = png(256, 256, (x, y) => {
   const n = ((x * 7 + y * 13) % 17) - 8;
@@ -119,12 +124,27 @@ export function osrmRoute(url) {
   ];
   const steps = types.map((s, k) => {
     const idx = Math.min(coords.length - 1, Math.round((k / (types.length - 1)) * (coords.length - 1)));
-    return { distance: total / (types.length - 1), duration: totalDur / (types.length - 1), name: s.name || '', ref: s.ref, destinations: s.destinations, exits: s.exits, maneuver: { type: s.type, modifier: s.modifier, exit: s.exit, bearing_after: s.bearing_after || 0, location: coords[idx] } };
+    return {
+      distance: total / (types.length - 1),
+      duration: totalDur / (types.length - 1),
+      name: s.name || '',
+      ref: s.ref,
+      destinations: s.destinations,
+      exits: s.exits,
+      maneuver: { type: s.type, modifier: s.modifier, exit: s.exit, bearing_after: s.bearing_after || 0, location: coords[idx] },
+    };
   });
   steps[steps.length - 1].distance = 0;
   return {
     code: 'Ok',
-    routes: [{ geometry: encodePolyline(coords), distance: total, duration: totalDur, legs: [{ steps, annotation: { distance: dist, duration: dur } }] }],
+    routes: [
+      {
+        geometry: encodePolyline(coords),
+        distance: total,
+        duration: totalDur,
+        legs: [{ steps, annotation: { distance: dist, duration: dur } }],
+      },
+    ],
   };
 }
 
@@ -141,12 +161,24 @@ const PLACES = {
 export function photon(url) {
   const u = new URL(url);
   if (u.pathname.includes('reverse')) {
-    return { features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: [Number(u.searchParams.get('lon')), Number(u.searchParams.get('lat'))] }, properties: { name: 'Testville', city: 'Testville', state: 'Test Region', country: 'Testland' } }] };
+    return {
+      features: [
+        {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [Number(u.searchParams.get('lon')), Number(u.searchParams.get('lat'))] },
+          properties: { name: 'Testville', city: 'Testville', state: 'Test Region', country: 'Testland' },
+        },
+      ],
+    };
   }
   const q = (u.searchParams.get('q') || '').toLowerCase();
   const hits = Object.entries(PLACES).filter(([k]) => k.startsWith(q.slice(0, 4)));
   return {
-    features: hits.map(([, [name, state, country, cc, coord]]) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: coord }, properties: { name, city: name, state, country, countrycode: cc } })),
+    features: hits.map(([, [name, state, country, cc, coord]]) => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: coord },
+      properties: { name, city: name, state, country, countrycode: cc },
+    })),
   };
 }
 
@@ -159,7 +191,19 @@ export function meteo(url) {
   return {
     timezone: 'Africa/Lagos',
     utc_offset_seconds: 3600,
-    current: { temperature_2m: 27.4, apparent_temperature: 30.1, relative_humidity_2m: 74, weather_code: 2, wind_speed_10m: 12, wind_direction_10m: 220, wind_gusts_10m: 25, cloud_cover: 40, visibility: 10000, is_day: 1, pressure_msl: 1011 },
+    current: {
+      temperature_2m: 27.4,
+      apparent_temperature: 30.1,
+      relative_humidity_2m: 74,
+      weather_code: 2,
+      wind_speed_10m: 12,
+      wind_direction_10m: 220,
+      wind_gusts_10m: 25,
+      cloud_cover: 40,
+      visibility: 10000,
+      is_day: 1,
+      pressure_msl: 1011,
+    },
   };
 }
 
@@ -169,7 +213,9 @@ export function wiki(url) {
     const m = url.match(/gscoord=([-\d.]+)%7C([-\d.]+)|gscoord=([-\d.]+)\|([-\d.]+)/);
     const lat = Number(m[1] || m[3]);
     const lon = Number(m[2] || m[4]);
-    return { query: { geosearch: [{ pageid: 1, title: `Historic Site ${lat.toFixed(2)}`, lat: lat + 0.01, lon: lon + 0.01, dist: 1450 }] } };
+    return {
+      query: { geosearch: [{ pageid: 1, title: `Historic Site ${lat.toFixed(2)}`, lat: lat + 0.01, lon: lon + 0.01, dist: 1450 }] },
+    };
   }
   const title = decodeURIComponent(url.split('/summary/')[1] || 'Page');
   return {

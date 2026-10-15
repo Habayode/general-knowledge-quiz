@@ -119,7 +119,10 @@ for (const e of edges) {
   }
   const span = Math.max(Math.abs(B[0] - A[0]), Math.abs(B[1] - A[1]));
   const m = Math.max(0.3, span * 0.35);
-  const grid = span > 25 ? null : gridFromMask(mask, Math.min(A[0], B[0]) - m, Math.min(A[1], B[1]) - m, Math.max(A[0], B[0]) + m, Math.max(A[1], B[1]) + m);
+  const grid =
+    span > 25
+      ? null
+      : gridFromMask(mask, Math.min(A[0], B[0]) - m, Math.min(A[1], B[1]) - m, Math.max(A[0], B[0]) + m, Math.max(A[1], B[1]) + m);
   const sa = grid && grid.cellOf(A);
   const sb = grid && grid.cellOf(B);
   const found = grid && sa >= 0 && sb >= 0 ? search(grid, sa, (c) => c === sb, 1, new Set([sa, sb])) : { goals: [] };

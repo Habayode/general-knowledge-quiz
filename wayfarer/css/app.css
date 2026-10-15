@@ -77,7 +77,10 @@ code {
   background: rgba(255, 255, 255, 0.06);
   font-weight: 600;
   text-decoration: none;
-  transition: background 0.15s, transform 0.05s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    transform 0.05s,
+    border-color 0.15s;
   white-space: nowrap;
 }
 .btn:hover {
@@ -200,7 +203,9 @@ select:focus {
   border-radius: 18px;
   box-shadow: var(--shadow);
   z-index: 10;
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s;
+  transition:
+    transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.3s;
   overflow: hidden;
 }
 #panel.collapsed {
@@ -823,7 +828,9 @@ select:focus {
   font-weight: 600;
   opacity: 0;
   transform: translateY(-8px);
-  transition: opacity 0.25s, transform 0.25s;
+  transition:
+    opacity 0.25s,
+    transform 0.25s;
   max-width: 100%;
   text-align: center;
 }
@@ -1286,7 +1293,9 @@ body:not(.journeying) #hud {
   backdrop-filter: blur(18px);
   opacity: 0;
   transform: translateX(20px);
-  transition: opacity 0.25s, transform 0.25s;
+  transition:
+    opacity 0.25s,
+    transform 0.25s;
 }
 .sheet.in {
   opacity: 1;
@@ -2036,12 +2045,16 @@ body:not(.journeying) #hud {
   margin: 0 auto 16px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #5fb3ff, #0b3d6b 60%, #031a30);
-  box-shadow: 0 0 60px rgba(95, 179, 255, 0.45), inset -14px -10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 60px rgba(95, 179, 255, 0.45),
+    inset -14px -10px 30px rgba(0, 0, 0, 0.5);
   animation: pulse 2s ease-in-out infinite;
 }
 @keyframes pulse {
   50% {
-    box-shadow: 0 0 90px rgba(95, 179, 255, 0.7), inset -14px -10px 30px rgba(0, 0, 0, 0.5);
+    box-shadow:
+      0 0 90px rgba(95, 179, 255, 0.7),
+      inset -14px -10px 30px rgba(0, 0, 0, 0.5);
   }
 }
 .boot-title {

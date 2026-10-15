@@ -32,7 +32,18 @@ export function loadSeaGraph() {
 }
 
 export function airportPlace(a) {
-  return { kind: 'airport', id: a.iata, iata: a.iata, city: a.city, name: `${a.city} ${a.iata}`, label: `${a.name} (${a.iata})`, coord: a.coord, iso: a.iso, tz: a.tz, airport: a };
+  return {
+    kind: 'airport',
+    id: a.iata,
+    iata: a.iata,
+    city: a.city,
+    name: `${a.city} ${a.iata}`,
+    label: `${a.name} (${a.iata})`,
+    coord: a.coord,
+    iso: a.iso,
+    tz: a.tz,
+    airport: a,
+  };
 }
 
 export function portPlace(p) {
@@ -163,10 +174,7 @@ export async function resolveLeg(leg) {
 
   if (leg.mode === 'sail') {
     const graph = await loadSeaGraph();
-    const voyage = graph.route(
-      { id: leg.from.id, coord: leg.from.coord },
-      { id: leg.to.id, coord: leg.to.coord },
-    );
+    const voyage = graph.route({ id: leg.from.id, coord: leg.from.coord }, { id: leg.to.id, coord: leg.to.coord });
     if (!voyage) throw new PlanError(`No sea route between ${leg.from.label} and ${leg.to.label}.`);
     const vesselKey = vesselFor(voyage.km, leg.to.iso, leg.from.iso);
     leg.vehicle = vesselKey;

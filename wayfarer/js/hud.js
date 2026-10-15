@@ -20,7 +20,8 @@ const ARROWS = {
 function arrow(step) {
   if (!step) return '';
   let key = step.modifier || 'straight';
-  if (step.type === 'arrive') return '<svg viewBox="0 0 56 56" class="tbt-arrow"><path d="M28 6 C18 6 12 14 12 22 C12 34 28 50 28 50 C28 50 44 34 44 22 C44 14 38 6 28 6Z" fill="currentColor"/><circle cx="28" cy="22" r="6" fill="#0b1626"/></svg>';
+  if (step.type === 'arrive')
+    return '<svg viewBox="0 0 56 56" class="tbt-arrow"><path d="M28 6 C18 6 12 14 12 22 C12 34 28 50 28 50 C28 50 44 34 44 22 C44 14 38 6 28 6Z" fill="currentColor"/><circle cx="28" cy="22" r="6" fill="#0b1626"/></svg>';
   if (step.type === 'roundabout' || step.type === 'rotary') {
     return `<svg viewBox="0 0 56 56" class="tbt-arrow"><circle cx="28" cy="30" r="10" fill="none" stroke="currentColor" stroke-width="5"/><path d="M28 54 V40 M36 23 L48 10 M40 10 H48 V18" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><text x="28" y="35" font-size="12" text-anchor="middle" fill="currentColor" font-weight="800">${step.exit || ''}</text></svg>`;
   }
@@ -78,7 +79,10 @@ function headingTape(hdg) {
     const x = 50 + (((v - hdg + 540) % 360) - 180) * 1.1;
     const big = v % 30 === 0;
     items.push(`<line x1="${x}" y1="${big ? 10 : 14}" x2="${x}" y2="20" stroke="#cfe" stroke-width="${big ? 1.4 : 0.8}"/>`);
-    if (big) items.push(`<text x="${x}" y="8" text-anchor="middle" font-size="6.5" fill="#cfe">${v === 0 ? 'N' : v === 90 ? 'E' : v === 180 ? 'S' : v === 270 ? 'W' : String(v / 10).padStart(2, '0')}</text>`);
+    if (big)
+      items.push(
+        `<text x="${x}" y="8" text-anchor="middle" font-size="6.5" fill="#cfe">${v === 0 ? 'N' : v === 90 ? 'E' : v === 180 ? 'S' : v === 270 ? 'W' : String(v / 10).padStart(2, '0')}</text>`,
+      );
   }
   return `<svg viewBox="0 0 100 22" class="htape"><rect width="100" height="22" fill="#05111f"/>${items.join('')}<path d="M50 20 L46 14 H54Z" fill="#ffcc00"/></svg>`;
 }
@@ -122,14 +126,25 @@ export class Hud {
     const fuelPct = v.batteryKWh ? (t.battery / v.batteryKWh) * 100 : (t.fuel / v.tankL) * 100;
     const next = t.nextStep;
     const etaLocal = fmtTime(ctx.clock.simMs + t.etaS * 1000, ctx.localTz);
-    return html`
-      ${this.progress(t)}
+    return html` ${this.progress(t)}
       <div class="cluster">
         <div class="cl-dial">${raw(dial(kmh, v.topSpeedKmh > 200 ? 260 : 220, 'Speed', 'km/h'))}</div>
         <div class="cl-mid">
           ${t.stopped
-            ? html`<div class="tbt stop"><span class="tbt-icon">⏸</span><div><div class="tbt-dist">${fmtDur(t.stopLeftS)}</div><div class="tbt-text">${t.status}</div></div></div>`
-            : html`<div class="tbt">${raw(arrow(next))}<div><div class="tbt-dist">${fmtDist(t.toNextM)}</div><div class="tbt-text">${next?.text || t.status}</div></div></div>`}
+            ? html`<div class="tbt stop">
+                <span class="tbt-icon">⏸</span>
+                <div>
+                  <div class="tbt-dist">${fmtDur(t.stopLeftS)}</div>
+                  <div class="tbt-text">${t.status}</div>
+                </div>
+              </div>`
+            : html`<div class="tbt">
+                ${raw(arrow(next))}
+                <div>
+                  <div class="tbt-dist">${fmtDist(t.toNextM)}</div>
+                  <div class="tbt-text">${next?.text || t.status}</div>
+                </div>
+              </div>`}
           <div class="cl-row">
             <span class="pill">${t.leftHand ? '⬅ Keep LEFT' : 'Keep RIGHT ➡'}</span>
             <span class="pill">${t.country ? `${flag(t.country.iso)} ${t.country.name}` : ''}</span>
@@ -137,7 +152,11 @@ export class Hud {
         </div>
         <div class="cl-side">
           <div class="gear">${t.gear || 'D'}</div>
-          <div class="gauge"><span>${v.batteryKWh ? '🔋' : '⛽'}</span><div class="gbar ${fuelPct < 15 ? 'low' : ''}"><div style="width:${Math.max(0, fuelPct).toFixed(0)}%"></div></div><span>${Math.max(0, fuelPct).toFixed(0)}%</span></div>
+          <div class="gauge">
+            <span>${v.batteryKWh ? '🔋' : '⛽'}</span>
+            <div class="gbar ${fuelPct < 15 ? 'low' : ''}"><div style="width:${Math.max(0, fuelPct).toFixed(0)}%"></div></div>
+            <span>${Math.max(0, fuelPct).toFixed(0)}%</span>
+          </div>
           <div class="kv-mini"><span>Trip</span><b>${(t.d / 1000).toFixed(1)} km</b></div>
           <div class="kv-mini"><span>To go</span><b>${fmtDist(t.total - t.d)}</b></div>
           <div class="kv-mini"><span>ETA</span><b>${etaLocal}</b></div>
@@ -148,8 +167,7 @@ export class Hud {
   active(t, ctx, v) {
     const kmh = t.speedMs * 3.6;
     const hr = Math.round(v.mode === 'bike' ? 118 + kmh * 1.6 : 92 + kmh * 4);
-    return html`
-      ${this.progress(t)}
+    return html` ${this.progress(t)}
       <div class="bikecomp">
         <div class="bc-main"><span class="bc-speed">${kmh.toFixed(1)}</span><span class="bc-unit">km/h</span></div>
         <div class="bc-grid">
@@ -158,9 +176,17 @@ export class Hud {
           <div><span>Moving time</span><b>${fmtDur(t.drivingS)}</b></div>
           <div><span>Heart rate</span><b>${t.stopped ? 88 : hr} bpm</b></div>
           <div><span>Energy</span><b>${Math.round(t.kcal)} kcal</b></div>
-          ${v.mode === 'bike' ? html`<div><span>Cadence</span><b>${t.stopped ? 0 : Math.round(72 + kmh)} rpm</b></div>` : html`<div><span>Steps</span><b>${Math.round(t.d / 0.75).toLocaleString('en-US')}</b></div>`}
+          ${v.mode === 'bike'
+            ? html`<div><span>Cadence</span><b>${t.stopped ? 0 : Math.round(72 + kmh)} rpm</b></div>`
+            : html`<div><span>Steps</span><b>${Math.round(t.d / 0.75).toLocaleString('en-US')}</b></div>`}
         </div>
-        <div class="tbt compact">${raw(arrow(t.nextStep))}<div><div class="tbt-dist">${t.stopped ? fmtDur(t.stopLeftS) : fmtDist(t.toNextM)}</div><div class="tbt-text">${t.stopped ? t.status : t.nextStep?.text || ''}</div></div></div>
+        <div class="tbt compact">
+          ${raw(arrow(t.nextStep))}
+          <div>
+            <div class="tbt-dist">${t.stopped ? fmtDur(t.stopLeftS) : fmtDist(t.toNextM)}</div>
+            <div class="tbt-text">${t.stopped ? t.status : t.nextStep?.text || ''}</div>
+          </div>
+        </div>
       </div>`;
   }
 
@@ -172,36 +198,51 @@ export class Hud {
     const toGoKm = (t.total - t.d) / 1000;
     const pct = t.d / t.total;
     const fl = t.altFt >= 18000 ? `FL${String(Math.round(t.altFt / 100)).padStart(3, '0')}` : `${Math.round(t.altFt / 10) * 10} ft`;
-    return html`
-      <div class="pfd">
-        <div class="pfd-tape speed"><span class="label">TAS</span><span class="val">${Math.round(t.tasKts)}</span><span class="unit">kt</span><span class="sub">GS ${Math.round(t.gsKts)}</span></div>
-        <div class="pfd-center">
-          <div class="pfd-phase">${t.phase}${t.seatbelt ? html` <span class="belt" title="Fasten seat belt sign">🔔 SEAT BELTS</span>` : ''}</div>
-          ${raw(headingTape(t.heading))}
-          <div class="ifm">
-            <span class="ifm-code">${p.from.iata}</span>
-            <div class="ifm-track"><div class="ifm-done" style="width:${(pct * 100).toFixed(1)}%"></div><span class="ifm-plane" style="left:${(pct * 100).toFixed(1)}%">✈</span></div>
-            <span class="ifm-code">${p.to.iata}</span>
-          </div>
-          <div class="ifm-grid">
-            <div><span>Distance to go</span><b>${Math.round(toGoKm).toLocaleString('en-US')} km</b></div>
-            <div><span>Time to destination</span><b>${fmtDur(t.etaS)}</b></div>
-            <div><span>Local time ${p.from.iata}</span><b>${fmtTime(ctx.clock.simMs, p.from.tz)}</b></div>
-            <div><span>Local time ${p.to.iata}</span><b>${fmtTime(ctx.clock.simMs, p.to.tz)}</b></div>
-            <div><span>Outside air</span><b>${Math.round(sat)}°C</b></div>
-            <div><span>Mach</span><b>${t.altFt > 10000 ? mach.toFixed(2) : '—'}</b></div>
-          </div>
+    return html` <div class="pfd">
+      <div class="pfd-tape speed">
+        <span class="label">TAS</span><span class="val">${Math.round(t.tasKts)}</span><span class="unit">kt</span
+        ><span class="sub">GS ${Math.round(t.gsKts)}</span>
+      </div>
+      <div class="pfd-center">
+        <div class="pfd-phase">
+          ${t.phase}${t.seatbelt ? html` <span class="belt" title="Fasten seat belt sign">🔔 SEAT BELTS</span>` : ''}
         </div>
-        <div class="pfd-tape alt"><span class="label">ALT</span><span class="val">${fl}</span><span class="unit">${Math.round(t.altFt).toLocaleString('en-US')} ft</span><span class="sub ${t.vsFpm > 200 ? 'up' : t.vsFpm < -200 ? 'down' : ''}">${t.vsFpm > 200 ? '▲' : t.vsFpm < -200 ? '▼' : '■'} ${Math.abs(Math.round(t.vsFpm / 100) * 100)} fpm</span></div>
-      </div>`;
+        ${raw(headingTape(t.heading))}
+        <div class="ifm">
+          <span class="ifm-code">${p.from.iata}</span>
+          <div class="ifm-track">
+            <div class="ifm-done" style="width:${(pct * 100).toFixed(1)}%"></div>
+            <span class="ifm-plane" style="left:${(pct * 100).toFixed(1)}%">✈</span>
+          </div>
+          <span class="ifm-code">${p.to.iata}</span>
+        </div>
+        <div class="ifm-grid">
+          <div><span>Distance to go</span><b>${Math.round(toGoKm).toLocaleString('en-US')} km</b></div>
+          <div><span>Time to destination</span><b>${fmtDur(t.etaS)}</b></div>
+          <div><span>Local time ${p.from.iata}</span><b>${fmtTime(ctx.clock.simMs, p.from.tz)}</b></div>
+          <div><span>Local time ${p.to.iata}</span><b>${fmtTime(ctx.clock.simMs, p.to.tz)}</b></div>
+          <div><span>Outside air</span><b>${Math.round(sat)}°C</b></div>
+          <div><span>Mach</span><b>${t.altFt > 10000 ? mach.toFixed(2) : '—'}</b></div>
+        </div>
+      </div>
+      <div class="pfd-tape alt">
+        <span class="label">ALT</span><span class="val">${fl}</span
+        ><span class="unit">${Math.round(t.altFt).toLocaleString('en-US')} ft</span
+        ><span class="sub ${t.vsFpm > 200 ? 'up' : t.vsFpm < -200 ? 'down' : ''}"
+          >${t.vsFpm > 200 ? '▲' : t.vsFpm < -200 ? '▼' : '■'} ${Math.abs(Math.round(t.vsFpm / 100) * 100)} fpm</span
+        >
+      </div>
+    </div>`;
   }
 
   ship(t, ctx, v) {
-    return html`
-      ${this.progress(t)}
+    return html` ${this.progress(t)}
       <div class="bridge">
         <div class="br-big"><span class="label">SOG</span><span class="val">${t.knots.toFixed(1)}</span><span class="unit">kn</span></div>
-        <div class="br-big"><span class="label">COG</span><span class="val">${String(Math.round(t.cog)).padStart(3, '0')}°</span><span class="unit">${compass(t.cog)}</span></div>
+        <div class="br-big">
+          <span class="label">COG</span><span class="val">${String(Math.round(t.cog)).padStart(3, '0')}°</span
+          ><span class="unit">${compass(t.cog)}</span>
+        </div>
         <div class="br-info">
           ${raw(headingTape(t.cog))}
           <div class="br-grid">

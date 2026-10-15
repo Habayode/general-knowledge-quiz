@@ -5,15 +5,17 @@ import { bbox, normalizeLon, pointInGeometry } from './geo.js';
 
 export class CountryIndex {
   constructor(fc) {
-    this.items = fc.features.filter((f) => f.geometry).map((f) => {
-      const g = f.geometry;
-      const polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
-      return {
-        ...f.properties,
-        geom: g,
-        boxes: polys.map((p) => bbox(p[0])),
-      };
-    });
+    this.items = fc.features
+      .filter((f) => f.geometry)
+      .map((f) => {
+        const g = f.geometry;
+        const polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
+        return {
+          ...f.properties,
+          geom: g,
+          boxes: polys.map((p) => bbox(p[0])),
+        };
+      });
     this.byIso = new Map(this.items.map((c) => [c.iso, c]));
     this.last = null;
   }

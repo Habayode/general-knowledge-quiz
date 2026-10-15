@@ -16,7 +16,7 @@ const TYPES = {
 export function serve(root, port = 0) {
   const server = createServer(async (req, res) => {
     try {
-      let p = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname)).replace(/^(\.\.[/\\])+/, '');
+      const p = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname)).replace(/^(\.\.[/\\])+/, '');
       let file = join(root, p);
       if ((await stat(file)).isDirectory()) file = join(file, 'index.html');
       const body = await readFile(file);

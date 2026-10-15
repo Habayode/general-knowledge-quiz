@@ -147,7 +147,7 @@ export class Path {
 
 /** Signed smallest difference between two headings, degrees in (-180, 180]. */
 export function headingDelta(from, to) {
-  let d = (((to - from) % 360) + 540) % 360 - 180;
+  let d = ((((to - from) % 360) + 540) % 360) - 180;
   if (d === -180) d = 180;
   return d;
 }
@@ -264,7 +264,7 @@ export function subsolar(date) {
   const δ = Math.asin(Math.sin(ε) * Math.sin(λ));
   const α = Math.atan2(Math.cos(ε) * Math.sin(λ), Math.cos(λ));
   const gmst = (18.697374558 + 24.06570982441908 * n) % 24;
-  return { decl: δ / rad, lon: normalizeLon((α / rad) - gmst * 15) };
+  return { decl: δ / rad, lon: normalizeLon(α / rad - gmst * 15) };
 }
 
 /**
@@ -276,7 +276,7 @@ export function subsolar(date) {
 export function nightPolygon(date, depression = 0, step = 3) {
   const { decl, lon: sunLon } = subsolar(date);
   const centre = [normalizeLon(sunLon + 180), -decl];
-  const radiusM = ((90 + depression) * Math.PI / 180) * EARTH_RADIUS_M;
+  const radiusM = (((90 + depression) * Math.PI) / 180) * EARTH_RADIUS_M;
   const pts = [];
   for (let b = 0; b <= 360; b += step) pts.push(destination(centre, b, radiusM));
   const ring = unwrapLongitudes(pts);

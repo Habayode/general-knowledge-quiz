@@ -8,7 +8,8 @@
 // [id, name, city, ISO, lon, lat, kind, pilot?]
 //   kind:  'ferry' (scheduled car/passenger ferry) or 'cruise' (cruise terminal)
 //   pilot: optional surveyed channel waypoints from the berth through inner
-//          harbours too narrow for 1:10m coastlines (Port Jackson, Göta älv).
+//          harbours too narrow for 1:10m coastlines (Port Jackson, Göta älv),
+//          or the channel big ships must use (Hudson → the Narrows, not the East River).
 const RAW = [
   // ── Europe ──────────────────────────────────────────────────────────────
   ['DOV', 'Port of Dover', 'Dover', 'GB', 1.333, 51.123, 'ferry'],
@@ -20,7 +21,22 @@ const RAW = [
   ['KEL', 'Kiel Norwegenkai', 'Kiel', 'DE', 10.143, 54.318, 'ferry'],
   ['CPH', 'Copenhagen DFDS Terminal', 'Copenhagen', 'DK', 12.605, 55.697, 'ferry'],
   ['OSL', 'Oslo Vippetangen', 'Oslo', 'NO', 10.742, 59.902, 'ferry'],
-  ['GOT', 'Gothenburg Stena Terminal', 'Gothenburg', 'SE', 11.945, 57.7, 'ferry', [[11.92, 57.699], [11.89, 57.697], [11.86, 57.693], [11.83, 57.69], [11.8, 57.69]]],
+  [
+    'GOT',
+    'Gothenburg Stena Terminal',
+    'Gothenburg',
+    'SE',
+    11.945,
+    57.7,
+    'ferry',
+    [
+      [11.92, 57.699],
+      [11.89, 57.697],
+      [11.86, 57.693],
+      [11.83, 57.69],
+      [11.8, 57.69],
+    ],
+  ],
   ['BGO', 'Bergen Hurtigruten Terminal', 'Bergen', 'NO', 5.318, 60.394, 'ferry'],
   ['HEL', 'Helsinki West Harbour', 'Helsinki', 'FI', 24.915, 60.152, 'ferry'],
   ['TLL', 'Tallinn Old City Harbour', 'Tallinn', 'EE', 24.772, 59.445, 'ferry'],
@@ -75,7 +91,21 @@ const RAW = [
   ['BOA', 'Benoa Harbour', 'Bali', 'ID', 115.21, -8.745, 'cruise'],
 
   // ── Oceania ─────────────────────────────────────────────────────────────
-  ['SYD', 'Overseas Passenger Terminal, Circular Quay', 'Sydney', 'AU', 151.21, -33.858, 'cruise', [[151.215, -33.854], [151.228, -33.852], [151.245, -33.849], [151.262, -33.846]]],
+  [
+    'SYD',
+    'Overseas Passenger Terminal, Circular Quay',
+    'Sydney',
+    'AU',
+    151.21,
+    -33.858,
+    'cruise',
+    [
+      [151.215, -33.854],
+      [151.228, -33.852],
+      [151.245, -33.849],
+      [151.262, -33.846],
+    ],
+  ],
   ['MEL', 'Station Pier, Port Melbourne', 'Melbourne', 'AU', 144.93, -37.845, 'cruise'],
   ['BNE', 'Brisbane International Cruise Terminal', 'Brisbane', 'AU', 153.155, -27.37, 'cruise'],
   ['AKL', 'Queens Wharf', 'Auckland', 'NZ', 174.77, -36.842, 'cruise'],
@@ -86,7 +116,22 @@ const RAW = [
   ['HNL', 'Aloha Tower Marketplace Pier', 'Honolulu', 'US', -157.865, 21.307, 'cruise'],
 
   // ── Americas ────────────────────────────────────────────────────────────
-  ['NYC', 'Manhattan Cruise Terminal', 'New York', 'US', -74.0, 40.766, 'cruise'],
+  [
+    'NYC',
+    'Manhattan Cruise Terminal',
+    'New York',
+    'US',
+    -74.0,
+    40.766,
+    'cruise',
+    [
+      [-74.008, 40.75],
+      [-74.02, 40.71],
+      [-74.035, 40.68],
+      [-74.045, 40.64],
+      [-74.04, 40.6],
+    ],
+  ],
   ['MIA', 'PortMiami', 'Miami', 'US', -80.17, 25.776, 'cruise'],
   ['YVR', 'Canada Place Cruise Terminal', 'Vancouver', 'CA', -123.112, 49.289, 'cruise'],
   ['LAX', 'World Cruise Center, San Pedro', 'Los Angeles', 'US', -118.278, 33.745, 'cruise'],

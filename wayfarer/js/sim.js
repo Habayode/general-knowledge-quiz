@@ -135,11 +135,17 @@ class Runner {
       }
     }
     if (Math.sign(p[1]) !== Math.sign(this.lastLat) && this.lastLat !== 0) this.ctx.emit('crossing', { kind: 'equator' });
-    for (const [lat, kind] of [[66.5634, 'arctic'], [-66.5634, 'antarctic'], [23.4366, 'cancer'], [-23.4366, 'capricorn']]) {
+    for (const [lat, kind] of [
+      [66.5634, 'arctic'],
+      [-66.5634, 'antarctic'],
+      [23.4366, 'cancer'],
+      [-23.4366, 'capricorn'],
+    ]) {
       if ((this.lastLat - lat) * (p[1] - lat) < 0) this.ctx.emit('crossing', { kind });
     }
     // Unwrapped longitudes: crossing any odd multiple of 180° is the antimeridian.
-    if (Math.floor((this.lastLon + 180) / 360) !== Math.floor((p[0] + 180) / 360)) this.ctx.emit('crossing', { kind: 'dateline', eastbound: p[0] > this.lastLon });
+    if (Math.floor((this.lastLon + 180) / 360) !== Math.floor((p[0] + 180) / 360))
+      this.ctx.emit('crossing', { kind: 'dateline', eastbound: p[0] > this.lastLon });
     this.lastLon = p[0];
     this.lastLat = p[1];
   }
@@ -262,7 +268,10 @@ export class RoadRunner extends Runner {
     if (!next) return;
     const toGo = next.along - this.d;
     this.status = this.currentStep.text;
-    for (const [m, tag] of [[1000, 'far'], [250, 'near']]) {
+    for (const [m, tag] of [
+      [1000, 'far'],
+      [250, 'near'],
+    ]) {
       const key = `${this.stepIdx}:${tag}`;
       if (toGo <= m && toGo > 30 && !this.announced.has(key) && next.type !== 'new name') {
         this.announced.add(key);
@@ -283,7 +292,8 @@ export class RoadRunner extends Runner {
       return this.stop('charge', 28 * 60, 'Supercharging 10% → 80%');
     }
     // UK Highway Code / EU guidance: a 15-minute break every 2 hours of driving.
-    if (v.mode === 'drive' && this.sinceBreakS > 2 * 3600) return this.stop('break', 15 * 60, 'Rest break: 15 minutes every 2 hours behind the wheel');
+    if (v.mode === 'drive' && this.sinceBreakS > 2 * 3600)
+      return this.stop('break', 15 * 60, 'Rest break: 15 minutes every 2 hours behind the wheel');
     if (v.mode === 'bike' && this.sinceBreakS > 90 * 60) return this.stop('break', 12 * 60, 'Water & snack stop');
     if (v.mode === 'walk' && this.sinceBreakS > 75 * 60) return this.stop('break', 10 * 60, 'Short rest');
   }
@@ -329,7 +339,11 @@ export class RoadRunner extends Runner {
       this.ctx.emit('voice', { text: `You are now in ${to.name}. Drive on the ${left ? 'left' : 'right'}.`, priority: 2 });
     }
     if (from && needsPassportControl(from.iso, to.iso)) {
-      this.stop('border', (20 + Math.round(Math.random() * 25)) * 60, `Border control: ${from.name} → ${to.name}. Passports, vehicle registration & insurance.`);
+      this.stop(
+        'border',
+        (20 + Math.round(Math.random() * 25)) * 60,
+        `Border control: ${from.name} → ${to.name}. Passports, vehicle registration & insurance.`,
+      );
     }
   }
 
@@ -414,20 +428,28 @@ export class FlightRunner extends Runner {
       this.cabinEvent(phase);
     }
     // Seatbelt sign: off passing 10,000 ft in the climb, on passing it in the descent.
-    if (prevAlt < 10000 && this.altFt >= 10000 && this.d < plan.tod) this.once('belt-off', () => {
-      this.seatbelt = false;
-      this.ctx.emit('chime', { kind: 'seatbelt-off' });
-      this.ctx.emit('voice', { text: 'The captain has switched off the fasten seat belt sign. You may now move about the cabin, but we recommend you keep your seat belt fastened while seated.', voice: 'crew' });
-    });
-    if (prevAlt > 10000 && this.altFt <= 10000 && this.d > plan.tod) this.once('belt-on', () => {
-      this.seatbelt = true;
-      this.ctx.emit('chime', { kind: 'seatbelt-on' });
-      this.ctx.emit('voice', { text: 'Cabin crew, please prepare the cabin for landing.', voice: 'pilot' });
-    });
-    if (phase === 'Cruise' && this.d > plan.climbM + 250000) this.once('meal', () => {
-      this.ctx.emit('cabin', { text: plan.airborneS > 4 * 3600 ? 'Meal service begins. Chicken or beef?' : 'Drinks and snack service' });
-    });
-    this.status = `${phase} · FL${Math.round(this.altFt / 100).toString().padStart(3, '0')}`;
+    if (prevAlt < 10000 && this.altFt >= 10000 && this.d < plan.tod)
+      this.once('belt-off', () => {
+        this.seatbelt = false;
+        this.ctx.emit('chime', { kind: 'seatbelt-off' });
+        this.ctx.emit('voice', {
+          text: 'The captain has switched off the fasten seat belt sign. You may now move about the cabin, but we recommend you keep your seat belt fastened while seated.',
+          voice: 'crew',
+        });
+      });
+    if (prevAlt > 10000 && this.altFt <= 10000 && this.d > plan.tod)
+      this.once('belt-on', () => {
+        this.seatbelt = true;
+        this.ctx.emit('chime', { kind: 'seatbelt-on' });
+        this.ctx.emit('voice', { text: 'Cabin crew, please prepare the cabin for landing.', voice: 'pilot' });
+      });
+    if (phase === 'Cruise' && this.d > plan.climbM + 250000)
+      this.once('meal', () => {
+        this.ctx.emit('cabin', { text: plan.airborneS > 4 * 3600 ? 'Meal service begins. Chicken or beef?' : 'Drinks and snack service' });
+      });
+    this.status = `${phase} · FL${Math.round(this.altFt / 100)
+      .toString()
+      .padStart(3, '0')}`;
     this.geoEvents(25000);
     return this.d >= plan.path.length - 0.5;
   }
@@ -468,7 +490,8 @@ export class FlightRunner extends Runner {
       ...t,
       altFt: this.altFt,
       phase: this.phase,
-      tasKts: this.phase === 'Taxi' || this.phase === 'Pushback' || this.phase === 'At gate' ? this.speed / MS_PER_KNOT : plan.tasAt(this.d),
+      tasKts:
+        this.phase === 'Taxi' || this.phase === 'Pushback' || this.phase === 'At gate' ? this.speed / MS_PER_KNOT : plan.tasAt(this.d),
       gsKts: this.speed / MS_PER_KNOT,
       vsFpm: this.vsFpm(),
       etaS: (this.d > 0 ? plan.remainingS(this.d) : plan.airborneS) + plan.taxiInS,
@@ -543,7 +566,8 @@ export class SeaRunner extends Runner {
     const solar = new Date(this.ctx.clock.simMs + (normalizeLon(p[0]) / 15) * 3600000);
     const day = solar.toISOString().slice(0, 10);
     if (solar.getUTCHours() === 12 && this.lastNoonDay !== day && this.d > this.harbourM) {
-      if (this.lastNoonDay !== null) this.ctx.emit('noon', { pos: p, nmRun: this.distSinceNoon / 1852, speedKn: this.speed / MS_PER_KNOT, runner: this });
+      if (this.lastNoonDay !== null)
+        this.ctx.emit('noon', { pos: p, nmRun: this.distSinceNoon / 1852, speedKn: this.speed / MS_PER_KNOT, runner: this });
       this.lastNoonDay = day;
       this.distSinceNoon = 0;
     }

@@ -41,7 +41,9 @@ export function createStyle() {
       },
       night: {
         type: 'raster',
-        tiles: ['https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_Black_Marble/default/2016-01-01/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png'],
+        tiles: [
+          'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_Black_Marble/default/2016-01-01/GoogleMapsCompatible_Level8/{z}/{y}/{x}.png',
+        ],
         tileSize: 256,
         maxzoom: 8,
         attribution: 'Night lights: <a href="https://earthdata.nasa.gov/" target="_blank" rel="noopener">NASA GIBS</a> Black Marble',
@@ -69,7 +71,8 @@ export function createStyle() {
       osm: {
         type: 'vector',
         url: 'https://tiles.openfreemap.org/planet',
-        attribution: '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
+        attribution:
+          '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
       },
       route: { type: 'geojson', data: empty() },
       done: { type: 'geojson', data: empty() },
@@ -111,7 +114,19 @@ export function createStyle() {
         source: 'route',
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: {
-          'line-color': ['match', ['get', 'mode'], 'fly', MODE_COLORS.fly, 'sail', MODE_COLORS.sail, 'bike', MODE_COLORS.bike, 'walk', MODE_COLORS.walk, MODE_COLORS.drive],
+          'line-color': [
+            'match',
+            ['get', 'mode'],
+            'fly',
+            MODE_COLORS.fly,
+            'sail',
+            MODE_COLORS.sail,
+            'bike',
+            MODE_COLORS.bike,
+            'walk',
+            MODE_COLORS.walk,
+            MODE_COLORS.drive,
+          ],
           'line-width': ['interpolate', ['linear'], ['zoom'], 2, 1.6, 14, 6],
           'line-dasharray': [2, 1.6],
           'line-opacity': 0.9,
@@ -169,9 +184,21 @@ function terminalsGeoJSON() {
   return {
     type: 'FeatureCollection',
     features: [
-      ...AIRPORTS.map((a) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: a.coord }, properties: { kind: 'airport', id: a.iata, label: `✈ ${a.iata}` } })),
-      ...PORTS.map((p) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: p.coord }, properties: { kind: 'port', id: p.id, label: `⚓ ${p.city}` } })),
-      ...LANDMARKS.map((l) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: l.coord }, properties: { kind: 'landmark', id: l.id, label: `★ ${l.name}` } })),
+      ...AIRPORTS.map((a) => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: a.coord },
+        properties: { kind: 'airport', id: a.iata, label: `✈ ${a.iata}` },
+      })),
+      ...PORTS.map((p) => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: p.coord },
+        properties: { kind: 'port', id: p.id, label: `⚓ ${p.city}` },
+      })),
+      ...LANDMARKS.map((l) => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: l.coord },
+        properties: { kind: 'landmark', id: l.id, label: `★ ${l.name}` },
+      })),
     ],
   };
 }
@@ -267,7 +294,9 @@ export class GlobeMap {
   showDone(segments) {
     this.map.getSource('done')?.setData({
       type: 'FeatureCollection',
-      features: segments.filter((c) => c.length > 1).map((coords) => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } })),
+      features: segments
+        .filter((c) => c.length > 1)
+        .map((coords) => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } })),
     });
   }
 
@@ -285,7 +314,13 @@ export class GlobeMap {
     }
     const pad = typeof padding === 'number' ? { top: padding, bottom: padding + 120, left: padding + 360, right: padding } : padding;
     if (window.innerWidth < 760) Object.assign(pad, { left: 30, right: 30, top: 90, bottom: 260 });
-    this.map.fitBounds([[minX, minY], [maxX, maxY]], { padding: pad, duration: 2200, pitch: 0, bearing: 0, maxZoom: 15 });
+    this.map.fitBounds(
+      [
+        [minX, minY],
+        [maxX, maxY],
+      ],
+      { padding: pad, duration: 2200, pitch: 0, bearing: 0, maxZoom: 15 },
+    );
   }
 
   flyTo(coord, { zoom = 15, pitch = 60, bearing = 0, duration = 4500 } = {}) {
@@ -298,7 +333,17 @@ export class GlobeMap {
     if (this.vehicleKey === iconKey && this.marker) return;
     this.removeVehicle();
     const svg = ICONS[iconKey] || ICONS.car;
-    const size = { car: [22, 44], suv: [24, 46], ev: [22, 44], motorbike: [12, 34], bicycle: [11, 30], walk: [24, 24], plane: [60, 60], ferry: [22, 66], ship: [24, 80] }[iconKey] || [24, 48];
+    const size = {
+      car: [22, 44],
+      suv: [24, 46],
+      ev: [22, 44],
+      motorbike: [12, 34],
+      bicycle: [11, 30],
+      walk: [24, 24],
+      plane: [60, 60],
+      ferry: [22, 66],
+      ship: [24, 80],
+    }[iconKey] || [24, 48];
     const el = document.createElement('div');
     el.className = `vehicle vehicle-${iconKey}`;
     el.style.width = `${size[0]}px`;
@@ -311,7 +356,9 @@ export class GlobeMap {
       sh.style.width = `${size[0]}px`;
       sh.style.height = `${size[1]}px`;
       sh.innerHTML = svg;
-      this.shadow = new maplibregl.Marker({ element: sh, rotationAlignment: 'map', pitchAlignment: 'map' }).setLngLat(coord).addTo(this.map);
+      this.shadow = new maplibregl.Marker({ element: sh, rotationAlignment: 'map', pitchAlignment: 'map' })
+        .setLngLat(coord)
+        .addTo(this.map);
     }
     this.vehicleKey = iconKey;
     this.vehicleSize = size;
@@ -367,7 +414,7 @@ export class GlobeMap {
     let bearing = this.map.getBearing();
     if (this.cameraMode === 'chase' || this.cameraMode === 'cockpit') {
       const k = Math.min(1, dtReal * 2.5);
-      let diff = ((t.heading - this.camBearing + 540) % 360) - 180;
+      const diff = ((t.heading - this.camBearing + 540) % 360) - 180;
       this.camBearing = (this.camBearing + diff * k + 360) % 360;
       bearing = this.camBearing;
       if (this.cameraMode === 'cockpit') {

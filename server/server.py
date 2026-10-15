@@ -1165,6 +1165,15 @@ class Handler(BaseHTTPRequestHandler):
             target.relative_to(STATIC_DIR.resolve())
         except (ValueError, OSError):
             return self.send_error(403, "Forbidden")
+        if target.is_dir():
+            # Sub-apps (e.g. /wayfarer/) serve their own index.html. Redirect
+            # /wayfarer → /wayfarer/ so the page's relative URLs resolve.
+            if not p.endswith("/"):
+                self.send_response(301)
+                self.send_header("Location", p + "/" + (f"?{u.query}" if u.query else ""))
+                self.end_headers()
+                return
+            target = target / "index.html"
         if not target.exists():
             # SPA fallback
             target = STATIC_DIR / "index.html"

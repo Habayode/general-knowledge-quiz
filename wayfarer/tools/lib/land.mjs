@@ -24,26 +24,26 @@ export async function loadLand(arg) {
 
 // ── Land as a flat list of rings with bounding boxes ──────────────────────
 export function landRings(land) {
-const RINGS = [];
-for (const f of land.features) {
-  const g = f.geometry;
-  const polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
-  for (const p of polys) {
-    for (const ring of p) {
-      let minX = Infinity;
-      let minY = Infinity;
-      let maxX = -Infinity;
-      let maxY = -Infinity;
-      for (const [x, y] of ring) {
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
+  const RINGS = [];
+  for (const f of land.features) {
+    const g = f.geometry;
+    const polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
+    for (const p of polys) {
+      for (const ring of p) {
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+        for (const [x, y] of ring) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+        RINGS.push({ ring, minX, minY, maxX, maxY });
       }
-      RINGS.push({ ring, minX, minY, maxX, maxY });
     }
   }
-}
   return RINGS;
 }
 
@@ -137,8 +137,24 @@ export class Grid {
         }
       }
     };
-    pass([[-1, 0, 1], [0, -1, 1], [-1, -1, 1.414], [1, -1, 1.414]], true);
-    pass([[1, 0, 1], [0, 1, 1], [1, 1, 1.414], [-1, 1, 1.414]], false);
+    pass(
+      [
+        [-1, 0, 1],
+        [0, -1, 1],
+        [-1, -1, 1.414],
+        [1, -1, 1.414],
+      ],
+      true,
+    );
+    pass(
+      [
+        [1, 0, 1],
+        [0, 1, 1],
+        [1, 1, 1.414],
+        [-1, 1, 1.414],
+      ],
+      false,
+    );
     return d;
   }
   isLand(pt) {
@@ -274,7 +290,6 @@ export function stringPull(pts, grids) {
   return out;
 }
 
-
 /**
  * Global land bitmask at `res` degrees (default 0.01° ≈ 1.1 km), rasterised once
  * with banded scanlines. Fast isLand() lookups for validating long tracks.
@@ -323,7 +338,7 @@ export class LandMask {
     }
   }
   cell(lon, lat) {
-    const i = Math.floor((((((lon + 180) % 360) + 360) % 360)) / this.res);
+    const i = Math.floor(((((lon + 180) % 360) + 360) % 360) / this.res);
     const j = Math.floor((lat + 90) / this.res);
     return [Math.min(this.w - 1, i), Math.max(0, Math.min(this.h - 1, j))];
   }

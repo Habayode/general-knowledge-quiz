@@ -52,7 +52,10 @@ export function fmtDur(s) {
 export const money = (n) => `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const tzName = (ms, tz) => {
   try {
-    return new Intl.DateTimeFormat('en-GB', { timeZone: tz, timeZoneName: 'short' }).formatToParts(ms).find((p) => p.type === 'timeZoneName')?.value || '';
+    return (
+      new Intl.DateTimeFormat('en-GB', { timeZone: tz, timeZoneName: 'short' }).formatToParts(ms).find((p) => p.type === 'timeZoneName')
+        ?.value || ''
+    );
   } catch {
     return '';
   }
@@ -71,10 +74,39 @@ function rng(seed) {
 
 // IATA airline accounting (ticketing) prefixes, used in bag-tag licence plates.
 const ACCOUNTING = {
-  AA: '001', DL: '006', UA: '016', AC: '014', BA: '125', AF: '057', KL: '074', LH: '220', LX: '724', EK: '176',
-  QR: '157', EY: '607', TK: '235', ET: '071', KQ: '706', SA: '083', SQ: '618', CX: '160', QF: '081', NZ: '086',
-  JL: '131', NH: '205', AI: '098', MS: '077', AT: '147', IB: '075', AZ: '055', TP: '047', SK: '117', AY: '105',
-  EI: '053', LO: '080', SV: '065',
+  AA: '001',
+  DL: '006',
+  UA: '016',
+  AC: '014',
+  BA: '125',
+  AF: '057',
+  KL: '074',
+  LH: '220',
+  LX: '724',
+  EK: '176',
+  QR: '157',
+  EY: '607',
+  TK: '235',
+  ET: '071',
+  KQ: '706',
+  SA: '083',
+  SQ: '618',
+  CX: '160',
+  QF: '081',
+  NZ: '086',
+  JL: '131',
+  NH: '205',
+  AI: '098',
+  MS: '077',
+  AT: '147',
+  IB: '075',
+  AZ: '055',
+  TP: '047',
+  SK: '117',
+  AY: '105',
+  EI: '053',
+  LO: '080',
+  SV: '065',
 };
 
 // ── The protocol sheet (UI) ───────────────────────────────────────────────
@@ -92,17 +124,20 @@ export class ProtocolSheet {
     if (!steps.length) return;
     const title = TITLES[name](runner);
     this.root.innerHTML = '';
-    const sheet = el(html`
-      <section class="sheet" role="dialog" aria-modal="false" aria-label="${title.text}">
+    const sheet = el(
+      html` <section class="sheet" role="dialog" aria-modal="false" aria-label="${title.text}">
         <header class="sheet-head">
           <div class="sheet-kicker">${title.kicker}</div>
           <h2>${title.text}</h2>
           <button class="sheet-min icon-btn" title="Minimise" aria-label="Minimise panel">▾</button>
         </header>
-        <ol class="sheet-steps">${steps.map((s, i) => html`<li data-i="${i}"><span class="dot">${s.icon || i + 1}</span><span>${s.title}</span></li>`)}</ol>
+        <ol class="sheet-steps">
+          ${steps.map((s, i) => html`<li data-i="${i}"><span class="dot">${s.icon || i + 1}</span><span>${s.title}</span></li>`)}
+        </ol>
         <div class="sheet-body" aria-live="polite"></div>
         <footer class="sheet-foot"></footer>
-      </section>`);
+      </section>`,
+    );
     this.root.appendChild(sheet);
     this.root.hidden = false;
     $('.sheet-min', sheet).onclick = () => sheet.classList.toggle('min');
@@ -166,10 +201,12 @@ export class ProtocolSheet {
         body.appendChild(grid);
         return new Promise((resolve) => {
           for (const o of options) {
-            const b = el(html`<button class="opt ${o.tone || ''}" ${o.disabled ? raw('disabled') : ''}>
+            const b = el(
+              html`<button class="opt ${o.tone || ''}" ${o.disabled ? raw('disabled') : ''}>
                 <span class="opt-label">${o.icon ? html`<span class="opt-icon">${o.icon}</span>` : ''}${o.label}</span>
                 ${o.sub ? html`<span class="opt-sub">${o.sub}</span>` : ''}
-              </button>`);
+              </button>`,
+            );
             b.onclick = () => {
               sfx('beep');
               $$('.opt', grid).forEach((x) => (x.disabled = true));
@@ -190,11 +227,15 @@ export class ProtocolSheet {
       async wait(seconds, label, { detail = '' } = {}) {
         const start = clock.simMs;
         const end = start + seconds * 1000;
-        const node = el(html`<div class="waitbox">
-            <div class="wait-head"><span class="spinner" aria-hidden="true"></span><strong>${label}</strong><span class="wait-left"></span></div>
+        const node = el(
+          html`<div class="waitbox">
+            <div class="wait-head">
+              <span class="spinner" aria-hidden="true"></span><strong>${label}</strong><span class="wait-left"></span>
+            </div>
             ${detail ? html`<div class="wait-detail">${detail}</div>` : ''}
             <div class="progress"><div class="bar"></div></div>
-          </div>`);
+          </div>`,
+        );
         body.appendChild(node);
         foot.innerHTML = '';
         const skip = el(html`<button class="btn">Skip waiting ⏩</button>`);
@@ -234,10 +275,15 @@ export class ProtocolSheet {
   }
 
   insufficient(body, foot, amount) {
-    const box = el(html`<div class="notice warn">
-      <strong>Card declined: insufficient funds.</strong>
-      <p>This costs ${money(amount)} but your wallet holds ${money(state.wallet)}. Like any traveller, you can pick up a day of remote work.</p>
-    </div>`);
+    const box = el(
+      html`<div class="notice warn">
+        <strong>Card declined: insufficient funds.</strong>
+        <p>
+          This costs ${money(amount)} but your wallet holds ${money(state.wallet)}. Like any traveller, you can pick up a day of remote
+          work.
+        </p>
+      </div>`,
+    );
     body.appendChild(box);
     foot.innerHTML = '';
     return new Promise((resolve) => {
@@ -252,7 +298,10 @@ export class ProtocolSheet {
 }
 
 const TITLES = {
-  'road-pre': (r) => ({ kicker: `${VEHICLES[r.leg.vehicle].name}`, text: r.leg.rental ? 'Pick up your rental' : VEHICLES[r.leg.vehicle].mode === 'drive' ? 'Before you drive' : 'Before you set off' }),
+  'road-pre': (r) => ({
+    kicker: `${VEHICLES[r.leg.vehicle].name}`,
+    text: r.leg.rental ? 'Pick up your rental' : VEHICLES[r.leg.vehicle].mode === 'drive' ? 'Before you drive' : 'Before you set off',
+  }),
   'road-post': (r) => ({ kicker: 'Arrival', text: r.leg.to.name }),
   'air-pre': (r) => ({ kicker: `${r.leg.from.airport.name} · ${r.leg.from.iata}`, text: 'Departure' }),
   'air-post': (r) => ({ kicker: `${r.leg.to.airport.name} · ${r.leg.to.iata}`, text: 'Arrival' }),
@@ -265,7 +314,14 @@ function passengerName() {
   const n = (state.profile?.name || 'Traveller').trim().toUpperCase().split(/\s+/);
   const last = n.length > 1 ? n[n.length - 1] : n[0];
   const first = n.length > 1 ? n.slice(0, -1).join(' ') : 'MX';
-  return { last, first, bcbp: `${last}/${first}`.replace(/[^A-Z/ ]/g, '').slice(0, 20).padEnd(20, ' ') };
+  return {
+    last,
+    first,
+    bcbp: `${last}/${first}`
+      .replace(/[^A-Z/ ]/g, '')
+      .slice(0, 20)
+      .padEnd(20, ' '),
+  };
 }
 
 function julian(ms) {
@@ -311,20 +367,52 @@ function boardingPassCard(b) {
         <div><span class="bp-code">${b.to}</span><span class="bp-city">${b.toAirport.city}</span></div>
       </div>
       <dl class="bp-grid">
-        <div><dt>Passenger</dt><dd>${passengerName().last}/${passengerName().first}</dd></div>
-        <div><dt>Flight</dt><dd>${b.carrier} ${b.number}</dd></div>
-        <div><dt>Date</dt><dd>${fmtDate(b.std, tz0, { day: '2-digit', month: 'short' }).toUpperCase()}</dd></div>
-        <div><dt>Gate</dt><dd>${b.gate}</dd></div>
-        <div><dt>Boarding</dt><dd>${fmtTime(b.boarding, tz0)}</dd></div>
-        <div><dt>Departs</dt><dd>${fmtTime(b.std, tz0)}</dd></div>
-        <div><dt>Seat</dt><dd class="big">${b.seat}</dd></div>
-        <div><dt>Group</dt><dd class="big">${b.group}</dd></div>
-        <div><dt>Seq</dt><dd>${String(b.seq).padStart(3, '0')}</dd></div>
-        <div><dt>PNR</dt><dd>${b.pnr}</dd></div>
+        <div>
+          <dt>Passenger</dt>
+          <dd>${passengerName().last}/${passengerName().first}</dd>
+        </div>
+        <div>
+          <dt>Flight</dt>
+          <dd>${b.carrier} ${b.number}</dd>
+        </div>
+        <div>
+          <dt>Date</dt>
+          <dd>${fmtDate(b.std, tz0, { day: '2-digit', month: 'short' }).toUpperCase()}</dd>
+        </div>
+        <div>
+          <dt>Gate</dt>
+          <dd>${b.gate}</dd>
+        </div>
+        <div>
+          <dt>Boarding</dt>
+          <dd>${fmtTime(b.boarding, tz0)}</dd>
+        </div>
+        <div>
+          <dt>Departs</dt>
+          <dd>${fmtTime(b.std, tz0)}</dd>
+        </div>
+        <div>
+          <dt>Seat</dt>
+          <dd class="big">${b.seat}</dd>
+        </div>
+        <div>
+          <dt>Group</dt>
+          <dd class="big">${b.group}</dd>
+        </div>
+        <div>
+          <dt>Seq</dt>
+          <dd>${String(b.seq).padStart(3, '0')}</dd>
+        </div>
+        <div>
+          <dt>PNR</dt>
+          <dd>${b.pnr}</dd>
+        </div>
       </dl>
       ${raw(barcodeSvg(bcbp(b)))}
       <code class="bp-raw" title="IATA BCBP string">${bcbp(b)}</code>
-      <p class="bp-note">Gate closes ${fmtTime(b.gateClose, tz0)}. ${b.international ? 'Present your passport at the gate.' : 'Photo ID required.'}</p>
+      <p class="bp-note">
+        Gate closes ${fmtTime(b.gateClose, tz0)}. ${b.international ? 'Present your passport at the gate.' : 'Photo ID required.'}
+      </p>
     </div>
   </article>`;
 }
@@ -332,7 +420,10 @@ function boardingPassCard(b) {
 function bagTagCard(b) {
   return html`<article class="doc bagtag">
     <div class="bt-dest">${b.to}</div>
-    <div class="bt-row"><span>${b.carrier} ${b.number}</span><span>${fmtDate(b.std, b.fromAirport.tz, { day: '2-digit', month: 'short' }).toUpperCase()}</span></div>
+    <div class="bt-row">
+      <span>${b.carrier} ${b.number}</span
+      ><span>${fmtDate(b.std, b.fromAirport.tz, { day: '2-digit', month: 'short' }).toUpperCase()}</span>
+    </div>
     <div class="bt-city">${b.toAirport.city.toUpperCase()}</div>
     ${raw(barcodeSvg(b.bagTag, 34))}
     <div class="bt-plate">${b.bagTag}</div>
@@ -399,15 +490,47 @@ async function arrivalCard(api, place, countries) {
     if (first) api.toast(`🎉 New country: ${flag(country.iso)} ${country.name} (+250 XP)`);
   }
   return html`<div class="arrival-card">
-    <div class="ac-head"><span class="ac-flag">${flag(iso)}</span><div><strong>Welcome to ${place.name}</strong><span>${country?.name || ''}${country?.continent ? ` · ${country.continent}` : ''}</span></div></div>
+    <div class="ac-head">
+      <span class="ac-flag">${flag(iso)}</span>
+      <div>
+        <strong>Welcome to ${place.name}</strong><span>${country?.name || ''}${country?.continent ? ` · ${country.continent}` : ''}</span>
+      </div>
+    </div>
     <dl class="kv">
-      <div><dt>Local time</dt><dd>${fmtTime(now, tz)} <small>${tz ? tzName(now, tz) : ''}</small></dd></div>
-      ${wx ? html`<div><dt>Weather now</dt><dd>${wx.icon} ${Math.round(wx.tempC)}°C · ${wx.text}</dd></div>` : ''}
-      ${wx ? html`<div><dt>Wind</dt><dd>${Math.round(wx.windKmh)} km/h ${compass(wx.windDir)}</dd></div>` : ''}
-      ${cur ? html`<div><dt>Currency</dt><dd>${curName}</dd></div>` : ''}
-      <div><dt>Traffic drives on</dt><dd>the ${drivesOnLeft(iso) ? 'LEFT' : 'RIGHT'}</dd></div>
-      <div><dt>Emergency number</dt><dd>${EMERGENCY[iso] || '112'}</dd></div>
-      <div><dt>Position</dt><dd>${formatCoord(place.coord)}</dd></div>
+      <div>
+        <dt>Local time</dt>
+        <dd>${fmtTime(now, tz)} <small>${tz ? tzName(now, tz) : ''}</small></dd>
+      </div>
+      ${wx
+        ? html`<div>
+            <dt>Weather now</dt>
+            <dd>${wx.icon} ${Math.round(wx.tempC)}°C · ${wx.text}</dd>
+          </div>`
+        : ''}
+      ${wx
+        ? html`<div>
+            <dt>Wind</dt>
+            <dd>${Math.round(wx.windKmh)} km/h ${compass(wx.windDir)}</dd>
+          </div>`
+        : ''}
+      ${cur
+        ? html`<div>
+            <dt>Currency</dt>
+            <dd>${curName}</dd>
+          </div>`
+        : ''}
+      <div>
+        <dt>Traffic drives on</dt>
+        <dd>the ${drivesOnLeft(iso) ? 'LEFT' : 'RIGHT'}</dd>
+      </div>
+      <div>
+        <dt>Emergency number</dt>
+        <dd>${EMERGENCY[iso] || '112'}</dd>
+      </div>
+      <div>
+        <dt>Position</dt>
+        <dd>${formatCoord(place.coord)}</dd>
+      </div>
     </dl>
   </div>`;
 }
@@ -430,12 +553,16 @@ const PROTOCOLS = {
         run: async (api) => {
           const days = Math.max(1, Math.ceil(leg.durationS / 86400));
           const daily = { sedan: 48, suv: 115, ev: 79, motorbike: 65 }[leg.vehicle] || 55;
-          api.show(html`<p class="lead">You're at the rental counter at ${leg.from.label || leg.from.name}.</p>
-            <ul class="checklist static">
-              <li>Driving licence${needsPassportControl(state.profile?.nationality, leg.from.iso) ? ' + International Driving Permit' : ''}</li>
-              <li>Credit card in the driver's name (security deposit hold: $300)</li>
-              <li>${v.name}, ${days} day${days > 1 ? 's' : ''} at ${money(daily)}/day, collision damage waiver included</li>
-            </ul>`);
+          api.show(
+            html`<p class="lead">You're at the rental counter at ${leg.from.label || leg.from.name}.</p>
+              <ul class="checklist static">
+                <li>
+                  Driving licence${needsPassportControl(state.profile?.nationality, leg.from.iso) ? ' + International Driving Permit' : ''}
+                </li>
+                <li>Credit card in the driver's name (security deposit hold: $300)</li>
+                <li>${v.name}, ${days} day${days > 1 ? 's' : ''} at ${money(daily)}/day, collision damage waiver included</li>
+              </ul>`,
+          );
           await api.next('Sign rental agreement');
           await api.pay(daily * days, `Rental: ${v.name}`);
           api.append(html`<p>Walk-around damage check: photograph every panel and note existing scratches on the check-out sheet.</p>`);
@@ -446,16 +573,35 @@ const PROTOCOLS = {
 
     const checks =
       v.mode === 'bike'
-        ? ['Helmet on and strap fastened', 'Tyre pressure checked (80–100 psi)', 'Brakes tested, front and rear', `Lights ${night ? 'ON (it is dark)' : 'charged'}`, 'Two water bottles filled (2 × 750 ml)']
+        ? [
+            'Helmet on and strap fastened',
+            'Tyre pressure checked (80–100 psi)',
+            'Brakes tested, front and rear',
+            `Lights ${night ? 'ON (it is dark)' : 'charged'}`,
+            'Two water bottles filled (2 × 750 ml)',
+          ]
         : v.mode === 'walk'
-          ? ['Comfortable shoes', 'Water bottle filled', 'Phone charged, offline map saved', night ? 'Reflective clothing (it is dark)' : 'Sunscreen & hat']
+          ? [
+              'Comfortable shoes',
+              'Water bottle filled',
+              'Phone charged, offline map saved',
+              night ? 'Reflective clothing (it is dark)' : 'Sunscreen & hat',
+            ]
           : v.icon === 'motorbike'
-            ? ['Helmet, gloves, jacket, boots: all the gear, all the time', 'Mirrors adjusted', 'Dipped headlight ON (mandatory in many countries)', 'Tyres & chain checked', 'Side stand up']
+            ? [
+                'Helmet, gloves, jacket, boots: all the gear, all the time',
+                'Mirrors adjusted',
+                'Dipped headlight ON (mandatory in many countries)',
+                'Tyres & chain checked',
+                'Side stand up',
+              ]
             : [
                 'Seat and steering wheel adjusted',
                 'Mirrors: rear-view and both wing mirrors',
                 'Seatbelts fastened: driver and all passengers',
-                v.batteryKWh ? `Battery ${Math.round((runner.battery / v.batteryKWh) * 100)}%, range ${Math.round(((runner.battery / v.kWhPer100) * 100))} km` : `Fuel ${Math.round((runner.fuel / v.tankL) * 100)}% (${Math.round(runner.fuel)} L), est. range ${Math.round((runner.fuel / v.lPer100) * 100)} km`,
+                v.batteryKWh
+                  ? `Battery ${Math.round((runner.battery / v.batteryKWh) * 100)}%, range ${Math.round((runner.battery / v.kWhPer100) * 100)} km`
+                  : `Fuel ${Math.round((runner.fuel / v.tankL) * 100)}% (${Math.round(runner.fuel)} L), est. range ${Math.round((runner.fuel / v.lPer100) * 100)} km`,
                 `Headlights ${night ? 'ON (after sunset)' : 'on AUTO'}`,
                 'Phone in cradle, Do Not Disturb while driving',
               ];
@@ -463,9 +609,18 @@ const PROTOCOLS = {
       title: 'Safety checks',
       icon: '✅',
       run: async (api) => {
-        const body = api.show(html`<p class="lead">${leg.from.name} → ${leg.to.name}</p>
-          <ul class="checklist">${checks.map((c, i) => html`<li><label><input type="checkbox" data-i="${i}"> ${c}</label></li>`)}</ul>
-          <p class="muted">Tick every item, as you would in real life.</p>`);
+        const body = api.show(
+          html`<p class="lead">${leg.from.name} → ${leg.to.name}</p>
+            <ul class="checklist">
+              ${checks.map(
+                (c, i) =>
+                  html`<li>
+                    <label><input type="checkbox" data-i="${i}" /> ${c}</label>
+                  </li>`,
+              )}
+            </ul>
+            <p class="muted">Tick every item, as you would in real life.</p>`,
+        );
         const list = $$('.checklist input', body);
         await new Promise((resolve) => {
           const check = () => list.every((b) => b.checked) && resolve();
@@ -479,18 +634,31 @@ const PROTOCOLS = {
       icon: '🧭',
       run: async (api) => {
         const kmh = (route.distanceM / route.durationS) * 3.6;
-        api.show(html`<div class="route-brief">
+        api.show(
+          html`<div class="route-brief">
             <div class="rb-big">${(route.distanceM / 1000).toFixed(route.distanceM < 10000 ? 1 : 0)} km</div>
             <div>Estimated ${fmtDur(leg.durationS)} · average ${Math.round(kmh)} km/h</div>
             ${majorRoads.length ? html`<div class="muted">Via ${majorRoads.join(' · ')}</div>` : ''}
-            ${v.lPer100 ? html`<div class="muted">Fuel needed ≈ ${((route.distanceM / 100000) * v.lPer100).toFixed(1)} L (≈ ${money(((route.distanceM / 100000) * v.lPer100) * fuelPrice(leg.from.iso))} at local prices)</div>` : ''}
-            <div class="muted">Traffic in ${leg.from.iso ? flag(leg.from.iso) : ''} keeps ${drivesOnLeft(leg.from.iso) ? 'LEFT' : 'RIGHT'}.</div>
-          </div>`);
+            ${v.lPer100
+              ? html`<div class="muted">
+                  Fuel needed ≈ ${((route.distanceM / 100000) * v.lPer100).toFixed(1)} L (≈
+                  ${money((route.distanceM / 100000) * v.lPer100 * fuelPrice(leg.from.iso))} at local prices)
+                </div>`
+              : ''}
+            <div class="muted">
+              Traffic in ${leg.from.iso ? flag(leg.from.iso) : ''} keeps ${drivesOnLeft(leg.from.iso) ? 'LEFT' : 'RIGHT'}.
+            </div>
+          </div>`,
+        );
         if (v.mode === 'drive') {
           await api.next(v.batteryKWh ? 'Press brake + Start' : 'Start engine');
           sfx('ignition');
           api.speak(`Starting route to ${leg.to.name}. ${route.steps[0]?.text || ''}.`, 'nav');
-          api.append(html`<p class="muted">Release the handbrake, select ${v.icon === 'motorbike' ? 'first gear' : 'D'}, check your blind spot, signal and pull away.</p>`);
+          api.append(
+            html`<p class="muted">
+              Release the handbrake, select ${v.icon === 'motorbike' ? 'first gear' : 'D'}, check your blind spot, signal and pull away.
+            </p>`,
+          );
           await api.next('Pull away');
         } else {
           await api.next(v.mode === 'bike' ? 'Clip in & ride' : 'Start walking');
@@ -512,7 +680,7 @@ const PROTOCOLS = {
       icon: '🏁',
       run: async (api) => {
         const hrs = runner.drivingS / 3600;
-        const avg = (leg.path.length / 1000) / Math.max(0.01, hrs);
+        const avg = leg.path.length / 1000 / Math.max(0.01, hrs);
         const toTerminal = next && (next.mode === 'fly' || next.mode === 'sail');
         const parkText = toTerminal
           ? next.mode === 'fly'
@@ -525,17 +693,40 @@ const PROTOCOLS = {
           : v.mode === 'drive'
             ? 'Parked. Handbrake on, engine off, valuables out of sight.'
             : 'You made it!';
-        api.show(html`<div class="trip-summary">
+        api.show(
+          html`<div class="trip-summary">
             <div class="ts-big">${(leg.path.length / 1000).toFixed(1)} km</div>
             <dl class="kv">
-              <div><dt>Time on the road</dt><dd>${fmtDur(runner.drivingS)}</dd></div>
-              <div><dt>Average speed</dt><dd>${avg.toFixed(0)} km/h</dd></div>
-              ${runner.fuelUsed ? html`<div><dt>Fuel used</dt><dd>${runner.fuelUsed.toFixed(1)} L (${((runner.fuelUsed / (leg.path.length / 1000)) * 100).toFixed(1)} L/100 km)</dd></div>` : ''}
-              ${runner.kcal ? html`<div><dt>Energy burned</dt><dd>${Math.round(runner.kcal)} kcal</dd></div>` : ''}
-              ${v.co2gPerKm ? html`<div><dt>CO₂</dt><dd>${((v.co2gPerKm * leg.path.length) / 1e6).toFixed(1)} kg</dd></div>` : ''}
+              <div>
+                <dt>Time on the road</dt>
+                <dd>${fmtDur(runner.drivingS)}</dd>
+              </div>
+              <div>
+                <dt>Average speed</dt>
+                <dd>${avg.toFixed(0)} km/h</dd>
+              </div>
+              ${runner.fuelUsed
+                ? html`<div>
+                    <dt>Fuel used</dt>
+                    <dd>${runner.fuelUsed.toFixed(1)} L (${((runner.fuelUsed / (leg.path.length / 1000)) * 100).toFixed(1)} L/100 km)</dd>
+                  </div>`
+                : ''}
+              ${runner.kcal
+                ? html`<div>
+                    <dt>Energy burned</dt>
+                    <dd>${Math.round(runner.kcal)} kcal</dd>
+                  </div>`
+                : ''}
+              ${v.co2gPerKm
+                ? html`<div>
+                    <dt>CO₂</dt>
+                    <dd>${((v.co2gPerKm * leg.path.length) / 1e6).toFixed(1)} kg</dd>
+                  </div>`
+                : ''}
             </dl>
             <p>${parkText}</p>
-          </div>`);
+          </div>`,
+        );
         if (!toTerminal) {
           const html2 = await arrivalCard(api, leg.to, deps.countries);
           api.append(html2);
@@ -555,7 +746,10 @@ const PROTOCOLS = {
     const intl = A.iso !== B.iso;
     const passport = needsPassportControl(A.iso, B.iso);
     const r = rng(`${A.iata}${B.iata}${Math.floor(runner.ctx.clock.simMs / 86400000)}`);
-    const [carrier, carrierName] = A.iso === 'US' || (!CARRIER[A.iso] && B.iso === 'US') ? US_CARRIERS[Math.floor(r() * 3)] : CARRIER[A.iso] || CARRIER[B.iso] || ['WF', 'Wayfarer Air'];
+    const [carrier, carrierName] =
+      A.iso === 'US' || (!CARRIER[A.iso] && B.iso === 'US')
+        ? US_CARRIERS[Math.floor(r() * 3)]
+        : CARRIER[A.iso] || CARRIER[B.iso] || ['WF', 'Wayfarer Air'];
     const number = plan.distanceKm > 4500 ? 1 + Math.floor(r() * 299) : 300 + Math.floor(r() * 1700);
     const now = runner.ctx.clock.simMs;
     const lead = (intl ? 3 : 2) * 3600 * 1000;
@@ -593,12 +787,27 @@ const PROTOCOLS = {
       title: 'Book',
       icon: '🎫',
       run: async (api) => {
-        api.show(html`<div class="itinerary">
-            <div class="it-row"><strong>${carrierName} ${carrier} ${number}</strong><span>${plan.ac.name}</span></div>
-            <div class="it-route"><div><b>${A.iata}</b> ${T(std)}<small>${A.city}</small></div><span class="it-line">${fmtDur(plan.blockS)} · ${Math.round(plan.distanceKm).toLocaleString('en-US')} km</span><div><b>${B.iata}</b> ${fmtTime(b.sta, B.tz)}<small>${B.city}${fmtDate(b.sta, B.tz) !== fmtDate(std, A.tz) ? ` · ${fmtDate(b.sta, B.tz, { day: '2-digit', month: 'short' })}` : ''}</small></div></div>
-            <div class="muted">Cruise FL${plan.cruiseFL} · ${plan.windKts >= 0 ? 'tailwind' : 'headwind'} ${Math.round(Math.abs(plan.windKts))} kt (live 250 hPa winds) · ${intl ? 'International' : 'Domestic'}</div>
-          </div>
-          <p class="muted">Choose your cabin. Fares are estimated from the distance band, like airline fare construction.</p>`);
+        api.show(
+          html`<div class="itinerary">
+              <div class="it-row"><strong>${carrierName} ${carrier} ${number}</strong><span>${plan.ac.name}</span></div>
+              <div class="it-route">
+                <div><b>${A.iata}</b> ${T(std)}<small>${A.city}</small></div>
+                <span class="it-line">${fmtDur(plan.blockS)} · ${Math.round(plan.distanceKm).toLocaleString('en-US')} km</span>
+                <div>
+                  <b>${B.iata}</b> ${fmtTime(b.sta, B.tz)}<small
+                    >${B.city}${fmtDate(b.sta, B.tz) !== fmtDate(std, A.tz)
+                      ? ` · ${fmtDate(b.sta, B.tz, { day: '2-digit', month: 'short' })}`
+                      : ''}</small
+                  >
+                </div>
+              </div>
+              <div class="muted">
+                Cruise FL${plan.cruiseFL} · ${plan.windKts >= 0 ? 'tailwind' : 'headwind'} ${Math.round(Math.abs(plan.windKts))} kt (live
+                250 hPa winds) · ${intl ? 'International' : 'Domestic'}
+              </div>
+            </div>
+            <p class="muted">Choose your cabin. Fares are estimated from the distance band, like airline fare construction.</p>`,
+        );
         const cabins = [
           ['economy', 'Economy', 'Y', `${BAGGAGE.checkedKg} kg bag · standard seat`],
           ['premium', 'Premium Economy', 'W', '2 × 23 kg · extra legroom'],
@@ -606,7 +815,12 @@ const PROTOCOLS = {
           ...(plan.distanceKm > 5000 ? [['first', 'First', 'F', 'Private suite · chauffeur']] : []),
         ];
         const pick = await api.choose(
-          cabins.map(([value, label, , sub]) => ({ value, label, sub: `${money(estimateFare(plan.distanceKm, value))} · ${sub}`, icon: { economy: '💺', premium: '🛋️', business: '🥂', first: '👑' }[value] })),
+          cabins.map(([value, label, , sub]) => ({
+            value,
+            label,
+            sub: `${money(estimateFare(plan.distanceKm, value))} · ${sub}`,
+            icon: { economy: '💺', premium: '🛋️', business: '🥂', first: '👑' }[value],
+          })),
           { autoPick: 'economy' },
         );
         const c = cabins.find((x) => x[0] === pick);
@@ -623,13 +837,26 @@ const PROTOCOLS = {
       title: 'Check-in & seat',
       icon: '💺',
       run: async (api) => {
-        api.show(html`<p class="lead">Online check-in is open (24 h to 1 h before departure).</p>
-          <dl class="kv">
-            <div><dt>Passenger</dt><dd>${passengerName().last}/${passengerName().first}</dd></div>
-            <div><dt>Passport</dt><dd>${flag(state.profile?.nationality)} ${state.profile?.passportNo || '—'}</dd></div>
-            ${passport ? html`<div><dt>Entry requirements</dt><dd>Visa/eTA verified for ${flag(B.iso)} ${B.iso}</dd></div>` : ''}
-          </dl>
-          <p class="muted">Select a seat on the ${plan.ac.name}:</p>`);
+        api.show(
+          html`<p class="lead">Online check-in is open (24 h to 1 h before departure).</p>
+            <dl class="kv">
+              <div>
+                <dt>Passenger</dt>
+                <dd>${passengerName().last}/${passengerName().first}</dd>
+              </div>
+              <div>
+                <dt>Passport</dt>
+                <dd>${flag(state.profile?.nationality)} ${state.profile?.passportNo || '—'}</dd>
+              </div>
+              ${passport
+                ? html`<div>
+                    <dt>Entry requirements</dt>
+                    <dd>Visa/eTA verified for ${flag(B.iso)} ${B.iso}</dd>
+                  </div>`
+                : ''}
+            </dl>
+            <p class="muted">Select a seat on the ${plan.ac.name}:</p>`,
+        );
         const seat = await seatMap(api, plan, b, r);
         b.seat = seat;
         const row = parseInt(seat, 10);
@@ -645,9 +872,17 @@ const PROTOCOLS = {
       icon: '🧳',
       run: async (api) => {
         const allowance = b.cabin === 'economy' ? 1 : 2;
-        const body = api.show(html`<p class="lead">Terminal ${b.terminal} · ${carrierName} bag drop</p>
-          <p>Place your suitcase on the belt scale. Allowance: ${allowance} × ${BAGGAGE.checkedKg} kg checked, ${BAGGAGE.cabinKg} kg cabin bag.</p>
-          <label class="slider-row">Suitcase weight <input type="range" min="8" max="34" step="0.5" value="19.5" class="bag-kg"> <output class="bag-out">19.5 kg</output></label>`);
+        const body = api.show(
+          html`<p class="lead">Terminal ${b.terminal} · ${carrierName} bag drop</p>
+            <p>
+              Place your suitcase on the belt scale. Allowance: ${allowance} × ${BAGGAGE.checkedKg} kg checked, ${BAGGAGE.cabinKg} kg cabin
+              bag.
+            </p>
+            <label class="slider-row"
+              >Suitcase weight <input type="range" min="8" max="34" step="0.5" value="19.5" class="bag-kg" />
+              <output class="bag-out">19.5 kg</output></label
+            >`,
+        );
         const input = $('.bag-kg', body);
         const out = $('.bag-out', body);
         input.oninput = () => (out.textContent = `${input.value} kg`);
@@ -655,12 +890,18 @@ const PROTOCOLS = {
         let kg = Number(input.value);
         if (kg > 32) {
           sfx('error');
-          api.append(html`<div class="notice warn">${kg} kg is over the 32 kg safety limit: no airline will accept it. You repack into your cabin bag.</div>`);
+          api.append(
+            html`<div class="notice warn">
+              ${kg} kg is over the 32 kg safety limit: no airline will accept it. You repack into your cabin bag.
+            </div>`,
+          );
           await api.wait(6 * 60, 'Repacking at the counter');
           kg = 31;
         }
         if (kg > BAGGAGE.checkedKg) {
-          api.append(html`<div class="notice warn">Overweight: ${kg} kg (limit ${BAGGAGE.checkedKg} kg). Excess baggage fee applies.</div>`);
+          api.append(
+            html`<div class="notice warn">Overweight: ${kg} kg (limit ${BAGGAGE.checkedKg} kg). Excess baggage fee applies.</div>`,
+          );
           await api.pay(75, 'Excess baggage');
         }
         const acct = ACCOUNTING[carrier] || String(100 + (hashString(carrier) % 900));
@@ -679,8 +920,10 @@ const PROTOCOLS = {
         title: 'Passport control',
         icon: '🛂',
         run: async (api) => {
-          api.show(html`<p class="lead">Emigration: departing ${flag(A.iso)} ${deps.countries.get(A.iso)?.name || A.iso}</p>
-            <p>Have your passport open at the photo page and your boarding pass ready.</p>`);
+          api.show(
+            html`<p class="lead">Emigration: departing ${flag(A.iso)} ${deps.countries.get(A.iso)?.name || A.iso}</p>
+              <p>Have your passport open at the photo page and your boarding pass ready.</p>`,
+          );
           const lane = await api.choose(
             [
               { value: 'egate', label: 'e-Gates', sub: 'Biometric passports · face scan', icon: '🤖' },
@@ -688,7 +931,10 @@ const PROTOCOLS = {
             ],
             { autoPick: 'egate' },
           );
-          await api.wait((lane === 'egate' ? 4 : 14) * 60, lane === 'egate' ? 'e-Gate: look at the camera, remove glasses' : 'Queue for the officer');
+          await api.wait(
+            (lane === 'egate' ? 4 : 14) * 60,
+            lane === 'egate' ? 'e-Gate: look at the camera, remove glasses' : 'Queue for the officer',
+          );
           api.append(html`<div class="notice ok">Cleared for departure.</div>`);
           await api.next('Airside');
         },
@@ -699,19 +945,34 @@ const PROTOCOLS = {
       title: 'Airside',
       icon: '🛍️',
       run: async (api) => {
-        api.show(html`<p class="lead">Departures · Terminal ${b.terminal}</p>${fidsBoard(runner, b, deps)}`);
+        api.show(
+          html`<p class="lead">Departures · Terminal ${b.terminal}</p>
+            ${fidsBoard(runner, b, deps)}`,
+        );
         const until = b.boarding - api.clock.simMs - 15 * 60000;
         const choice = await api.choose(
           [
-            { value: 'lounge', label: b.cabin === 'economy' ? 'Lounge day pass ($45)' : 'Lounge (included)', sub: 'Quiet seats, food, showers', icon: '☕' },
+            {
+              value: 'lounge',
+              label: b.cabin === 'economy' ? 'Lounge day pass ($45)' : 'Lounge (included)',
+              sub: 'Quiet seats, food, showers',
+              icon: '☕',
+            },
             { value: 'dutyfree', label: 'Browse duty free', sub: 'Allowances apply on arrival', icon: '🛍️' },
             { value: 'gate', label: 'Go straight to the gate', sub: `Gate ${b.gate}`, icon: '🚶' },
           ],
           { autoPick: 'gate' },
         );
         if (choice === 'lounge' && b.cabin === 'economy') await api.pay(45, 'Lounge day pass');
-        if (until > 0) await api.wait(until / 1000, choice === 'gate' ? `Waiting at gate ${b.gate}` : choice === 'lounge' ? 'Relaxing in the lounge' : 'Shopping airside', { detail: `Boarding at ${T(b.boarding)}` });
-        api.append(html`<div class="notice">📢 “${carrierName} flight ${carrier} ${number} to ${B.city} is now boarding at gate ${b.gate}.”</div>`);
+        if (until > 0)
+          await api.wait(
+            until / 1000,
+            choice === 'gate' ? `Waiting at gate ${b.gate}` : choice === 'lounge' ? 'Relaxing in the lounge' : 'Shopping airside',
+            { detail: `Boarding at ${T(b.boarding)}` },
+          );
+        api.append(
+          html`<div class="notice">📢 “${carrierName} flight ${carrier} ${number} to ${B.city} is now boarding at gate ${b.gate}.”</div>`,
+        );
         api.speak(`${carrierName} flight ${carrier} ${number} to ${B.city} is now boarding at gate ${b.gate}.`, 'crew');
         await api.wait(Math.max(60, (b.boarding - api.clock.simMs) / 1000 + 600), `Walking to gate ${b.gate}`);
       },
@@ -721,18 +982,48 @@ const PROTOCOLS = {
       title: 'Boarding',
       icon: '🛫',
       run: async (api) => {
-        api.show(html`<p class="lead">Gate ${b.gate} · Boarding by group</p>
-          <ol class="groups">${[1, 2, 3, 4].map((g) => html`<li class="${g === b.group ? 'you' : ''}">Group ${g}${g === 1 ? ': Business, First & priority' : g === 2 ? ': Premium & elite' : g === 3 ? ': Rear rows' : ': Front rows'}${g === b.group ? ' ← you' : ''}</li>`)}</ol>`);
+        api.show(
+          html`<p class="lead">Gate ${b.gate} · Boarding by group</p>
+            <ol class="groups">
+              ${[1, 2, 3, 4].map(
+                (g) =>
+                  html`<li class="${g === b.group ? 'you' : ''}">
+                    Group
+                    ${g}${g === 1
+                      ? ': Business, First & priority'
+                      : g === 2
+                        ? ': Premium & elite'
+                        : g === 3
+                          ? ': Rear rows'
+                          : ': Front rows'}${g === b.group ? ' ← you' : ''}
+                  </li>`,
+              )}
+            </ol>`,
+        );
         await api.wait(Math.max(60, (b.group - 1) * 6 * 60), 'Waiting for your group to be called');
         await api.next('Scan boarding pass');
         sfx('beep');
         api.append(html`<div class="notice ok">✔ Boarding pass accepted · ${b.seat}</div>`);
-        api.append(html`<p>Down the jet bridge, aircraft door ${wide ? '2L' : '1L'}. “Welcome aboard!” Find seat <b>${b.seat}</b>, bag in the overhead bin, seatbelt fastened.</p>`);
+        api.append(
+          html`<p>
+            Down the jet bridge, aircraft door ${wide ? '2L' : '1L'}. “Welcome aboard!” Find seat <b>${b.seat}</b>, bag in the overhead bin,
+            seatbelt fastened.
+          </p>`,
+        );
         await api.wait(Math.max(60, (b.std - api.clock.simMs) / 1000 - 6 * 60), 'Passengers boarding · stowing bags');
-        api.append(html`<div class="notice">Doors closed. Cabin crew, arm doors and cross-check. Please switch portable electronic devices to flight mode.</div>`);
+        api.append(
+          html`<div class="notice">
+            Doors closed. Cabin crew, arm doors and cross-check. Please switch portable electronic devices to flight mode.
+          </div>`,
+        );
         const demo = `Ladies and gentlemen, welcome aboard ${carrierName} flight ${number} to ${B.city}. Please watch carefully as we demonstrate the safety features of this ${plan.ac.name}. Fasten your seatbelt by inserting the metal tip into the buckle. There are emergency exits on both sides of the aircraft. In the event of a loss of cabin pressure, oxygen masks will drop from the panel above. Pull the mask towards you, place it over your nose and mouth, and secure your own mask before helping others. Your life jacket is under your seat. Thank you for your attention.`;
         api.speak(demo, 'crew');
-        api.append(html`<details class="safety"><summary>Safety demonstration</summary><p>${demo}</p></details>`);
+        api.append(
+          html`<details class="safety">
+            <summary>Safety demonstration</summary>
+            <p>${demo}</p>
+          </details>`,
+        );
         await api.next('Ready for pushback');
       },
     });
@@ -765,10 +1056,17 @@ const PROTOCOLS = {
         title: 'Immigration',
         icon: '🛂',
         run: async (api) => {
-          api.show(html`<p class="lead">Arrivals immigration · ${flag(B.iso)} ${country?.name || B.iso}</p>
-            <p>Join the queue for ${state.profile?.nationality === B.iso ? 'citizens' : 'all other passports'}.</p>`);
+          api.show(
+            html`<p class="lead">Arrivals immigration · ${flag(B.iso)} ${country?.name || B.iso}</p>
+              <p>Join the queue for ${state.profile?.nationality === B.iso ? 'citizens' : 'all other passports'}.</p>`,
+          );
           await api.wait((15 + Math.round(r() * 25)) * 60, 'Immigration queue');
-          api.append(html`<p><b>Officer:</b> “Good ${new Date(api.clock.simMs).getUTCHours() < 12 ? 'morning' : 'afternoon'}. Passport, please. What is the purpose of your visit?”</p>`);
+          api.append(
+            html`<p>
+              <b>Officer:</b> “Good ${new Date(api.clock.simMs).getUTCHours() < 12 ? 'morning' : 'afternoon'}. Passport, please. What is the
+              purpose of your visit?”
+            </p>`,
+          );
           await api.choose(
             [
               { value: 't', label: 'Tourism', icon: '📸' },
@@ -788,7 +1086,14 @@ const PROTOCOLS = {
             { autoPick: 'w', columns: 3 },
           );
           api.append(html`<p><b>Officer:</b> “Enjoy your stay.” <i>Fingerprints scanned, photo taken, passport stamped.</i></p>`);
-          await giveStamp(api, { iso: B.iso, country: country?.name || B.city, date: api.clock.simMs, port: B.iata, mode: 'fly', kind: 'entry' });
+          await giveStamp(api, {
+            iso: B.iso,
+            country: country?.name || B.city,
+            date: api.clock.simMs,
+            port: B.iata,
+            mode: 'fly',
+            kind: 'entry',
+          });
           await api.next('Baggage reclaim');
         },
       });
@@ -798,9 +1103,16 @@ const PROTOCOLS = {
       icon: '🧳',
       run: async (api) => {
         const belt = 1 + Math.floor(r() * 12);
-        api.show(html`<p class="lead">Baggage reclaim · belt ${belt}</p><p>Flight ${b ? `${b.carrier} ${b.number}` : ''} from ${A.city}.</p>`);
+        api.show(
+          html`<p class="lead">Baggage reclaim · belt ${belt}</p>
+            <p>Flight ${b ? `${b.carrier} ${b.number}` : ''} from ${A.city}.</p>`,
+        );
         await api.wait((10 + Math.round(r() * 18)) * 60, `Waiting at belt ${belt}`);
-        api.append(html`<div class="notice ok">Your suitcase appears${b?.bagTag ? html`: tag <code>${b.bagTag}</code> matches your receipt` : ''}.</div>`);
+        api.append(
+          html`<div class="notice ok">
+            Your suitcase appears${b?.bagTag ? html`: tag <code>${b.bagTag}</code> matches your receipt` : ''}.
+          </div>`,
+        );
         await api.next(customs ? 'To customs' : 'To arrivals');
       },
     });
@@ -809,8 +1121,13 @@ const PROTOCOLS = {
         title: 'Customs',
         icon: '🛃',
         run: async (api) => {
-          api.show(html`<p class="lead">Customs</p>
-            <p>Green channel: nothing to declare (within duty-free allowances). Red channel: goods to declare, cash over the reporting limit (typically 10,000 USD/EUR), restricted food, plants or animals.</p>`);
+          api.show(
+            html`<p class="lead">Customs</p>
+              <p>
+                Green channel: nothing to declare (within duty-free allowances). Red channel: goods to declare, cash over the reporting
+                limit (typically 10,000 USD/EUR), restricted food, plants or animals.
+              </p>`,
+          );
           const ch = await api.choose(
             [
               { value: 'green', label: 'Nothing to declare', tone: 'green', icon: '🟢' },
@@ -862,17 +1179,40 @@ const PROTOCOLS = {
           const km = leg.distanceM / 1000;
           const pax = Math.round(35 + km * 0.22);
           const car = leg.withVehicle ? Math.round(70 + km * 0.55) : 0;
-          api.show(html`<p class="lead">${leg.from.label} → ${leg.to.label}</p>
-            <dl class="kv"><div><dt>Crossing</dt><dd>${fmtDur(leg.durationS)} · ${(km / 1.852).toFixed(0)} nmi</dd></div>
-            <div><dt>Vessel</dt><dd>${v.name}, ${v.serviceKnots} kn</dd></div>
-            <div><dt>Fare</dt><dd>${money(pax)} foot passenger${leg.withVehicle ? html` + ${money(car)} car & driver` : ''}</dd></div></dl>`);
+          api.show(
+            html`<p class="lead">${leg.from.label} → ${leg.to.label}</p>
+              <dl class="kv">
+                <div>
+                  <dt>Crossing</dt>
+                  <dd>${fmtDur(leg.durationS)} · ${(km / 1.852).toFixed(0)} nmi</dd>
+                </div>
+                <div>
+                  <dt>Vessel</dt>
+                  <dd>${v.name}, ${v.serviceKnots} kn</dd>
+                </div>
+                <div>
+                  <dt>Fare</dt>
+                  <dd>${money(pax)} foot passenger${leg.withVehicle ? html` + ${money(car)} car & driver` : ''}</dd>
+                </div>
+              </dl>`,
+          );
           await api.next('Buy ticket');
           await api.pay(pax + car, `Ferry ${leg.from.city}–${leg.to.city}`);
         } else {
-          api.show(html`<p class="lead">${leg.from.label} → ${leg.to.label}</p>
-            <dl class="kv"><div><dt>Voyage</dt><dd>${nights} night${nights > 1 ? 's' : ''} · ${(leg.distanceM / 1852).toFixed(0)} nautical miles</dd></div>
-            <div><dt>Ship</dt><dd>${v.name} · service speed ${v.serviceKnots} kn</dd></div></dl>
-            <p class="muted">Choose your stateroom (price per night, all meals included):</p>`);
+          api.show(
+            html`<p class="lead">${leg.from.label} → ${leg.to.label}</p>
+              <dl class="kv">
+                <div>
+                  <dt>Voyage</dt>
+                  <dd>${nights} night${nights > 1 ? 's' : ''} · ${(leg.distanceM / 1852).toFixed(0)} nautical miles</dd>
+                </div>
+                <div>
+                  <dt>Ship</dt>
+                  <dd>${v.name} · service speed ${v.serviceKnots} kn</dd>
+                </div>
+              </dl>
+              <p class="muted">Choose your stateroom (price per night, all meals included):</p>`,
+          );
           const base = v.icon === 'ship' && leg.vehicle === 'expedition' ? 650 : 140;
           const kinds = [
             ['interior', 'Interior', 1, '🛏️'],
@@ -880,7 +1220,15 @@ const PROTOCOLS = {
             ['balcony', 'Balcony', 1.8, '🌅'],
             ['suite', 'Suite', 3.4, '👑'],
           ];
-          const pick = await api.choose(kinds.map(([value, label, m, icon]) => ({ value, label, icon, sub: `${money(base * m)}/night · ${money(base * m * nights)} total` })), { autoPick: 'interior' });
+          const pick = await api.choose(
+            kinds.map(([value, label, m, icon]) => ({
+              value,
+              label,
+              icon,
+              sub: `${money(base * m)}/night · ${money(base * m * nights)} total`,
+            })),
+            { autoPick: 'interior' },
+          );
           const k = kinds.find((x) => x[0] === pick);
           runner.booking.cabin = k[1];
           runner.booking.deck = pick === 'interior' ? 4 + Math.floor(r() * 4) : pick === 'suite' ? 14 : 8 + Math.floor(r() * 5);
@@ -898,18 +1246,62 @@ const PROTOCOLS = {
           const lane = 100 + Math.floor(r() * 140);
           const L = () => 'ABCDEFGHJKLMNPRSTVWXY'[Math.floor(r() * 21)];
           const plate = `${L()}${L()}${10 + Math.floor(r() * 89)} ${L()}${L()}${L()}`;
-          api.show(html`<p class="lead">${leg.withVehicle ? 'Drive-up check-in booth' : 'Foot passenger check-in'}</p>
-            <article class="doc ferry-card"><div class="fc-head">BOARDING CARD</div>
-            <div class="fc-route">${leg.from.city.toUpperCase()} ➜ ${leg.to.city.toUpperCase()}</div>
-            <dl class="kv"><div><dt>Passenger</dt><dd>${passengerName().last}/${passengerName().first}</dd></div>
-            ${leg.withVehicle ? html`<div><dt>Vehicle</dt><dd>${plate}</dd></div><div><dt>Lane</dt><dd class="big">${lane}</dd></div>` : html`<div><dt>Gate</dt><dd>Foot passengers</dd></div>`}</dl></article>
-            <p class="muted">Hang the boarding card from your rear-view mirror.</p>`);
+          api.show(
+            html`<p class="lead">${leg.withVehicle ? 'Drive-up check-in booth' : 'Foot passenger check-in'}</p>
+              <article class="doc ferry-card">
+                <div class="fc-head">BOARDING CARD</div>
+                <div class="fc-route">${leg.from.city.toUpperCase()} ➜ ${leg.to.city.toUpperCase()}</div>
+                <dl class="kv">
+                  <div>
+                    <dt>Passenger</dt>
+                    <dd>${passengerName().last}/${passengerName().first}</dd>
+                  </div>
+                  ${leg.withVehicle
+                    ? html`<div>
+                          <dt>Vehicle</dt>
+                          <dd>${plate}</dd>
+                        </div>
+                        <div>
+                          <dt>Lane</dt>
+                          <dd class="big">${lane}</dd>
+                        </div>`
+                    : html`<div>
+                        <dt>Gate</dt>
+                        <dd>Foot passengers</dd>
+                      </div>`}
+                </dl>
+              </article>
+              <p class="muted">Hang the boarding card from your rear-view mirror.</p>`,
+          );
           await api.wait(6 * 60, 'Check-in queue');
         } else {
-          api.show(html`<p class="lead">Cruise terminal check-in</p>
-            <ul class="checklist static"><li>Passport & travel documents checked</li><li>Health questionnaire completed</li><li>Photo taken for your cruise card</li><li>Credit card linked for onboard purchases</li></ul>
-            <article class="doc seapass"><div class="sp-ship">${v.name.toUpperCase()}</div><div class="sp-name">${passengerName().first} ${passengerName().last}</div>
-            <dl class="kv"><div><dt>Stateroom</dt><dd class="big">${runner.booking.stateroom}</dd></div><div><dt>Muster station</dt><dd class="big">${runner.booking.muster}</dd></div><div><dt>Dining</dt><dd>Main dining · 2nd seating</dd></div></dl></article>`);
+          api.show(
+            html`<p class="lead">Cruise terminal check-in</p>
+              <ul class="checklist static">
+                <li>Passport & travel documents checked</li>
+                <li>Health questionnaire completed</li>
+                <li>Photo taken for your cruise card</li>
+                <li>Credit card linked for onboard purchases</li>
+              </ul>
+              <article class="doc seapass">
+                <div class="sp-ship">${v.name.toUpperCase()}</div>
+                <div class="sp-name">${passengerName().first} ${passengerName().last}</div>
+                <dl class="kv">
+                  <div>
+                    <dt>Stateroom</dt>
+                    <dd class="big">${runner.booking.stateroom}</dd>
+                  </div>
+                  <div>
+                    <dt>Muster station</dt>
+                    <dd class="big">${runner.booking.muster}</dd>
+                  </div>
+                  <div>
+                    <dt>Dining</dt>
+                    <dd>Main dining · 2nd seating</dd>
+                  </div>
+                </dl>
+              </article>`,
+          );
           await api.wait(25 * 60, 'Check-in & photo');
         }
       },
@@ -921,9 +1313,22 @@ const PROTOCOLS = {
         icon: '🛂',
         run: async (api) => {
           const dest = deps.countries.get(leg.to.iso);
-          api.show(html`<p class="lead">Juxtaposed controls</p><p>Under the Le Touquet Treaty, ${dest?.name || leg.to.iso} border officers check your passport here, before you sail, so you drive straight off on arrival.</p>`);
+          api.show(
+            html`<p class="lead">Juxtaposed controls</p>
+              <p>
+                Under the Le Touquet Treaty, ${dest?.name || leg.to.iso} border officers check your passport here, before you sail, so you
+                drive straight off on arrival.
+              </p>`,
+          );
           await api.wait(10 * 60, `${dest?.name || ''} border control booth`);
-          await giveStamp(api, { iso: leg.to.iso, country: dest?.name || leg.to.city, date: api.clock.simMs, port: leg.to.id, mode: 'sail', kind: 'entry' });
+          await giveStamp(api, {
+            iso: leg.to.iso,
+            country: dest?.name || leg.to.city,
+            date: api.clock.simMs,
+            port: leg.to.id,
+            mode: 'sail',
+            kind: 'entry',
+          });
           runner.booking.stamped = true;
           await api.next('Continue');
         },
@@ -934,7 +1339,14 @@ const PROTOCOLS = {
       title: 'Security',
       icon: '🛡️',
       run: async (api) => {
-        api.show(html`<p class="lead">Security screening</p><p>${ferry && leg.withVehicle ? 'Vehicles may be selected for a random search; passengers stay with their car.' : 'Hand luggage through X-ray, walk-through metal detector. No weapons, no irons, no candles.'}</p>`);
+        api.show(
+          html`<p class="lead">Security screening</p>
+            <p>
+              ${ferry && leg.withVehicle
+                ? 'Vehicles may be selected for a random search; passengers stay with their car.'
+                : 'Hand luggage through X-ray, walk-through metal detector. No weapons, no irons, no candles.'}
+            </p>`,
+        );
         await api.wait((ferry ? 5 : 12) * 60, 'Screening');
         if (ferry && leg.withVehicle && r() < 0.15) {
           api.append(html`<div class="notice warn">Your car is waved into the search bay.</div>`);
@@ -948,16 +1360,32 @@ const PROTOCOLS = {
       icon: ferry ? '⛴️' : '🦺',
       run: async (api) => {
         if (ferry) {
-          api.show(html`<p class="lead">${leg.withVehicle ? 'Drive up the ramp onto the car deck' : 'Walk the gangway onto the ship'}</p>
-            <p>${leg.withVehicle ? 'Follow the crew’s hand signals. Engage the handbrake, leave the car in gear, switch off the alarm. Note your deck & stairway colour. The car decks are closed during the crossing.' : 'Find a seat in the lounge or out on deck.'}</p>`);
+          api.show(
+            html`<p class="lead">${leg.withVehicle ? 'Drive up the ramp onto the car deck' : 'Walk the gangway onto the ship'}</p>
+              <p>
+                ${leg.withVehicle
+                  ? 'Follow the crew’s hand signals. Engage the handbrake, leave the car in gear, switch off the alarm. Note your deck & stairway colour. The car decks are closed during the crossing.'
+                  : 'Find a seat in the lounge or out on deck.'}
+              </p>`,
+          );
           await api.wait(Math.max(5, 20 * (leg.withVehicle ? 1 : 0.5)) * 60, 'Loading the ship');
-          const brief = 'Ladies and gentlemen, welcome aboard. In an emergency you will hear seven short blasts and one long blast on the ship’s whistle. Make your way to your assembly station, where crew will issue life jackets.';
+          const brief =
+            'Ladies and gentlemen, welcome aboard. In an emergency you will hear seven short blasts and one long blast on the ship’s whistle. Make your way to your assembly station, where crew will issue life jackets.';
           api.speak(brief, 'crew');
           api.append(html`<div class="notice">“${brief}”</div>`);
         } else {
-          api.show(html`<p class="lead">Mandatory safety drill (SOLAS)</p>
-            <p>International law requires every passenger to attend the muster drill before the ship departs. Watch the safety video on your stateroom TV, then check in at muster station <b>${runner.booking.muster}</b>, Deck 5.</p>
-            <ul class="checklist static"><li>General emergency alarm: seven short blasts, one long</li><li>Life jackets at the muster station</li><li>No elevators during an emergency</li></ul>`);
+          api.show(
+            html`<p class="lead">Mandatory safety drill (SOLAS)</p>
+              <p>
+                International law requires every passenger to attend the muster drill before the ship departs. Watch the safety video on
+                your stateroom TV, then check in at muster station <b>${runner.booking.muster}</b>, Deck 5.
+              </p>
+              <ul class="checklist static">
+                <li>General emergency alarm: seven short blasts, one long</li>
+                <li>Life jackets at the muster station</li>
+                <li>No elevators during an emergency</li>
+              </ul>`,
+          );
           await api.wait(20 * 60, `Checking in at muster station ${runner.booking.muster}`);
           api.append(html`<div class="notice ok">Your attendance has been recorded. Sail-away party on the pool deck!</div>`);
         }
@@ -978,7 +1406,13 @@ const PROTOCOLS = {
       title: 'Disembark',
       icon: '🚪',
       run: async (api) => {
-        api.show(html`<p class="lead">${ferry && leg.withVehicle ? 'Return to your vehicle when called. Wait for crew signals to drive off.' : 'Disembarkation by colour group. Collect your luggage in the terminal.'}</p>`);
+        api.show(
+          html`<p class="lead">
+            ${ferry && leg.withVehicle
+              ? 'Return to your vehicle when called. Wait for crew signals to drive off.'
+              : 'Disembarkation by colour group. Collect your luggage in the terminal.'}
+          </p>`,
+        );
         await api.wait((ferry ? 15 : 45) * 60, ferry ? 'Unloading the car deck' : 'Disembarking');
       },
     });
@@ -989,7 +1423,14 @@ const PROTOCOLS = {
         run: async (api) => {
           api.show(html`<p class="lead">Arrival immigration · ${flag(leg.to.iso)} ${country?.name || leg.to.iso}</p>`);
           await api.wait(20 * 60, 'Passport check');
-          await giveStamp(api, { iso: leg.to.iso, country: country?.name || leg.to.city, date: api.clock.simMs, port: leg.to.id, mode: 'sail', kind: 'entry' });
+          await giveStamp(api, {
+            iso: leg.to.iso,
+            country: country?.name || leg.to.city,
+            date: api.clock.simMs,
+            port: leg.to.id,
+            mode: 'sail',
+            kind: 'entry',
+          });
           await api.next('Continue');
         },
       });
@@ -1030,7 +1471,12 @@ function seatMap(api, plan, b, r) {
   let mine = blocks.filter((x) => x.cabin === want);
   if (!mine.length) mine = blocks.filter((x) => x.cabin === 'premium').length ? blocks.filter((x) => x.cabin === 'premium') : blocks;
   blocks = mine;
-  api.append(html`<div class="seat-legend"><span class="seat window">A</span> Window <span class="seat aisle">C</span> Aisle <span class="seat">B</span> Middle <span class="seat taken">·</span> Occupied</div>`);
+  api.append(
+    html`<div class="seat-legend">
+      <span class="seat window">A</span> Window <span class="seat aisle">C</span> Aisle <span class="seat">B</span> Middle
+      <span class="seat taken">·</span> Occupied
+    </div>`,
+  );
   const container = api.append(html`<div class="seatmap" role="grid" aria-label="Seat map"></div>`);
   return new Promise((resolve) => {
     const free = [];
@@ -1047,8 +1493,22 @@ function seatMap(api, plan, b, r) {
           }
           const taken = r() < 0.62;
           const seat = `${row}${c}`;
-          const kind = c === 'A' || c === blk.cols.replace(/_/g, '').slice(-1) ? 'window' : blk.cols[blk.cols.indexOf(c) - 1] === '_' || blk.cols[blk.cols.indexOf(c) + 1] === '_' ? 'aisle' : 'middle';
-          const btn = el(html`<button class="seat ${kind} ${taken ? 'taken' : ''}" ${taken ? raw('disabled') : ''} title="${seat} · ${kind}" aria-label="Seat ${seat}, ${kind}${taken ? ', occupied' : ''}">${c}</button>`);
+          const kind =
+            c === 'A' || c === blk.cols.replace(/_/g, '').slice(-1)
+              ? 'window'
+              : blk.cols[blk.cols.indexOf(c) - 1] === '_' || blk.cols[blk.cols.indexOf(c) + 1] === '_'
+                ? 'aisle'
+                : 'middle';
+          const btn = el(
+            html`<button
+              class="seat ${kind} ${taken ? 'taken' : ''}"
+              ${taken ? raw('disabled') : ''}
+              title="${seat} · ${kind}"
+              aria-label="Seat ${seat}, ${kind}${taken ? ', occupied' : ''}"
+            >
+              ${c}
+            </button>`,
+          );
           if (!taken) {
             free.push(btn);
             btn.onclick = () => {
@@ -1063,7 +1523,8 @@ function seatMap(api, plan, b, r) {
         container.appendChild(line);
       }
     }
-    if (state.settings.autoChecks && free.length) setTimeout(() => free.find((x) => x.classList.contains('window'))?.click() || free[0].click(), 1200);
+    if (state.settings.autoChecks && free.length)
+      setTimeout(() => free.find((x) => x.classList.contains('window'))?.click() || free[0].click(), 1200);
   });
 }
 
@@ -1086,11 +1547,23 @@ async function securityScreening(api, r) {
     ['bag', 'In bag'],
     ['bin', 'Bin'],
   ];
-  const body = api.show(html`<p class="lead">Security checkpoint ${ct ? '· CT scanner lane' : '· conventional X-ray'}</p>
-    <p class="muted">${ct ? 'This lane has computed-tomography scanners: laptops and liquids may stay in your bag.' : 'Laptops and the liquids bag must go in a separate tray. Liquids over 100 ml are not allowed.'}</p>
-    <div class="trays">${items.map(
-      (it) => html`<div class="tray-item" data-id="${it.id}"><span class="ti-label">${it.icon} ${it.label}</span><span class="ti-opts">${choices.map(([v, l]) => html`<button class="chip" data-v="${v}">${l}</button>`)}</span></div>`,
-    )}</div>`);
+  const body = api.show(
+    html`<p class="lead">Security checkpoint ${ct ? '· CT scanner lane' : '· conventional X-ray'}</p>
+      <p class="muted">
+        ${ct
+          ? 'This lane has computed-tomography scanners: laptops and liquids may stay in your bag.'
+          : 'Laptops and the liquids bag must go in a separate tray. Liquids over 100 ml are not allowed.'}
+      </p>
+      <div class="trays">
+        ${items.map(
+          (it) =>
+            html`<div class="tray-item" data-id="${it.id}">
+              <span class="ti-label">${it.icon} ${it.label}</span
+              ><span class="ti-opts">${choices.map(([v, l]) => html`<button class="chip" data-v="${v}">${l}</button>`)}</span>
+            </div>`,
+        )}
+      </div>`,
+  );
   const picks = {};
   $$('.tray-item', body).forEach((row) => {
     $$('.chip', row).forEach((chip) =>
@@ -1103,7 +1576,9 @@ async function securityScreening(api, r) {
     );
   });
   if (state.settings.autoChecks) {
-    items.forEach((it, i) => setTimeout(() => $(`.tray-item[data-id="${it.id}"] .chip[data-v="${it.ok[0]}"]`, body)?.click(), 200 * (i + 1)));
+    items.forEach((it, i) =>
+      setTimeout(() => $(`.tray-item[data-id="${it.id}"] .chip[data-v="${it.ok[0]}"]`, body)?.click(), 200 * (i + 1)),
+    );
   }
   await api.wait(10 * 60, 'Security queue');
   for (;;) {
@@ -1112,10 +1587,17 @@ async function securityScreening(api, r) {
     api.toast('Place every item first');
   }
   const wrong = items.filter((it) => !it.ok.includes(picks[it.id]));
-  api.append(html`<p>Walk through the body scanner: arms up… ${wrong.some((w) => ['belt', 'pockets'].includes(w.id)) ? html`<b>BEEP.</b> Pat-down search.` : 'clear.'}</p>`);
+  api.append(
+    html`<p>
+      Walk through the body scanner: arms up…
+      ${wrong.some((w) => ['belt', 'pockets'].includes(w.id)) ? html`<b>BEEP.</b> Pat-down search.` : 'clear.'}
+    </p>`,
+  );
   if (wrong.length) {
     sfx('error');
-    api.append(html`<div class="notice warn">Your bag was pulled for a manual search: ${wrong.map((w) => w.label.toLowerCase()).join(', ')}.</div>`);
+    api.append(
+      html`<div class="notice warn">Your bag was pulled for a manual search: ${wrong.map((w) => w.label.toLowerCase()).join(', ')}.</div>`,
+    );
     await api.wait(9 * 60, 'Secondary search');
   } else {
     sfx('success');
@@ -1133,15 +1615,49 @@ function fidsBoard(runner, b, deps) {
   for (let i = 0; i < 7; i++) {
     const to = others[Math.floor(r() * others.length)];
     const [cc] = CARRIER[A.iso] && r() < 0.5 ? CARRIER[A.iso] : CARRIER[to.iso] || ['WF'];
-    const t = b.std + Math.round((r() * 4 - 1.5) * 3600000 / 300000) * 300000;
-    rows.push({ t, flt: `${cc} ${100 + Math.floor(r() * 1800)}`, to: to.city, gate: `${'ABCDEFGHK'[Math.floor(r() * 9)]}${1 + Math.floor(r() * 48)}` });
+    const t = b.std + Math.round(((r() * 4 - 1.5) * 3600000) / 300000) * 300000;
+    rows.push({
+      t,
+      flt: `${cc} ${100 + Math.floor(r() * 1800)}`,
+      to: to.city,
+      gate: `${'ABCDEFGHK'[Math.floor(r() * 9)]}${1 + Math.floor(r() * 48)}`,
+    });
   }
   rows.push({ t: b.std, flt: `${b.carrier} ${b.number}`, to: b.toAirport.city, gate: b.gate, you: true });
   rows.sort((x, y) => x.t - y.t);
   const now = runner.ctx.clock.simMs;
-  const status = (t) => (t < now - 600000 ? 'DEPARTED' : t - now < 20 * 60000 ? 'GATE CLOSED' : t - now < 50 * 60000 ? 'BOARDING' : t - now < 120 * 60000 ? 'GO TO GATE' : 'ON TIME');
+  const status = (t) =>
+    t < now - 600000
+      ? 'DEPARTED'
+      : t - now < 20 * 60000
+        ? 'GATE CLOSED'
+        : t - now < 50 * 60000
+          ? 'BOARDING'
+          : t - now < 120 * 60000
+            ? 'GO TO GATE'
+            : 'ON TIME';
   void deps;
-  return html`<table class="fids"><thead><tr><th>Time</th><th>Flight</th><th>Destination</th><th>Gate</th><th>Remarks</th></tr></thead><tbody>
-    ${rows.map((x) => html`<tr class="${x.you ? 'you' : ''}"><td>${fmtTime(x.t, A.tz)}</td><td>${x.flt}</td><td>${x.to.toUpperCase()}</td><td>${x.gate}</td><td>${status(x.t)}</td></tr>`)}
-  </tbody></table>`;
+  return html`<table class="fids">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Flight</th>
+        <th>Destination</th>
+        <th>Gate</th>
+        <th>Remarks</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows.map(
+        (x) =>
+          html`<tr class="${x.you ? 'you' : ''}">
+            <td>${fmtTime(x.t, A.tz)}</td>
+            <td>${x.flt}</td>
+            <td>${x.to.toUpperCase()}</td>
+            <td>${x.gate}</td>
+            <td>${status(x.t)}</td>
+          </tr>`,
+      )}
+    </tbody>
+  </table>`;
 }

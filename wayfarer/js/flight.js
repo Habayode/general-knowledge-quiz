@@ -65,7 +65,7 @@ export function planFlight(from, to, { aircraft, windKts = 0 } = {}) {
 
   const takeoffRollM = 2200;
   const landingRollM = 1600;
-  const climbM = Math.min(distM * 0.45, ((cruiseFt / 1000) * 4.2 * KM_PER_NM * 1000));
+  const climbM = Math.min(distM * 0.45, (cruiseFt / 1000) * 4.2 * KM_PER_NM * 1000);
   const descentM = Math.min(distM * 0.45, ((cruiseFt / 1000) * 3.0 + 10) * KM_PER_NM * 1000);
   const tod = distM - descentM; // top of descent
 
@@ -150,7 +150,7 @@ export function planFlight(from, to, { aircraft, windKts = 0 } = {}) {
       const i = Math.min(n, Math.max(0, Math.floor(d / STEP)));
       return Math.max(0, airborneS - timeAt[i]);
     },
-    fuelKg: (ac.burnKgPerH * (airborneS / 3600)) * 1.05 + 2500,
+    fuelKg: ac.burnKgPerH * (airborneS / 3600) * 1.05 + 2500,
   };
 }
 

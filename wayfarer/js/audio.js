@@ -195,7 +195,8 @@ function pickVoice(kind) {
   const voices = window.speechSynthesis?.getVoices() || [];
   const en = voices.filter((v) => /^en[-_]/i.test(v.lang));
   if (!en.length) return null;
-  const pref = kind === 'pilot' ? /Daniel|George|Male|Google UK English Male|Arthur/i : /Samantha|Karen|Female|Google UK English Female|Serena|Moira/i;
+  const pref =
+    kind === 'pilot' ? /Daniel|George|Male|Google UK English Male|Arthur/i : /Samantha|Karen|Female|Google UK English Female|Serena|Moira/i;
   return en.find((v) => pref.test(v.name)) || en[0];
 }
 

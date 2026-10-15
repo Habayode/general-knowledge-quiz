@@ -36,12 +36,27 @@ async function newPage({ width = 1440, height = 900, profile = true, settings = 
   });
   await context.route('**/*', async (route) => {
     const url = route.request().url();
-    const json = (obj) => route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(obj) });
+    const json = (obj) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: { 'access-control-allow-origin': '*' },
+        body: JSON.stringify(obj),
+      });
     if (url.startsWith(BASE)) return route.continue();
-    if (url.includes('unpkg.com/maplibre-gl') && url.endsWith('.js')) return route.fulfill({ status: 200, contentType: 'text/javascript', headers: { 'access-control-allow-origin': '*' }, body: maplibreJs });
-    if (url.includes('unpkg.com/maplibre-gl') && url.endsWith('.css')) return route.fulfill({ status: 200, contentType: 'text/css', headers: { 'access-control-allow-origin': '*' }, body: maplibreCss });
-    if (url.includes('fonts.googleapis.com') || url.includes('fonts.gstatic.com')) return route.fulfill({ status: 200, contentType: 'text/css', body: '' });
-    if (url.includes('World_Imagery') || url.includes('Reference/')) return route.fulfill({ status: 200, contentType: 'image/png', body: SAT_TILE });
+    if (url.includes('unpkg.com/maplibre-gl') && url.endsWith('.js'))
+      return route.fulfill({
+        status: 200,
+        contentType: 'text/javascript',
+        headers: { 'access-control-allow-origin': '*' },
+        body: maplibreJs,
+      });
+    if (url.includes('unpkg.com/maplibre-gl') && url.endsWith('.css'))
+      return route.fulfill({ status: 200, contentType: 'text/css', headers: { 'access-control-allow-origin': '*' }, body: maplibreCss });
+    if (url.includes('fonts.googleapis.com') || url.includes('fonts.gstatic.com'))
+      return route.fulfill({ status: 200, contentType: 'text/css', body: '' });
+    if (url.includes('World_Imagery') || url.includes('Reference/'))
+      return route.fulfill({ status: 200, contentType: 'image/png', body: SAT_TILE });
     if (url.includes('gibs.earthdata.nasa.gov')) return route.fulfill({ status: 200, contentType: 'image/png', body: NIGHT_TILE });
     if (url.includes('elevation-tiles-prod')) return route.fulfill({ status: 200, contentType: 'image/png', body: TERRAIN_TILE });
     if (url.includes('tiles.openfreemap.org')) return route.fulfill({ status: 404, body: '' });
@@ -57,7 +72,13 @@ async function newPage({ width = 1440, height = 900, profile = true, settings = 
         localStorage.setItem(
           'wayfarer.v1',
           JSON.stringify({
-            profile: { name: 'Ada Okafor', nationality: 'NG', passportNo: 'A12345678', createdAt: 0, home: { kind: 'place', name: 'Ikeja', label: 'Ikeja, Lagos State, Nigeria', coord: [3.3515, 6.6018], iso: 'NG' } },
+            profile: {
+              name: 'Ada Okafor',
+              nationality: 'NG',
+              passportNo: 'A12345678',
+              createdAt: 0,
+              home: { kind: 'place', name: 'Ikeja', label: 'Ikeja, Lagos State, Nigeria', coord: [3.3515, 6.6018], iso: 'NG' },
+            },
             settings: { voice: false, sound: false, autoChecks: true, labels: true, buildings: true, timeScale: 1800, ...s },
           }),
         );
@@ -92,7 +113,13 @@ async function runToFinish(page, { maxMs = 240000, shots = [] } = {}) {
   const start = Date.now();
   const taken = new Set();
   while (Date.now() - start < maxMs) {
-    if (await page.locator('.finish').isVisible().catch(() => false)) return true;
+    if (
+      await page
+        .locator('.finish')
+        .isVisible()
+        .catch(() => false)
+    )
+      return true;
     // Fast-forward waits.
     const skip = page.locator('.sheet-foot .btn', { hasText: 'Skip waiting' });
     if (await skip.isVisible().catch(() => false)) await skip.click().catch(() => {});
@@ -117,7 +144,13 @@ async function playManually(page, { maxMs = 300000, shots = [] } = {}) {
   const taken = new Set();
   const correct = { laptop: 'own', liquids: 'own', water: 'bin', belt: 'tray', pockets: 'tray', jacket: 'tray', passport: 'keep' };
   while (Date.now() - start < maxMs) {
-    if (await page.locator('.finish').isVisible().catch(() => false)) return true;
+    if (
+      await page
+        .locator('.finish')
+        .isVisible()
+        .catch(() => false)
+    )
+      return true;
     for (const s of shots) {
       if (!taken.has(s.name) && (await s.when(page).catch(() => false))) {
         taken.add(s.name);
@@ -134,7 +167,11 @@ async function playManually(page, { maxMs = 300000, shots = [] } = {}) {
     };
     for (const box of await page.locator('.sheet .checklist input:not(:checked)').all()) await box.check().catch(() => {});
     for (const row of await page.locator('.sheet .tray-item').all()) {
-      if (!(await row.locator('.chip.on').count())) await row.locator(`.chip[data-v="${correct[await row.getAttribute('data-id')]}"]`).click().catch(() => {});
+      if (!(await row.locator('.chip.on').count()))
+        await row
+          .locator(`.chip[data-v="${correct[await row.getAttribute('data-id')]}"]`)
+          .click()
+          .catch(() => {});
     }
     if (await act(page.locator('.sheet .seat.window:not(.taken):not(:disabled)').first())) continue;
     if (await act(page.locator('.sheet .opt:not(:disabled)').first())) continue;
@@ -182,7 +219,11 @@ const scenarios = {
         { name: '05-boarding-pass', when: (p) => p.locator('.boarding-pass').isVisible(), delay: 300 },
         { name: '06-security', when: (p) => p.locator('.trays').isVisible(), delay: 300 },
         { name: '07-fids', when: (p) => p.locator('.fids').isVisible(), delay: 200 },
-        { name: '08-inflight', when: async (p) => (await p.locator('.pfd').isVisible()) && (await p.evaluate(() => (window.wayfarer.journey?.runner?.altFt || 0) > 30000)) },
+        {
+          name: '08-inflight',
+          when: async (p) =>
+            (await p.locator('.pfd').isVisible()) && (await p.evaluate(() => (window.wayfarer.journey?.runner?.altFt || 0) > 30000)),
+        },
         { name: '09-immigration-stamp', when: (p) => p.locator('.stamp-drop').isVisible(), delay: 500 },
         { name: '10-arrival-card', when: (p) => p.locator('.arrival-card').isVisible(), delay: 300 },
       ],
@@ -229,7 +270,10 @@ const scenarios = {
     if (!ok) throw new Error('Ferry journey did not finish');
     if (errors.length) return errors;
     const s = await page.evaluate(() => window.wayfarer.state);
-    if (!s.stamps.some((x) => x.iso === 'FR' && x.port === 'CQF')) throw new Error(`Juxtaposed French stamp missing: ${JSON.stringify(s.stamps)} legs=${JSON.stringify(await page.evaluate(() => document.querySelector('.leg-progress')?.innerText))}`);
+    if (!s.stamps.some((x) => x.iso === 'FR' && x.port === 'CQF'))
+      throw new Error(
+        `Juxtaposed French stamp missing: ${JSON.stringify(s.stamps)} legs=${JSON.stringify(await page.evaluate(() => document.querySelector('.leg-progress')?.innerText))}`,
+      );
     if (s.stats.voyages !== 1) throw new Error('voyage not counted');
     await context.close();
     return errors;

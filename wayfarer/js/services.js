@@ -187,10 +187,10 @@ export async function searchPlaces(query, near) {
       };
     });
   } catch {
-    const json = await fetchJson(
-      `${ENDPOINTS.nominatim}/search?format=jsonv2&limit=7&addressdetails=1&q=${encodeURIComponent(q)}`,
-      { timeout: 10000, minIntervalMs: 1100 },
-    );
+    const json = await fetchJson(`${ENDPOINTS.nominatim}/search?format=jsonv2&limit=7&addressdetails=1&q=${encodeURIComponent(q)}`, {
+      timeout: 10000,
+      minIntervalMs: 1100,
+    });
     return json.map((r) => ({
       name: r.name || r.display_name.split(',')[0],
       label: r.display_name,
@@ -205,13 +205,18 @@ export async function searchPlaces(query, near) {
 export async function reverseLocality(coord) {
   const key = `rev:${coord[0].toFixed(2)},${coord[1].toFixed(2)}`;
   try {
-    const json = await fetchJson(
-      `${ENDPOINTS.photon}/reverse?lat=${coord[1].toFixed(5)}&lon=${coord[0].toFixed(5)}&lang=en&limit=1`,
-      { timeout: 8000, minIntervalMs: 1500, key },
-    );
+    const json = await fetchJson(`${ENDPOINTS.photon}/reverse?lat=${coord[1].toFixed(5)}&lon=${coord[0].toFixed(5)}&lang=en&limit=1`, {
+      timeout: 8000,
+      minIntervalMs: 1500,
+      key,
+    });
     const p = json.features?.[0]?.properties;
     if (!p) return null;
-    return { locality: p.city || p.town || p.village || p.name || p.county || p.state || '', region: p.state || '', country: p.country || '' };
+    return {
+      locality: p.city || p.town || p.village || p.name || p.county || p.state || '',
+      region: p.state || '',
+      country: p.country || '',
+    };
   } catch {
     return null;
   }
@@ -221,13 +226,34 @@ export async function reverseLocality(coord) {
 
 /** WMO weather interpretation codes → description + emoji. */
 export const WMO = {
-  0: ['Clear sky', '☀️'], 1: ['Mainly clear', '🌤️'], 2: ['Partly cloudy', '⛅'], 3: ['Overcast', '☁️'],
-  45: ['Fog', '🌫️'], 48: ['Depositing rime fog', '🌫️'], 51: ['Light drizzle', '🌦️'], 53: ['Drizzle', '🌦️'],
-  55: ['Dense drizzle', '🌧️'], 56: ['Freezing drizzle', '🌧️'], 57: ['Freezing drizzle', '🌧️'], 61: ['Slight rain', '🌦️'],
-  63: ['Rain', '🌧️'], 65: ['Heavy rain', '🌧️'], 66: ['Freezing rain', '🌧️'], 67: ['Freezing rain', '🌧️'],
-  71: ['Slight snow', '🌨️'], 73: ['Snow', '🌨️'], 75: ['Heavy snow', '❄️'], 77: ['Snow grains', '🌨️'],
-  80: ['Rain showers', '🌦️'], 81: ['Rain showers', '🌧️'], 82: ['Violent rain showers', '⛈️'], 85: ['Snow showers', '🌨️'],
-  86: ['Heavy snow showers', '❄️'], 95: ['Thunderstorm', '⛈️'], 96: ['Thunderstorm with hail', '⛈️'], 99: ['Thunderstorm with hail', '⛈️'],
+  0: ['Clear sky', '☀️'],
+  1: ['Mainly clear', '🌤️'],
+  2: ['Partly cloudy', '⛅'],
+  3: ['Overcast', '☁️'],
+  45: ['Fog', '🌫️'],
+  48: ['Depositing rime fog', '🌫️'],
+  51: ['Light drizzle', '🌦️'],
+  53: ['Drizzle', '🌦️'],
+  55: ['Dense drizzle', '🌧️'],
+  56: ['Freezing drizzle', '🌧️'],
+  57: ['Freezing drizzle', '🌧️'],
+  61: ['Slight rain', '🌦️'],
+  63: ['Rain', '🌧️'],
+  65: ['Heavy rain', '🌧️'],
+  66: ['Freezing rain', '🌧️'],
+  67: ['Freezing rain', '🌧️'],
+  71: ['Slight snow', '🌨️'],
+  73: ['Snow', '🌨️'],
+  75: ['Heavy snow', '❄️'],
+  77: ['Snow grains', '🌨️'],
+  80: ['Rain showers', '🌦️'],
+  81: ['Rain showers', '🌧️'],
+  82: ['Violent rain showers', '⛈️'],
+  85: ['Snow showers', '🌨️'],
+  86: ['Heavy snow showers', '❄️'],
+  95: ['Thunderstorm', '⛈️'],
+  96: ['Thunderstorm with hail', '⛈️'],
+  99: ['Thunderstorm with hail', '⛈️'],
 };
 
 /** Current conditions + local time zone at a coordinate. */
