@@ -19,6 +19,10 @@ COPY robots.txt                     /app/server/public/robots.txt
 COPY sitemap.xml                    /app/server/public/sitemap.xml
 COPY og-image.png                   /app/server/public/og-image.png
 COPY google17d112ff5fd2b224.html    /app/server/public/google17d112ff5fd2b224.html
+# Wayfarer travel simulator: static sub-app served at /wayfarer/
+COPY wayfarer/index.html            /app/server/public/wayfarer/index.html
+COPY wayfarer/css/                  /app/server/public/wayfarer/css/
+COPY wayfarer/js/                   /app/server/public/wayfarer/js/
 
 # Data volume — SQLite DB + logs land here so container upgrades don't wipe state
 RUN mkdir -p /data
