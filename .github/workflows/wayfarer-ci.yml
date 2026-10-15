@@ -1,0 +1,48 @@
+name: Wayfarer CI
+# Lint, unit tests and full mocked end-to-end journeys for the Wayfarer game.
+
+on:
+  pull_request:
+    paths: ['wayfarer/**', '.github/workflows/wayfarer-*.yml']
+  push:
+    branches: [main]
+    paths: ['wayfarer/**', '.github/workflows/wayfarer-*.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wayfarer-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: wayfarer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: wayfarer/package-lock.json
+      - run: npm ci
+      - name: Lint (ESLint + Prettier)
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: End-to-end journeys (all services mocked)
+        run: npm run test:e2e
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wayfarer-e2e-screenshots
+          path: wayfarer/tests/e2e/screenshots/
+          if-no-files-found: ignore

@@ -13,7 +13,8 @@
     "build:ports": "node tools/build-ports.mjs",
     "build:data": "npm run build:countries && npm run build:sealanes && npm run build:ports",
     "lint": "eslint . && prettier --check \"js/**/*.js\" \"tools/**/*.mjs\" \"tests/**/*.mjs\" css/app.css index.html",
-    "format": "prettier --write \"js/**/*.js\" \"tools/**/*.mjs\" \"tests/**/*.mjs\" css/app.css index.html"
+    "format": "prettier --write \"js/**/*.js\" \"tools/**/*.mjs\" \"tests/**/*.mjs\" css/app.css index.html",
+    "test:live": "node tests/live/smoke.mjs"
   },
   "devDependencies": {
     "eslint": "10.1.0",

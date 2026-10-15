@@ -5,7 +5,9 @@ routes and sail real shipping lanes, and combine them in one journey. Along the 
 a real traveller does: check-in, bag drop, security trays, passport control, boarding groups, immigration stamps,
 baggage reclaim, customs, car-ferry lanes, cruise muster drills, rental desks, fuel stops and border posts.
 
-Served at **`/wayfarer/`** by the existing Python server (no build step: plain ES modules).
+**Play it live: https://habayode.github.io/general-knowledge-quiz/wayfarer/** (GitHub Pages, redeployed on every
+push to `main`). It is also served at `/wayfarer/` by the gkall.online Python server/Docker image. No build step: plain
+ES modules.
 
 ## What is real
 
@@ -62,8 +64,17 @@ npm run serve          # http://localhost:8090
 npm test               # unit tests: geodesy, flight model, sea routing vs coastlines, data validation, clock
 npm run test:e2e       # full journeys in headless Chromium, all services mocked; screenshots in tests/e2e/screenshots/
 npm run lint           # ESLint + Prettier
+npm run test:live      # smoke-test the DEPLOYED site against the real services (needs internet)
 npm run build:data     # rebuild countries.json, sealanes.json and port-approaches.json (downloads Natural Earth)
 ```
+
+## Continuous integration & deployment
+
+- **Wayfarer CI** (`.github/workflows/wayfarer-ci.yml`): lint, unit tests and the mocked end-to-end journeys on every PR.
+- **GitHub Pages** publishes `main` automatically.
+- **Wayfarer live smoke test** (`.github/workflows/wayfarer-live.yml`): after each deployment, and daily, it loads the
+  deployed game in Chromium against the real Esri, OSRM, Photon, Open-Meteo and Wikipedia services. It plans road, air
+  and sea routes, drives a full journey, and uploads screenshots plus a JSON report.
 
 ## Credits & licences
 
