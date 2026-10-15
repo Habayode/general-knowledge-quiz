@@ -23,7 +23,7 @@ const browser = Object.fromEntries(
   ].map((g) => [g, 'readonly']),
 );
 const node = Object.fromEntries(
-  ['process', 'Buffer', 'console', 'URL', 'fetch', 'setTimeout', 'Intl', 'performance'].map((g) => [g, 'readonly']),
+  ['process', 'Buffer', 'console', 'URL', 'URLSearchParams', 'fetch', 'setTimeout', 'Intl', 'performance'].map((g) => [g, 'readonly']),
 );
 const rules = {
   'no-undef': 'error',
