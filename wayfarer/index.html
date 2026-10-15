@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Wayfarer: Real-World Travel Simulator</title>
+    <meta name="description" content="Travel the real world on real satellite imagery. Drive real roads, cycle, walk, fly great-circle routes and sail real shipping lanes, going through every check-in, security line and passport stamp along the way." />
+    <meta name="theme-color" content="#06121f" />
+    <meta property="og:title" content="Wayfarer: Real-World Travel Simulator" />
+    <meta property="og:description" content="Drive, ride, fly and sail across the real globe with live routes, satellite imagery, weather and authentic travel procedures." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%230b3d6b'/%3E%3Cpath d='M8 30c10-4 14 6 22 2s10-14 20-10 6 18-2 22-18 2-22 10' fill='none' stroke='%2380e0a7' stroke-width='5'/%3E%3Cpath d='M44 14l8 2-2 8' fill='none' stroke='%23ff6d3a' stroke-width='4'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css"
+      integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="css/app.css" />
+    <script
+      src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"
+      integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp"
+      crossorigin="anonymous"
+      defer
+    ></script>
+    <script type="module" src="js/main.js"></script>
+  </head>
+  <body>
+    <div id="map" aria-label="Interactive 3D globe with satellite imagery"></div>
+
+    <aside id="panel" aria-label="Wayfarer control panel">
+      <header class="brand">
+        <button id="panel-toggle" class="icon-btn" aria-label="Toggle panel">☰</button>
+        <div class="logo"><span class="logo-mark">◍</span> Wayfarer</div>
+        <div id="profile" class="profile-chip"></div>
+      </header>
+      <nav class="tabs" role="tablist">
+        <button class="tab on" data-tab="plan" role="tab">🧭 Plan</button>
+        <button class="tab" data-tab="explore" role="tab">🏛️ Explore</button>
+        <button class="tab" data-tab="passport" role="tab">🛂 Passport</button>
+        <button class="tab" data-tab="settings" role="tab" aria-label="Settings">⚙️</button>
+      </nav>
+      <section id="tab-plan" class="tab-panel"></section>
+      <section id="tab-explore" class="tab-panel" hidden></section>
+      <section id="tab-passport" class="tab-panel" hidden></section>
+      <section id="tab-settings" class="tab-panel" hidden></section>
+    </aside>
+
+    <div id="legs" aria-live="polite"></div>
+    <div id="placecard" class="placecard" hidden></div>
+    <div id="toasts" aria-live="polite"></div>
+    <div id="hud" hidden></div>
+    <div id="wiki" hidden></div>
+    <div id="sheet" hidden></div>
+    <button id="recenter" class="btn" hidden>⌖ Re-centre</button>
+    <button id="skipwait" class="btn" hidden>Skip to next event ⏩</button>
+
+    <div id="controls" aria-label="Simulation controls">
+      <div class="ctl-row">
+        <span id="clock" class="clock" title="Local time at your position"></span>
+        <button id="pause" class="icon-btn" aria-label="Pause">❚❚</button>
+        <div id="timescale" class="timescale" role="group" aria-label="Time compression"></div>
+      </div>
+      <div class="ctl-row journey-only">
+        <div class="cams" role="group" aria-label="Camera">
+          <button class="cam on" data-cam="chase" title="Chase camera (C)">🎥 Chase</button>
+          <button class="cam" data-cam="cockpit" title="Driver / cockpit view">👁️ Cockpit</button>
+          <button class="cam" data-cam="top" title="Top-down, north up">🗺️ Top</button>
+          <button class="cam" data-cam="orbit" title="Orbit around the vehicle">🛰️ Orbit</button>
+          <button class="cam" data-cam="free" title="Free camera">✋ Free</button>
+        </div>
+        <button id="abort" class="btn danger small">End trip</button>
+      </div>
+    </div>
+
+    <div id="modal" hidden></div>
+    <div id="loading">
+      <div class="boot">
+        <div class="boot-globe"></div>
+        <div class="boot-title">Wayfarer</div>
+        <div class="boot-sub">Loading the planet…</div>
+      </div>
+    </div>
+    <noscript>Wayfarer needs JavaScript and WebGL to render the globe.</noscript>
+  </body>
+</html>
