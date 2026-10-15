@@ -199,23 +199,32 @@ try {
     check(`live service reachable: ${k}`, s && s.ok > 0, JSON.stringify(s || {}));
   }
   // Every curated landmark must resolve to a real English Wikipedia article.
-  const bad = [];
-  for (let i = 0; i < LANDMARKS.length; i += 6) {
-    await Promise.all(
-      LANDMARKS.slice(i, i + 6).map(async (l) => {
-        try {
-          const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(l.wiki)}?redirect=true`, {
-            headers: { 'Api-User-Agent': 'Wayfarer smoke test (github.com/Habayode/general-knowledge-quiz)' },
-          });
-          const j = r.ok ? await r.json() : null;
-          if (!j?.extract) bad.push(`${l.id}:${l.wiki}:${r.status}`);
-        } catch (e) {
-          bad.push(`${l.id}:${l.wiki}:${e.message}`);
-        }
-      }),
-    );
+  // Batched Action API queries (50 titles each) stay well inside rate limits.
+  const api = 'https://en.wikipedia.org/w/api.php';
+  const headers = { 'Api-User-Agent': 'Wayfarer smoke test (github.com/Habayode/general-knowledge-quiz)' };
+  const missing = [];
+  for (let i = 0; i < LANDMARKS.length; i += 50) {
+    const batch = LANDMARKS.slice(i, i + 50);
+    const params = new URLSearchParams({
+      action: 'query',
+      format: 'json',
+      formatversion: '2',
+      redirects: '1',
+      titles: batch.map((l) => l.wiki.replace(/_/g, ' ')).join('|'),
+    });
+    const j = await (await fetch(`${api}?${params}`, { headers })).json();
+    for (const p of j.query?.pages || []) {
+      if (p.missing || p.invalid)
+        missing.push(batch.find((l) => l.wiki.replace(/_/g, ' ') === p.title) || { id: '?', wiki: p.title, name: p.title });
+    }
   }
-  check(`all ${LANDMARKS.length} landmark Wikipedia articles resolve`, bad.length === 0, bad.join(' '));
+  const hints = [];
+  for (const l of missing) {
+    const params = new URLSearchParams({ action: 'query', format: 'json', list: 'search', srlimit: '3', srsearch: l.name });
+    const j = await (await fetch(`${api}?${params}`, { headers })).json();
+    hints.push(`${l.id}:"${l.wiki}" → try ${(j.query?.search || []).map((r) => `"${r.title}"`).join(', ')}`);
+  }
+  check(`all ${LANDMARKS.length} landmark Wikipedia articles resolve`, missing.length === 0, hints.join(' | '));
   check('no JavaScript errors', report.errors.length === 0, report.errors.join(' | '));
 } catch (err) {
   check('smoke test ran to completion', false, err.stack || err.message);
