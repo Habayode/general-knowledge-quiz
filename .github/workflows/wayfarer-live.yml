@@ -1,0 +1,57 @@
+name: Wayfarer live smoke test
+# After each GitHub Pages deployment of main, load the DEPLOYED game in a real
+# browser against the REAL services (Esri imagery, OSRM, Photon, Open-Meteo,
+# Wikipedia): plan road, air and sea routes and drive a full journey.
+# Also runs daily, so a broken upstream service is noticed.
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: read
+
+concurrency:
+  group: wayfarer-live
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: wayfarer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: wayfarer/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Wait for GitHub Pages to publish this commit
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for i in $(seq 1 40); do
+            read -r status commit < <(gh api "repos/${{ github.repository }}/pages/builds/latest" --jq '"\(.status) \(.commit)"' || echo "unknown none")
+            echo "Pages build: $status $commit"
+            if [ "$status" = "built" ] && [ "$commit" = "${{ github.sha }}" ]; then sleep 30; exit 0; fi
+            sleep 15
+          done
+          echo "::warning::Pages did not report this commit as built within 10 minutes; testing what is live."
+      - name: Live smoke test
+        run: node tests/live/smoke.mjs "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/wayfarer/"
+      - name: Upload screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wayfarer-live-screenshots
+          path: wayfarer/tests/live/screenshots/
