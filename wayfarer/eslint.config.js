@@ -8,6 +8,7 @@ const browser = Object.fromEntries(
     'localStorage',
     'fetch',
     'URL',
+    'URLSearchParams',
     'AbortController',
     'Intl',
     'performance',

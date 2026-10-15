@@ -10,6 +10,7 @@ import { chromium } from 'playwright';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { LANDMARKS } from '../../js/data/landmarks.js';
 
 const URL_ = process.argv[2] || process.env.WAYFARER_URL || 'https://habayode.github.io/general-knowledge-quiz/wayfarer/';
 const SHOTS = join(dirname(fileURLToPath(import.meta.url)), 'screenshots');
@@ -197,6 +198,24 @@ try {
     const s = report.services[k];
     check(`live service reachable: ${k}`, s && s.ok > 0, JSON.stringify(s || {}));
   }
+  // Every curated landmark must resolve to a real English Wikipedia article.
+  const bad = [];
+  for (let i = 0; i < LANDMARKS.length; i += 6) {
+    await Promise.all(
+      LANDMARKS.slice(i, i + 6).map(async (l) => {
+        try {
+          const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(l.wiki)}?redirect=true`, {
+            headers: { 'Api-User-Agent': 'Wayfarer smoke test (github.com/Habayode/general-knowledge-quiz)' },
+          });
+          const j = r.ok ? await r.json() : null;
+          if (!j?.extract) bad.push(`${l.id}:${l.wiki}:${r.status}`);
+        } catch (e) {
+          bad.push(`${l.id}:${l.wiki}:${e.message}`);
+        }
+      }),
+    );
+  }
+  check(`all ${LANDMARKS.length} landmark Wikipedia articles resolve`, bad.length === 0, bad.join(' '));
   check('no JavaScript errors', report.errors.length === 0, report.errors.join(' | '));
 } catch (err) {
   check('smoke test ran to completion', false, err.stack || err.message);
