@@ -217,7 +217,7 @@ export function wiki(url) {
       query: { geosearch: [{ pageid: 1, title: `Historic Site ${lat.toFixed(2)}`, lat: lat + 0.01, lon: lon + 0.01, dist: 1450 }] },
     };
   }
-  const title = decodeURIComponent(url.split('/summary/')[1] || 'Page');
+  const title = decodeURIComponent((url.split('/summary/')[1] || 'Page').split('?')[0]);
   return {
     title: title.replace(/_/g, ' '),
     description: 'Landmark',

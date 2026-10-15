@@ -297,26 +297,68 @@ export async function windsAloft(coord) {
 
 // ── Wikipedia ─────────────────────────────────────────────────────────────
 
-/** Article summary: title, extract, thumbnail, coordinates, page URL. */
+/**
+ * Article summary: title, extract, thumbnail, coordinates, page URL.
+ * Uses the REST summary endpoint and falls back to the Action API (origin=*),
+ * whose CORS headers are present even on redirects and rate-limit responses.
+ */
 export async function wikiSummary(title) {
-  const j = await fetchJson(`${ENDPOINTS.wikiRest}/page/summary/${encodeURIComponent(title)}`, { timeout: 10000 });
-  return {
-    title: j.title,
-    description: j.description || '',
-    extract: j.extract || '',
-    image: j.originalimage?.source || j.thumbnail?.source || null,
-    thumb: j.thumbnail?.source || null,
-    url: j.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`,
-    coord: j.coordinates ? [j.coordinates.lon, j.coordinates.lat] : null,
-  };
+  try {
+    const j = await fetchJson(`${ENDPOINTS.wikiRest}/page/summary/${encodeURIComponent(title)}?redirect=true`, { timeout: 10000 });
+    if (!j.extract) throw new ServiceError('Empty summary');
+    return {
+      title: j.title,
+      description: j.description || '',
+      extract: j.extract,
+      image: j.originalimage?.source || j.thumbnail?.source || null,
+      thumb: j.thumbnail?.source || null,
+      url: j.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`,
+      coord: j.coordinates ? [j.coordinates.lon, j.coordinates.lat] : null,
+    };
+  } catch {
+    const params = new URLSearchParams({
+      action: 'query',
+      format: 'json',
+      formatversion: '2',
+      origin: '*',
+      redirects: '1',
+      prop: 'extracts|pageimages|description|coordinates|info',
+      exintro: '1',
+      explaintext: '1',
+      exsentences: '5',
+      piprop: 'thumbnail',
+      pithumbsize: '640',
+      inprop: 'url',
+      titles: title.replace(/_/g, ' '),
+    });
+    const j = await fetchJson(`${ENDPOINTS.wikiApi}?${params}`, { timeout: 10000 });
+    const page = j.query?.pages?.[0];
+    if (!page || page.missing) throw new ServiceError(`No Wikipedia article "${title}"`);
+    return {
+      title: page.title,
+      description: page.description || '',
+      extract: page.extract || '',
+      image: page.thumbnail?.source || null,
+      thumb: page.thumbnail?.source || null,
+      url: page.fullurl || `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`,
+      coord: page.coordinates?.[0] ? [page.coordinates[0].lon, page.coordinates[0].lat] : null,
+    };
+  }
 }
 
 /** Notable places with Wikipedia articles near a coordinate. */
 export async function wikiNearby(coord, radiusM = 10000, limit = 8) {
   const key = `geo:${coord[0].toFixed(2)},${coord[1].toFixed(2)}:${radiusM}`;
-  const url =
-    `${ENDPOINTS.wikiApi}?action=query&list=geosearch&format=json&origin=*` +
-    `&gscoord=${coord[1].toFixed(5)}|${coord[0].toFixed(5)}&gsradius=${Math.min(10000, radiusM)}&gslimit=${limit}`;
+  const params = new URLSearchParams({
+    action: 'query',
+    list: 'geosearch',
+    format: 'json',
+    origin: '*',
+    gscoord: `${coord[1].toFixed(5)}|${coord[0].toFixed(5)}`, // URLSearchParams encodes the pipe
+    gsradius: String(Math.min(10000, radiusM)),
+    gslimit: String(limit),
+  });
+  const url = `${ENDPOINTS.wikiApi}?${params}`;
   const j = await fetchJson(url, { timeout: 10000, minIntervalMs: 800, key });
   return (j.query?.geosearch || []).map((g) => ({
     title: g.title,

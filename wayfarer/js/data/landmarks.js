@@ -11,7 +11,7 @@ const RAW = [
   ['table-mountain', 'Table Mountain', 'Cape Town', 'ZA', -33.9628, 18.4098, 'Table_Mountain', 13.4, 68, 160],
   ['kilimanjaro', 'Mount Kilimanjaro (Kibo)', 'Kilimanjaro', 'TZ', -3.0674, 37.3556, 'Mount_Kilimanjaro', 12.2, 70, 0],
   ['zuma-rock', 'Zuma Rock', 'Madalla', 'NG', 9.1278, 7.2297, 'Zuma_Rock', 14.6, 66, 20],
-  ['lekki-bridge', 'Lekki–Ikoyi Link Bridge', 'Lagos', 'NG', 6.4467, 3.4469, 'Lekki-Ikoyi_Link_Bridge', 16, 60, 120],
+  ['lekki-bridge', 'Lekki–Ikoyi Link Bridge', 'Lagos', 'NG', 6.4467, 3.4469, 'Lekki–Ikoyi_Link_Bridge', 16, 60, 120],
   ['cape-coast', 'Cape Coast Castle', 'Cape Coast', 'GH', 5.1036, -1.2413, 'Cape_Coast_Castle', 17.4, 55, 0],
   ['hassan-ii', 'Hassan II Mosque', 'Casablanca', 'MA', 33.6084, -7.6325, 'Hassan_II_Mosque', 17, 58, 320],
   ['djenne', 'Great Mosque of Djenné', 'Djenné', 'ML', 13.9053, -4.5553, 'Great_Mosque_of_Djenné', 17.4, 55, 20],
